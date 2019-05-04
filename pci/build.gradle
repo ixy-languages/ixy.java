@@ -1,0 +1,79 @@
+// Include some useful Gradle plugins
+plugins {
+	id 'java-library'                            // Java library support
+	id 'io.freefair.lombok'      version '3.2.0' // Lombok support
+	id 'com.adarshr.test-logger' version '1.6.0' // Gradle test logging prettifier
+}
+
+// Set the source and target compatibility of this subproject to Java 11
+sourceCompatibility = 1.11
+targetCompatibility = 1.11
+
+// Exclude the module-info.java file, because Gradle is not intelligent enough and tries to compile it
+sourceSets {
+	main {
+		java {
+			exclude 'module-info.java'
+		}
+	}
+	test {
+		java {
+			exclude 'module-info.java'
+		}
+	}
+}
+
+// Include all the dependencies of the library
+// * JetBrains annotations
+// * Simple Logging Facade for Java API
+//   * Simple Logging Facade for Java NOP (testing)
+//   * Simple Logging Facade for Java Simple (testing)
+// * JUnit 5
+//   * JUnit 5 Parameterized Tests
+dependencies {
+	implementation     group: 'org.jetbrains',     name: 'annotations',          version: '16.0.2'
+	testImplementation group: 'org.jetbrains',     name: 'annotations',          version: '16.0.2'
+	compileOnly        group: 'org.slf4j',         name: 'slf4j-api',            version: '1.8.0-beta4'
+	testCompile        group: 'org.slf4j',         name: 'slf4j-nop',            version: '1.8.0-beta4'
+//	testCompile        group: 'org.slf4j',         name: 'slf4j-simple',         version: '1.8.0-beta4'
+	testRuntimeOnly    group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.5.0-M1'
+	testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: '5.5.0-M1'
+}
+
+// Configure the test task
+test {
+
+	// Enable and configure JUnit 5
+	useJUnitPlatform {
+		failFast = true
+	}
+
+	// Consider that tests are never up to date
+	outputs.upToDateWhen { false }
+
+	// Configure the Gradle test logging, even if it's overwritten by the Gradle Test Logger plugin
+	testLogging {
+		events = ["passed", "failed", "skipped"]
+		showStandardStreams = true
+	}
+
+	// Configure the Gradle Test Logger Plugin
+	testlogger {
+		theme                      "mocha-parallel"
+		showExceptions             true
+		slowThreshold              2000
+		showSummary                true
+		showPassed                 true
+		showSkipped                true
+		showFailed                 true
+		showStandardStreams        true
+		showPassedStandardStreams  true
+		showSkippedStandardStreams true
+		showFailedStandardStreams  true
+	}
+
+	// Exclude the tests that will fail always if no Virtio NICs are available
+	if (System.env["IXY_VIRTIO_COUNT"] == null) {
+		exclude "**/PciTest.class"
+	}
+}
