@@ -1,7 +1,7 @@
 // Include some useful Gradle plugins
 plugins {
-    id 'java'                                           // Adds Java support
-    id 'com.github.ben-manes.versions' version '0.21.0' // Outdate dependency detection
+    id 'java'                                           // Java applications support
+    id 'com.github.ben-manes.versions' version '0.21.0' // Outdated dependencies detection support
 }
 
 // Configure all projects (including root) to use the Bintray's JCenter repository
