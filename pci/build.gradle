@@ -53,13 +53,13 @@ test {
 
 	// Configure the Gradle test logging, even if it's overwritten by the Gradle Test Logger plugin
 	testLogging {
-		events = ["passed", "failed", "skipped"]
+		events = ['passed', 'failed', 'skipped']
 		showStandardStreams = true
 	}
 
 	// Configure the Gradle Test Logger Plugin
 	testlogger {
-		theme                      "mocha-parallel"
+		theme                      'mocha-parallel'
 		showExceptions             true
 		slowThreshold              2000
 		showSummary                true
@@ -73,7 +73,7 @@ test {
 	}
 
 	// Exclude the tests that will fail always if no Virtio NICs are available
-	if (System.env["IXY_VIRTIO_COUNT"] == null) {
-		exclude "**/PciTest.class"
+	if (System.env['IXY_VIRTIO_COUNT'] == null) {
+		exclude '**/PciTest.class'
 	}
 }
