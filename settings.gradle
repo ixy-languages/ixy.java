@@ -1,2 +1,5 @@
 // Set the root project name
 rootProject.name  = 'ixy.java'
+
+// Include all the subprojects
+include 'pci'

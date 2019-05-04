@@ -16,3 +16,8 @@ subprojects {
     group   = 'de.tum.in.net'
     version = '1.0'
 }
+
+// Compile all subprojects
+dependencies {
+    compile project(':pci')
+}
