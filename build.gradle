@@ -1,0 +1,18 @@
+// Include some useful Gradle plugins
+plugins {
+    id 'java'                                           // Adds Java support
+    id 'com.github.ben-manes.versions' version '0.21.0' // Outdate dependency detection
+}
+
+// Configure all projects (including root) to use the Bintray's JCenter repository
+allprojects {
+    repositories {
+        jcenter()
+    }
+}
+
+// Set the group and version of all subprojects
+subprojects {
+    group   = 'de.tum.in.net'
+    version = '1.0'
+}
