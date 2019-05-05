@@ -40,6 +40,8 @@ class PciTest {
 	 * Checks that the vendor id of the Virtio devices is correct.
 	 *
 	 * @param pciDevice A PCI device.
+	 * @throws IOException If an I/O error occurs.
+	 * @see Pci#getVendorId(String)
 	 */
 	@ParameterizedTest(name = "[static] Vendor id of {0} should be " + EXPECTED_VENDOR + " (Red Hat, Inc)")
 	@MethodSource("pciSource")
@@ -55,6 +57,8 @@ class PciTest {
 	 * Checks that the device id of the Virtio devices is correct.
 	 *
 	 * @param pciDevice A PCI device.
+	 * @throws IOException If an I/O error occurs.
+	 * @see Pci#getDeviceId(String)
 	 */
 	@ParameterizedTest(name = "[static] Device id of {0} should be " + EXPECTED_DEVICE + " (Virtio network device)")
 	@MethodSource("pciSource")
@@ -65,6 +69,24 @@ class PciTest {
 			log.warn("The PCI device does not exist", e);
 		}
 	}
+
+	/**
+	 * Checks that the class id of the Virtio devices is correct.
+	 *
+	 * @param pciDevice A PCI device.
+	 * @throws IOException If an I/O error occurs.
+	 * @see Pci#getClassId(String)
+	 */
+	@ParameterizedTest(name = "[static] Class id of {0} should be " + EXPECTED_CLASS + " (Virtio network device)")
+	@MethodSource("pciSource")
+	void getClassId(@NonNull final String pciDevice) throws IOException {
+		try {
+			assertEquals(EXPECTED_CLASS, Pci.getClassId(pciDevice), "class id should be correct");
+		} catch (FileNotFoundException e) {
+			log.warn("The PCI device does not exist", e);
+		}
+	}
+
 	/** Checks the non-static methods of the class {@link Pci}. */
 	static class NonStatic {
 
@@ -80,6 +102,8 @@ class PciTest {
 		 * Checks that the vendor id of the Virtio devices is correct.
 		 *
 		 * @param pci A {@link Pci} instance.
+		 * @throws IOException If an I/O error occurs.
+		 * @see Pci#getVendorId()
 		 */
 		@ParameterizedTest(name = "Vendor id of {0} should be " + EXPECTED_VENDOR + " (Red Hat, Inc)")
 		@MethodSource("pciSource")
@@ -91,11 +115,26 @@ class PciTest {
 		 * Checks that the device id of the Virtio devices is correct.
 		 *
 		 * @param pci A {@link Pci} instance.
+		 * @throws IOException If an I/O error occurs.
+		 * @see Pci#getDeviceId()
 		 */
 		@ParameterizedTest(name = "Device id of {0} should be " + EXPECTED_DEVICE + " (Virtio network device)")
 		@MethodSource("pciSource")
 		void getDeviceId(@NonNull final Pci pci) throws IOException {
 			assertEquals(EXPECTED_DEVICE, pci.getDeviceId(), "device id should be correct");
+		}
+
+		/**
+		 * Checks that the class id of the Virtio devices is correct.
+		 *
+		 * @param pci A {@link Pci} instance.
+		 * @throws IOException If an I/O error occurs.
+		 * @see Pci#getClassId()
+		 */
+		@ParameterizedTest(name = "Class id of {0} should be " + EXPECTED_CLASS + " (Virtio network device)")
+		@MethodSource("pciSource")
+		void getClassId(@NonNull final Pci pci) throws IOException {
+			assertEquals(EXPECTED_CLASS, pci.getClassId(), "class id should be correct");
 		}
 
 		/**
@@ -106,6 +145,8 @@ class PciTest {
 		 * included in the output stream.
 		 *
 		 * @return A {@link Stream} of valid {@link Pci} instances.
+		 * @see PciTest#pciSource()
+		 * @see PciTest#newPci(String)
 		 */
 		@NotNull
 		private static Stream<Pci> pciSource() {
@@ -148,6 +189,7 @@ class PciTest {
 	 *
 	 * @param pciDevice The PCI device.
 	 * @return The {@link Pci} instance.
+	 * @see Pci#Pci(String)
 	 */
 	private static Pci newPci(final String pciDevice) {
 		try {

@@ -46,7 +46,7 @@ public final class Pci {
 	private RandomAccessFile config;
 
 	/** Direct {@link ByteBuffer} used to read/write from/to the resources of the PCI device. */
-	private final ByteBuffer buffer = ByteBuffer.allocateDirect(12).order(ByteOrder.nativeOrder());
+	private final ByteBuffer buffer = ByteBuffer.allocateDirect(2).order(ByteOrder.nativeOrder());
 
 	/**
 	 * Allocates the resources needed to read/write from/to the PCI device as fast as possible.
@@ -84,13 +84,30 @@ public final class Pci {
 	 *
 	 * @return The device id of the PCI device.
 	 * @throws FileNotFoundException If the given {@code pciDevice} or its resource {@code config} do not exist.
-	 * @throws IOException           If an I/O error occurs when calling {@link #getVendorId(ByteBuffer,
+	 * @throws IOException           If an I/O error occurs when calling {@link #getDeviceId(ByteBuffer,
 	 *                               SeekableByteChannel)}.
-	 * @see #getVendorId(ByteBuffer, SeekableByteChannel)
+	 * @see #getDeviceId(ByteBuffer, SeekableByteChannel)
 	 */
 	public short getDeviceId() throws IOException {
 		log.trace("Reading device id of PCI device {}", name);
 		return getDeviceId(buffer, config.getChannel());
+	}
+
+	/**
+	 * Reads the class id.
+	 * <p>
+	 * This method uses the previously allocated direct {@link ByteBuffer} {@link #buffer} and reads the contents of the
+	 * resource {@code config} from the PCI device.
+	 *
+	 * @return The class id of the PCI device.
+	 * @throws FileNotFoundException If the given {@code pciDevice} or its resource {@code config} do not exist.
+	 * @throws IOException           If an I/O error occurs when calling {@link #getClassId(ByteBuffer,
+	 *                               SeekableByteChannel)}.
+	 * @see #getClassId(ByteBuffer, SeekableByteChannel)
+	 */
+	public byte getClassId() throws IOException {
+		log.trace("Reading class id of PCI device {}", name);
+		return getClassId(buffer, config.getChannel());
 	}
 
 	 /**
@@ -155,9 +172,9 @@ public final class Pci {
 	 * @param pciDevice The name of the PCI device.
 	 * @return The device id of the PCI device.
 	 * @throws FileNotFoundException If the given {@code pciDevice} or its resource {@code config} do not exist.
-	 * @throws IOException           If an I/O error occurs when calling {@link #getVendorId(ByteBuffer,
+	 * @throws IOException           If an I/O error occurs when calling {@link #getDeviceId(ByteBuffer,
 	 *                               SeekableByteChannel)}.
-	 * @see #getVendorId(ByteBuffer, SeekableByteChannel)
+	 * @see #getDeviceId(ByteBuffer, SeekableByteChannel)
 	 */
 	public static short getDeviceId(final String pciDevice) throws FileNotFoundException, IOException {
 		log.trace("Reading device id of PCI device {}", pciDevice);
@@ -171,6 +188,30 @@ public final class Pci {
 		}
 	}
 
+	/**
+	 * Given the name of a PCI device, reads its class id.
+	 * <p>
+	 * This method creates a disposable non-direct {@link ByteBuffer} and reads the contents of the resource {@code
+	 * config} from the given PCI device.
+	 *
+	 * @param pciDevice The name of the PCI device.
+	 * @return The class id of the PCI device.
+	 * @throws FileNotFoundException If the given {@code pciDevice} or its resource {@code config} do not exist.
+	 * @throws IOException           If an I/O error occurs when calling {@link #getClassId(ByteBuffer,
+	 *                               SeekableByteChannel)}.
+	 * @see #getClassId(ByteBuffer, SeekableByteChannel)
+	 */
+	public static byte getClassId(final String pciDevice) throws FileNotFoundException, IOException {
+		log.trace("Reading class id of PCI device {}", pciDevice);
+		val path = String.format(PCI_RES_PATH_FMT, pciDevice, "config");
+		val file = new RandomAccessFile(path, "r");
+		val buffer = ByteBuffer.allocate(1);
+		try {
+			return getClassId(buffer, file.getChannel());
+		} finally {
+			file.close();
+		}
+	}
 
 	///////////////////////////////////////////////// INTERNAL METHODS /////////////////////////////////////////////////
 
@@ -184,7 +225,7 @@ public final class Pci {
 	 * should be inline, but Java does not support such specifier.
 	 *
 	 * @param buffer  The {@link ByteBuffer} where the bytes will be written to.
-	 * @param channel The {@link ReadableByteChannel} where the bytes will be read from.
+	 * @param channel The {@link SeekableByteChannel} where the bytes will be read from.
 	 * @return The vendor id.
 	 * @throws IOException If an I/O error occurs when reading the bytes from the {@code channel} and writing them to
 	 *                     the {@code buffer}.
@@ -207,7 +248,7 @@ public final class Pci {
 	 * should be inline, but Java does not support such specifier.
 	 *
 	 * @param buffer  The {@link ByteBuffer} where the bytes will be written to.
-	 * @param channel The {@link ReadableByteChannel} where the bytes will be read from.
+	 * @param channel The {@link SeekableByteChannel} where the bytes will be read from.
 	 * @return The device id.
 	 * @throws IOException If an I/O error occurs when reading the bytes from the {@code channel} and writing them to
 	 *                     the {@code buffer}.
@@ -218,6 +259,29 @@ public final class Pci {
 			log.warn("Could't read the exact amount of bytes needed to read the device id");
 		}
 		return buffer.getShort(0);
+	}
+
+	/**
+	 * Reads the required bytes to get the class id.
+	 * <p>
+	 * This method updates the {@code buffer} position to the origin, the {@code channel} position where the device id
+	 * should be located and performs a read operation without setting a limit.
+	 * <p>
+	 * This method exists only to reduce the amount of code used in the rest of publicly available methods. This method
+	 * should be inline, but Java does not support such specifier.
+	 *
+	 * @param buffer  The {@link ByteBuffer} where the bytes will be written to.
+	 * @param channel The {@link SeekableByteChannel} where the bytes will be read from.
+	 * @return The device id.
+	 * @throws IOException If an I/O error occurs when reading the bytes from the {@code channel} and writing them to
+	 *                     the {@code buffer}.
+	 */
+	private static byte getClassId(final ByteBuffer buffer, final SeekableByteChannel channel) throws IOException {
+		val bytes = channel.position(11).read(buffer.position(0));
+		if (bytes != 4) {
+			log.warn("Could't read the exact amount of bytes needed to read the class id");
+		}
+		return buffer.get(0);
 	}
 
 }
