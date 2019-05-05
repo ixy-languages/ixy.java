@@ -11,6 +11,7 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.SeekableByteChannel;
 
 /**
  * PCI static utils with instantiation support.
@@ -72,7 +73,7 @@ public final class Pci {
 	 */
 	public short getVendorId() throws IOException {
 		log.trace("Reading vendor id of PCI device {}", name);
-		return getVendorId(buffer.position(0), config.getChannel().position(0));
+		return getVendorId(buffer, config.getChannel());
 	}
 
 	 /**
@@ -133,9 +134,8 @@ public final class Pci {
 	/**
 	 * Reads the required bytes to get the vendor id.
 	 * <p>
-	 * This method assumes that the {@code buffer} has enough space to read the required amount of bytes, uses the
-	 * correct byte order so that the read data is meaningful, and that the {@code channel} has enough remaining bytes,
-	 * it is positioned in the correct position and it reads from the correct file.
+	 * This method updates the {@code buffer} position to the origin, the {@code channel} position where the device id
+	 * should be located and performs a read operation without setting a limit.
 	 * <p>
 	 * This method exists only to reduce the amount of code used in the rest of publicly available methods. This method
 	 * should be inline, but Java does not support such specifier.
@@ -146,8 +146,8 @@ public final class Pci {
 	 * @throws IOException If an I/O error occurs when reading the bytes from the {@code channel} and writing them to
 	 *                     the {@code buffer}.
 	 */
-	private static short getVendorId(final ByteBuffer buffer, final ReadableByteChannel channel) throws IOException {
-		val bytes = channel.read(buffer);
+	private static short getVendorId(final ByteBuffer buffer, final SeekableByteChannel channel) throws IOException {
+		val bytes = channel.position(0).read(buffer.position(0));
 		if (bytes != 2) {
 			log.warn("Could't read the exact amount of bytes needed to read the vendor id");
 		}
