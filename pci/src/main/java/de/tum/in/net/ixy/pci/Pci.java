@@ -1,17 +1,17 @@
 package de.tum.in.net.ixy.pci;
 
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
-
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.SeekableByteChannel;
+
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.val;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * PCI static utils with instantiation support.
@@ -24,7 +24,7 @@ import java.nio.channels.SeekableByteChannel;
  * file, otherwise a direct {@link ByteBuffer} big enough to read all the different PCI properties is allocated.
  * <p>
  * The required resources when instantiating are the collection of all resources used by the static methods, which are
- * {@code config}.
+ * {@code config}, {@code driver/unbind} and {@code driver/bind}.
  *
  * @author Esaú García Sánchez-Torija
  * @see ByteBuffer
@@ -38,15 +38,24 @@ public final class Pci {
 	/** Path format string used to build the path to a resource of a PCI device. */
 	private static final String PCI_RES_PATH_FMT = PCI_PATH_FMT + "/%s";
 
+	/** Path format string used to build the path to a Virtio driver resource. */
+	private static final String PCI_VIRTIO_PATH_FMT = "/sys/bus/pci/drivers/virtio-pci/%s";
+
 	/** The name of the PCI device being manipulated. */
 	@Getter
 	private String name;
 
-	/** The {@link RandomAccessFile} instance used to access the resource {@code config} of PCI device. */
-	private RandomAccessFile config;
+	/** The {@link SeekableByteChannel} instance used to access the resource {@code config} of PCI device. */
+	private SeekableByteChannel config;
+
+	/** The {@link SeekableByteChannel} instance used to access the resource {@code driver/unbind} of PCI device. */
+	private SeekableByteChannel unbind;
+
+	/** The {@link SeekableByteChannel} instance used to access the resource {@code driver/bind} of PCI device. */
+	private SeekableByteChannel bind;
 
 	/** Direct {@link ByteBuffer} used to read/write from/to the resources of the PCI device. */
-	private final ByteBuffer buffer = ByteBuffer.allocateDirect(2).order(ByteOrder.nativeOrder());
+	private final ByteBuffer buffer;
 
 	/**
 	 * Allocates the resources needed to read/write from/to the PCI device as fast as possible.
@@ -55,8 +64,11 @@ public final class Pci {
 	 * @throws FileNotFoundException If the specified PCI device does not exist or any of its required resources.
 	 */
 	public Pci(@NonNull final String pciDevice) throws FileNotFoundException {
-		name = pciDevice;
-		config = new RandomAccessFile(String.format(PCI_RES_PATH_FMT, name, "config"), "r");
+		name   = pciDevice;
+		buffer = ByteBuffer.allocateDirect(Math.max(4, name.length())).order(ByteOrder.nativeOrder());
+		config = new FileInputStream(String.format(PCI_RES_PATH_FMT, name, "config")).getChannel();
+		unbind = new FileOutputStream(String.format(PCI_VIRTIO_PATH_FMT, "unbind")).getChannel();
+		bind   = new FileOutputStream(String.format(PCI_VIRTIO_PATH_FMT, "bind")).getChannel();
 	}
 
 	/**
@@ -73,7 +85,7 @@ public final class Pci {
 	 */
 	public short getVendorId() throws IOException {
 		log.trace("Reading vendor id of PCI device {}", name);
-		return getVendorId(buffer, config.getChannel());
+		return getVendorId(buffer, config);
 	}
 
 	/**
@@ -90,7 +102,7 @@ public final class Pci {
 	 */
 	public short getDeviceId() throws IOException {
 		log.trace("Reading device id of PCI device {}", name);
-		return getDeviceId(buffer, config.getChannel());
+		return getDeviceId(buffer, config);
 	}
 
 	/**
@@ -107,10 +119,38 @@ public final class Pci {
 	 */
 	public byte getClassId() throws IOException {
 		log.trace("Reading class id of PCI device {}", name);
-		return getClassId(buffer, config.getChannel());
+		return getClassId(buffer, config);
 	}
 
-	 /**
+	/**
+	 * Unbinds the driver.
+	 * <p>
+	 * This method uses the previously allocated direct {@link ByteBuffer} {@link #buffer} and writes the PCI device
+	 * name to the resource {@code driver/unbind} of the PCI device.
+	 *
+	 * @throws IOException If an I/O error occurs when calling {@link #unbindDriver(ByteBuffer, SeekableByteChannel)}.
+	 * @see #unbindDriver(ByteBuffer, SeekableByteChannel)
+	 */
+	public void unbindDriver() throws IOException {
+		buffer.position(0).put(name.getBytes());
+		unbindDriver(buffer, unbind);
+	}
+
+	/**
+	 * Binds the driver.
+	 * <p>
+	 * This method uses the previously allocated direct {@link ByteBuffer} {@link #buffer} and writes the PCI device
+	 * name to the resource {@code driver/bind} of the PCI device.
+	 *
+	 * @throws IOException If an I/O error occurs when calling {@link #bindDriver(ByteBuffer, SeekableByteChannel)}.
+	 * @see #bindDriver(ByteBuffer, SeekableByteChannel)
+	 */
+	public void bindDriver() throws IOException {
+		buffer.position(0).put(name.getBytes());
+		bindDriver(buffer, bind);
+	}
+
+	/**
 	  * Releases all the resources that have been allocated.
 	  * <p>
 	  * Because Java does not have destructors, the convention is to provide a {@code close} method that releases all
@@ -120,6 +160,8 @@ public final class Pci {
 	  */
 	public void close() throws IOException {
 		config.close();
+		unbind.close();
+		bind.close();
 	}
 
 	/**
@@ -151,15 +193,12 @@ public final class Pci {
 	 *                               SeekableByteChannel)}.
 	 * @see #getVendorId(ByteBuffer, SeekableByteChannel)
 	 */
-	public static short getVendorId(final String pciDevice) throws FileNotFoundException, IOException {
+	public static short getVendorId(@NonNull final String pciDevice) throws FileNotFoundException, IOException {
 		log.trace("Reading vendor id of PCI device {}", pciDevice);
-		val path = String.format(PCI_RES_PATH_FMT, pciDevice, "config");
-		val file = new RandomAccessFile(path, "r");
 		val buffer = ByteBuffer.allocate(2).order(ByteOrder.nativeOrder());
-		try {
+		val path = String.format(PCI_RES_PATH_FMT, pciDevice, "config");
+		try (val file = new FileInputStream(path)) {
 			return getVendorId(buffer, file.getChannel());
-		} finally {
-			file.close();
 		}
 	}
 
@@ -176,15 +215,12 @@ public final class Pci {
 	 *                               SeekableByteChannel)}.
 	 * @see #getDeviceId(ByteBuffer, SeekableByteChannel)
 	 */
-	public static short getDeviceId(final String pciDevice) throws FileNotFoundException, IOException {
+	public static short getDeviceId(@NonNull final String pciDevice) throws FileNotFoundException, IOException {
 		log.trace("Reading device id of PCI device {}", pciDevice);
-		val path = String.format(PCI_RES_PATH_FMT, pciDevice, "config");
-		val file = new RandomAccessFile(path, "r");
 		val buffer = ByteBuffer.allocate(2).order(ByteOrder.nativeOrder());
-		try {
+		val path = String.format(PCI_RES_PATH_FMT, pciDevice, "config");
+		try (val file = new FileInputStream(path)) {
 			return getDeviceId(buffer, file.getChannel());
-		} finally {
-			file.close();
 		}
 	}
 
@@ -201,15 +237,52 @@ public final class Pci {
 	 *                               SeekableByteChannel)}.
 	 * @see #getClassId(ByteBuffer, SeekableByteChannel)
 	 */
-	public static byte getClassId(final String pciDevice) throws FileNotFoundException, IOException {
+	public static byte getClassId(@NonNull String pciDevice) throws FileNotFoundException, IOException {
 		log.trace("Reading class id of PCI device {}", pciDevice);
-		val path = String.format(PCI_RES_PATH_FMT, pciDevice, "config");
-		val file = new RandomAccessFile(path, "r");
 		val buffer = ByteBuffer.allocate(1);
-		try {
+		val path = String.format(PCI_RES_PATH_FMT, pciDevice, "config");
+		try (val file = new FileInputStream(path)) {
 			return getClassId(buffer, file.getChannel());
-		} finally {
-			file.close();
+		}
+	}
+
+	/**
+	 * Given the name of a PCI device, unbinds the driver.
+	 * <p>
+	 * This method creates a disposable non-direct {@link ByteBuffer} containing the PCI device and writes the contents
+	 * to the resource {@code driver/unbind} of the given PCI device.
+	 *
+	 * @param pciDevice The name of the PCI device.
+	 * @throws IOException If an I/O error occurs when calling {@link #unbindDriver(ByteBuffer, SeekableByteChannel)}.
+	 * @see #unbindDriver(ByteBuffer, SeekableByteChannel)
+	 */
+	public static void unbindDriver(@NonNull final String pciDevice) throws IOException {
+		val buffer = ByteBuffer.wrap(pciDevice.getBytes());
+		val resource = String.format(PCI_VIRTIO_PATH_FMT, "unbind");
+		try (val stream = new FileOutputStream(resource, false)) {
+			unbindDriver(buffer, stream.getChannel());
+		} catch (FileNotFoundException e) {
+			log.warn("Driver not loaded", e);
+		}
+	}
+
+	/**
+	 * Given the name of a PCI device, binds the driver.
+	 * <p>
+	 * This method creates a disposable non-direct {@link ByteBuffer} containing the PCI device and writes the contents
+	 * to the resource {@code driver/bind} of the given PCI device.
+	 *
+	 * @param pciDevice The name of the PCI device.
+	 * @throws IOException If an I/O error occurs when calling {@link #bindDriver(ByteBuffer, SeekableByteChannel)}.
+	 * @see #bindDriver(ByteBuffer, SeekableByteChannel)
+	 */
+	public static void bindDriver(@NonNull final String pciDevice) throws IOException {
+		val buffer = ByteBuffer.wrap(pciDevice.getBytes());
+		val resource = String.format(PCI_VIRTIO_PATH_FMT, "bind");
+		try (val stream = new FileOutputStream(resource, false)) {
+			bindDriver(buffer, stream.getChannel());
+		} catch (FileNotFoundException e) {
+			log.warn("Driver not loaded", e);
 		}
 	}
 
@@ -218,7 +291,7 @@ public final class Pci {
 	/**
 	 * Reads the required bytes to get the vendor id.
 	 * <p>
-	 * This method updates the {@code buffer} position to the origin, the {@code channel} position where the device id
+	 * This method sets the {@code buffer} position to the origin, the {@code channel} position where the device id
 	 * should be located and performs a read operation without setting a limit.
 	 * <p>
 	 * This method exists only to reduce the amount of code used in the rest of publicly available methods. This method
@@ -241,7 +314,7 @@ public final class Pci {
 	/**
 	 * Reads the required bytes to get the device id.
 	 * <p>
-	 * This method updates the {@code buffer} position to the origin, the {@code channel} position where the device id
+	 * This method sets the {@code buffer} position to the origin, the {@code channel} position where the device id
 	 * should be located and performs a read operation without setting a limit.
 	 * <p>
 	 * This method exists only to reduce the amount of code used in the rest of publicly available methods. This method
@@ -264,7 +337,7 @@ public final class Pci {
 	/**
 	 * Reads the required bytes to get the class id.
 	 * <p>
-	 * This method updates the {@code buffer} position to the origin, the {@code channel} position where the device id
+	 * This method sets the {@code buffer} position to the origin, the {@code channel} position where the device id
 	 * should be located and performs a read operation without setting a limit.
 	 * <p>
 	 * This method exists only to reduce the amount of code used in the rest of publicly available methods. This method
@@ -282,6 +355,49 @@ public final class Pci {
 			log.warn("Could't read the exact amount of bytes needed to read the class id");
 		}
 		return buffer.get(0);
+	}
+
+	/**
+	 * Writes the required bytes to unbind the driver.
+	 * <p>
+	 * This method sets the {@code buffer} position to the origin, the {@code channel} position to the origin and
+	 * performs a write operation without setting a limit.
+	 * <p>
+	 * This method exists only to reduce the amount of code used in the rest of publicly available methods. This method
+	 * should be inline, but Java does not support such specifier.
+	 * 
+	 * @param buffer  The {@link ByteBuffer} where the bytes will be read from.
+	 * @param channel The {@link SeekableByteChannel} where the bytes will be written to.
+	 * @return The device id.
+	 * @throws IOException If an I/O error occurs when reading the bytes from the {@code buffer} and writing them to
+	 *                     the {@code channel}.
+	 */
+	private static void unbindDriver(final ByteBuffer buffer, final SeekableByteChannel channel) throws IOException {
+		val bytes = channel.position(0).write(buffer.position(0));
+		if (bytes != 12) {
+			log.warn("Couldn't write the exact amount of bytes needed to unbind the driver");
+		}
+	}
+
+	/**
+	 * Writes the required bytes to bind the driver.
+	 * <p>
+	 * This method sets the {@code buffer} position to the origin, the {@code channel} position to the origin and
+	 * performs a write operation without setting a limit.
+	 * <p>
+	 * This method exists only to reduce the amount of code used in the rest of publicly available methods. This method
+	 * should be inline, but Java does not support such specifier.
+	 * 
+	 * @param buffer  The {@link ByteBuffer} where the bytes will be read from.
+	 * @param channel The {@link SeekableByteChannel} where the bytes will be written to.
+	 * @throws IOException If an I/O error occurs when reading the bytes from the {@code buffer} and writing them to
+	 *                     the {@code channel}.
+	 */
+	private static void bindDriver(final ByteBuffer buffer, final SeekableByteChannel channel) throws IOException {
+		val bytes = channel.position(0).write(buffer.position(0));
+		if (bytes != 12) {
+			log.warn("Couldn't write the exact amount of bytes needed to bind the driver");
+		}
 	}
 
 }
