@@ -75,6 +75,18 @@ public final class Pci {
 		return getVendorId(buffer.position(0), config.getChannel().position(0));
 	}
 
+	 /**
+	  * Releases all the resources that have been allocated.
+	  * <p>
+	  * Because Java does not have destructors, the convention is to provide a {@code close} method that releases all
+	  * the resources allocated to an instance.
+	  *
+	  * @throws IOException If an I/O error occurs.
+	  */
+	public void close() throws IOException {
+		config.close();
+	}
+
 	/**
 	 * Returns the {@link String} representation of this PCI device.
 	 * <p>
@@ -109,7 +121,11 @@ public final class Pci {
 		val path = String.format(PCI_RES_PATH_FMT, pciDevice, "config");
 		val file = new RandomAccessFile(path, "r");
 		val buffer = ByteBuffer.allocate(2).order(ByteOrder.nativeOrder());
-		return getVendorId(buffer, file.getChannel());
+		try {
+			return getVendorId(buffer, file.getChannel());
+		} finally {
+			file.close();
+		}
 	}
 
 	///////////////////////////////////////////////// INTERNAL METHODS /////////////////////////////////////////////////
