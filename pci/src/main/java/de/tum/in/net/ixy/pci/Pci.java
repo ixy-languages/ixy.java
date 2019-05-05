@@ -85,6 +85,11 @@ public final class Pci {
 	 */
 	public short getVendorId() throws IOException {
 		log.trace("Reading vendor id of PCI device {}", name);
+		if (buffer.remaining() >= 2) {
+			buffer.limit(buffer.position() + 2);
+		} else {
+			buffer.clear();
+		}
 		return getVendorId(buffer, config);
 	}
 
@@ -102,6 +107,11 @@ public final class Pci {
 	 */
 	public short getDeviceId() throws IOException {
 		log.trace("Reading device id of PCI device {}", name);
+		if (buffer.remaining() >= 2) {
+			buffer.limit(buffer.position() + 2);
+		} else {
+			buffer.clear();
+		}
 		return getDeviceId(buffer, config);
 	}
 
@@ -119,6 +129,11 @@ public final class Pci {
 	 */
 	public byte getClassId() throws IOException {
 		log.trace("Reading class id of PCI device {}", name);
+		if (buffer.remaining() >= 1) {
+			buffer.limit(buffer.position() + 1);
+		} else {
+			buffer.clear();
+		}
 		return getClassId(buffer, config);
 	}
 
@@ -132,7 +147,7 @@ public final class Pci {
 	 * @see #unbindDriver(ByteBuffer, SeekableByteChannel)
 	 */
 	public void unbindDriver() throws IOException {
-		buffer.position(0).put(name.getBytes());
+		buffer.clear().put(name.getBytes()).flip();
 		unbindDriver(buffer, unbind);
 	}
 
@@ -146,7 +161,7 @@ public final class Pci {
 	 * @see #bindDriver(ByteBuffer, SeekableByteChannel)
 	 */
 	public void bindDriver() throws IOException {
-		buffer.position(0).put(name.getBytes());
+		buffer.clear().put(name.getBytes()).flip();
 		bindDriver(buffer, bind);
 	}
 
@@ -291,8 +306,8 @@ public final class Pci {
 	/**
 	 * Reads the required bytes to get the vendor id.
 	 * <p>
-	 * This method sets the {@code buffer} position to the origin, the {@code channel} position where the device id
-	 * should be located and performs a read operation without setting a limit.
+	 * This method assumes that the {@code buffer} has the correct capacity or a limit but changes the {@code channel}'s
+	 * position.
 	 * <p>
 	 * This method exists only to reduce the amount of code used in the rest of publicly available methods. This method
 	 * should be inline, but Java does not support such specifier.
@@ -304,11 +319,11 @@ public final class Pci {
 	 *                     the {@code buffer}.
 	 */
 	private static short getVendorId(final ByteBuffer buffer, final SeekableByteChannel channel) throws IOException {
-		val bytes = channel.position(0).read(buffer.position(0));
-		if (bytes != 2) {
+		val bytes = channel.position(0).read(buffer.mark());
+		if (bytes < 2) {
 			log.warn("Could't read the exact amount of bytes needed to read the vendor id");
 		}
-		return buffer.getShort(0);
+		return buffer.reset().getShort();
 	}
 
 	/**
@@ -327,8 +342,8 @@ public final class Pci {
 	 *                     the {@code buffer}.
 	 */
 	private static short getDeviceId(final ByteBuffer buffer, final SeekableByteChannel channel) throws IOException {
-		val bytes = channel.position(2).read(buffer.position(0));
-		if (bytes != 2) {
+		val bytes = channel.position(2).read(buffer);
+		if (bytes < 2) {
 			log.warn("Could't read the exact amount of bytes needed to read the device id");
 		}
 		return buffer.getShort(0);
@@ -350,8 +365,8 @@ public final class Pci {
 	 *                     the {@code buffer}.
 	 */
 	private static byte getClassId(final ByteBuffer buffer, final SeekableByteChannel channel) throws IOException {
-		val bytes = channel.position(11).read(buffer.position(0));
-		if (bytes != 4) {
+		val bytes = channel.position(11).read(buffer);
+		if (bytes < 1) {
 			log.warn("Could't read the exact amount of bytes needed to read the class id");
 		}
 		return buffer.get(0);
@@ -360,21 +375,20 @@ public final class Pci {
 	/**
 	 * Writes the required bytes to unbind the driver.
 	 * <p>
-	 * This method sets the {@code buffer} position to the origin, the {@code channel} position to the origin and
-	 * performs a write operation without setting a limit.
+	 * This method assumes that the {@code buffer} has the correct capacity or a limit and that the {@code channel}'s
+	 * position is correctly set.
 	 * <p>
 	 * This method exists only to reduce the amount of code used in the rest of publicly available methods. This method
 	 * should be inline, but Java does not support such specifier.
 	 * 
 	 * @param buffer  The {@link ByteBuffer} where the bytes will be read from.
 	 * @param channel The {@link SeekableByteChannel} where the bytes will be written to.
-	 * @return The device id.
 	 * @throws IOException If an I/O error occurs when reading the bytes from the {@code buffer} and writing them to
 	 *                     the {@code channel}.
 	 */
 	private static void unbindDriver(final ByteBuffer buffer, final SeekableByteChannel channel) throws IOException {
-		val bytes = channel.position(0).write(buffer.position(0));
-		if (bytes != 12) {
+		val bytes = channel.write(buffer);
+		if (bytes < 12) {
 			log.warn("Couldn't write the exact amount of bytes needed to unbind the driver");
 		}
 	}
@@ -382,8 +396,8 @@ public final class Pci {
 	/**
 	 * Writes the required bytes to bind the driver.
 	 * <p>
-	 * This method sets the {@code buffer} position to the origin, the {@code channel} position to the origin and
-	 * performs a write operation without setting a limit.
+	 * This method assumes that the {@code buffer} has the correct capacity or a limit and that the {@code channel}'s
+	 * position is correctly set.
 	 * <p>
 	 * This method exists only to reduce the amount of code used in the rest of publicly available methods. This method
 	 * should be inline, but Java does not support such specifier.
@@ -394,8 +408,8 @@ public final class Pci {
 	 *                     the {@code channel}.
 	 */
 	private static void bindDriver(final ByteBuffer buffer, final SeekableByteChannel channel) throws IOException {
-		val bytes = channel.position(0).write(buffer.position(0));
-		if (bytes != 12) {
+		val bytes = channel.write(buffer);
+		if (bytes < 12) {
 			log.warn("Couldn't write the exact amount of bytes needed to bind the driver");
 		}
 	}
