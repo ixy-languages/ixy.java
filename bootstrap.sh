@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 # Download the latest release (OpenJDK 12.0.1)
-wget -q https://download.java.net/java/GA/jdk12.0.1/69cfe15208a647278a19ef0990eea691/12/GPL/openjdk-12.0.1_linux-x64_bin.tar.gz
-wget -q https://download.java.net/java/GA/jdk12.0.1/69cfe15208a647278a19ef0990eea691/12/GPL/openjdk-12.0.1_linux-x64_bin.tar.gz.sha256
+wget -q https://download.java.net/java/GA/jdk12.0.1/69cfe15208a647278a19ef0990eea691/12/GPL/openjdk-12.0.1_linux-x64_bin.tar.gz        -O openjdk-12.0.1_linux-x64_bin.tar.gz
+wget -q https://download.java.net/java/GA/jdk12.0.1/69cfe15208a647278a19ef0990eea691/12/GPL/openjdk-12.0.1_linux-x64_bin.tar.gz.sha256 -O openjdk-12.0.1_linux-x64_bin.tar.gz.sha256
 
 # Append the name of the file to the hash file so that we can test it with sha256sum
 echo '  openjdk-12.0.1_linux-x64_bin.tar.gz' >> openjdk-11.0.2_linux-x64_bin.tar.gz.sha256
