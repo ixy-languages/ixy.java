@@ -1,7 +1,8 @@
 // Include some useful Gradle plugins
 plugins {
-    id 'java'                                           // Java applications support
-    id 'com.github.ben-manes.versions' version '0.21.0' // Outdated dependencies detection support
+    id 'java'                                               // Java applications support
+    id 'io.freefair.aggregate-javadoc-jar' version '3.2.1'  // Aggregated JavaDoc
+    id 'com.github.ben-manes.versions'     version '0.21.0' // Outdated dependencies detection support
 }
 
 // Configure all projects (including root) to use the Bintray's JCenter repository
@@ -20,4 +21,9 @@ subprojects {
 // Compile all subprojects
 dependencies {
     compile project(':pci')
+}
+
+// When aggregating the JavaDocs, make sure the JavaDocs have been generated
+aggregateJavadoc {
+    options.memberLevel = JavadocMemberLevel.PRIVATE
 }
