@@ -43,39 +43,28 @@ class PciTest {
 	 */
 	@ParameterizedTest(name = "[static] Vendor id of {0} should be " + EXPECTED_VENDOR + " (Red Hat, Inc)")
 	@MethodSource("pciSource")
-	void getVendorId(@NonNull final String pciDevice) {
+	void getVendorId(@NonNull final String pciDevice) throws IOException {
 		try {
 			assertEquals(EXPECTED_VENDOR, Pci.getVendorId(pciDevice), "vendor id should be correct");
 		} catch (FileNotFoundException e) {
 			log.warn("The PCI device does not exist", e);
-		} catch (IOException e) {
-			log.error("Unexpected I/O error", e);
 		}
 	}
 
-//
-//	/**
-//	 * Tests the device id of the PCI devices.
-//	 *
-//	 * @param pci a PCI device
-//	 */
-//	@ParameterizedTest(name = "device id of {0} should be " + EXPECTED_DEVICE + " (Virtio network device)")
-//	@MethodSource("pciSource")
-//	void getDeviceId(@NonNull final Pci pci) {
-//		assertEquals(EXPECTED_DEVICE, pci.getDeviceId(), "device id should be correct");
-//	}
-
-//	/**
-//	 * Tests the class id of the PCI devices.
-//	 *
-//	 * @param pci a PCI device
-//	 */
-//	@ParameterizedTest(name = "class id of {0} should be " + EXPECTED_CLASS + " (Network controller)")
-//	@MethodSource("pciSource")
-//	void getClassId(@NonNull final Pci pci) {
-//		assertEquals(EXPECTED_CLASS, pci.getClassId(), "class id should be correct");
-//	}
-
+	/**
+	 * Checks that the device id of the Virtio devices is correct.
+	 *
+	 * @param pciDevice A PCI device.
+	 */
+	@ParameterizedTest(name = "[static] Device id of {0} should be " + EXPECTED_DEVICE + " (Virtio network device)")
+	@MethodSource("pciSource")
+	void getDeviceId(@NonNull final String pciDevice) throws IOException {
+		try {
+			assertEquals(EXPECTED_DEVICE, Pci.getDeviceId(pciDevice), "device id should be correct");
+		} catch (FileNotFoundException e) {
+			log.warn("The PCI device does not exist", e);
+		}
+	}
 	/** Checks the non-static methods of the class {@link Pci}. */
 	static class NonStatic {
 
@@ -96,6 +85,17 @@ class PciTest {
 		@MethodSource("pciSource")
 		void getVendorId(@NonNull final Pci pci) throws IOException {
 			assertEquals(EXPECTED_VENDOR, pci.getVendorId(), "vendor id should be correct");
+		}
+
+		/**
+		 * Checks that the device id of the Virtio devices is correct.
+		 *
+		 * @param pci A {@link Pci} instance.
+		 */
+		@ParameterizedTest(name = "Device id of {0} should be " + EXPECTED_DEVICE + " (Virtio network device)")
+		@MethodSource("pciSource")
+		void getDeviceId(@NonNull final Pci pci) throws IOException {
+			assertEquals(EXPECTED_DEVICE, pci.getDeviceId(), "device id should be correct");
 		}
 
 		/**

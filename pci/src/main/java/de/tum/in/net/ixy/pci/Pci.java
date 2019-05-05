@@ -68,12 +68,29 @@ public final class Pci {
 	 * @return The vendor id of the PCI device.
 	 * @throws FileNotFoundException If the given {@code pciDevice} or its resource {@code config} do not exist.
 	 * @throws IOException           If an I/O error occurs when calling {@link #getVendorId(ByteBuffer,
-	 *                               ReadableByteChannel)}.
-	 * @see #getVendorId(ByteBuffer, ReadableByteChannel)
+	 *                               SeekableByteChannel)}.
+	 * @see #getVendorId(ByteBuffer, SeekableByteChannel)
 	 */
 	public short getVendorId() throws IOException {
 		log.trace("Reading vendor id of PCI device {}", name);
 		return getVendorId(buffer, config.getChannel());
+	}
+
+	/**
+	 * Reads the device id.
+	 * <p>
+	 * This method uses the previously allocated direct {@link ByteBuffer} {@link #buffer} and reads the contents of the
+	 * resource {@code config} from the PCI device.
+	 *
+	 * @return The device id of the PCI device.
+	 * @throws FileNotFoundException If the given {@code pciDevice} or its resource {@code config} do not exist.
+	 * @throws IOException           If an I/O error occurs when calling {@link #getVendorId(ByteBuffer,
+	 *                               SeekableByteChannel)}.
+	 * @see #getVendorId(ByteBuffer, SeekableByteChannel)
+	 */
+	public short getDeviceId() throws IOException {
+		log.trace("Reading device id of PCI device {}", name);
+		return getDeviceId(buffer, config.getChannel());
 	}
 
 	 /**
@@ -114,8 +131,8 @@ public final class Pci {
 	 * @return The vendor id of the PCI device.
 	 * @throws FileNotFoundException If the given {@code pciDevice} or its resource {@code config} do not exist.
 	 * @throws IOException           If an I/O error occurs when calling {@link #getVendorId(ByteBuffer,
-	 *                               ReadableByteChannel)}.
-	 * @see #getVendorId(ByteBuffer, ReadableByteChannel)
+	 *                               SeekableByteChannel)}.
+	 * @see #getVendorId(ByteBuffer, SeekableByteChannel)
 	 */
 	public static short getVendorId(final String pciDevice) throws FileNotFoundException, IOException {
 		log.trace("Reading vendor id of PCI device {}", pciDevice);
@@ -128,6 +145,32 @@ public final class Pci {
 			file.close();
 		}
 	}
+
+	/**
+	 * Given the name of a PCI device, reads its device id.
+	 * <p>
+	 * This method creates a disposable non-direct {@link ByteBuffer} and reads the contents of the resource {@code
+	 * config} from the given PCI device.
+	 *
+	 * @param pciDevice The name of the PCI device.
+	 * @return The device id of the PCI device.
+	 * @throws FileNotFoundException If the given {@code pciDevice} or its resource {@code config} do not exist.
+	 * @throws IOException           If an I/O error occurs when calling {@link #getVendorId(ByteBuffer,
+	 *                               SeekableByteChannel)}.
+	 * @see #getVendorId(ByteBuffer, SeekableByteChannel)
+	 */
+	public static short getDeviceId(final String pciDevice) throws FileNotFoundException, IOException {
+		log.trace("Reading device id of PCI device {}", pciDevice);
+		val path = String.format(PCI_RES_PATH_FMT, pciDevice, "config");
+		val file = new RandomAccessFile(path, "r");
+		val buffer = ByteBuffer.allocate(2).order(ByteOrder.nativeOrder());
+		try {
+			return getDeviceId(buffer, file.getChannel());
+		} finally {
+			file.close();
+		}
+	}
+
 
 	///////////////////////////////////////////////// INTERNAL METHODS /////////////////////////////////////////////////
 
@@ -150,6 +193,29 @@ public final class Pci {
 		val bytes = channel.position(0).read(buffer.position(0));
 		if (bytes != 2) {
 			log.warn("Could't read the exact amount of bytes needed to read the vendor id");
+		}
+		return buffer.getShort(0);
+	}
+
+	/**
+	 * Reads the required bytes to get the device id.
+	 * <p>
+	 * This method updates the {@code buffer} position to the origin, the {@code channel} position where the device id
+	 * should be located and performs a read operation without setting a limit.
+	 * <p>
+	 * This method exists only to reduce the amount of code used in the rest of publicly available methods. This method
+	 * should be inline, but Java does not support such specifier.
+	 *
+	 * @param buffer  The {@link ByteBuffer} where the bytes will be written to.
+	 * @param channel The {@link ReadableByteChannel} where the bytes will be read from.
+	 * @return The device id.
+	 * @throws IOException If an I/O error occurs when reading the bytes from the {@code channel} and writing them to
+	 *                     the {@code buffer}.
+	 */
+	private static short getDeviceId(final ByteBuffer buffer, final SeekableByteChannel channel) throws IOException {
+		val bytes = channel.position(2).read(buffer.position(0));
+		if (bytes != 2) {
+			log.warn("Could't read the exact amount of bytes needed to read the device id");
 		}
 		return buffer.getShort(0);
 	}
