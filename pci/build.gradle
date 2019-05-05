@@ -1,8 +1,9 @@
 // Include some useful Gradle plugins
 plugins {
-	id 'java-library'                            // Java library support
-	id 'io.freefair.lombok'      version '3.2.0' // Lombok support
-	id 'com.adarshr.test-logger' version '1.6.0' // Gradle test logging prettifier
+	id 'java-library'                                  // Java library support
+	id 'io.freefair.lombok'            version '3.2.0' // Lombok support
+	id 'com.github.gmazzo.buildconfig' version '1.5.0' // Build config support
+	id 'com.adarshr.test-logger'       version '1.6.0' // Gradle test logging beautifier
 }
 
 // Set the source and target compatibility of this subproject to Java 11
@@ -21,6 +22,19 @@ sourceSets {
 			exclude 'module-info.java'
 		}
 	}
+}
+
+// The @Generated annotation causes compilation problems, so let's disable it
+tasks.withType(com.github.gmazzo.gradle.plugins.tasks.BuildConfigTask) {
+	addGeneratedAnnotation = false
+}
+
+// Setup some build configuration fields that can be optimized by the compiler
+buildConfig {
+	className('BuildConstants')
+	packageName("${project.group}.${project.name}")
+	language('java')
+	buildConfigField('boolean', 'DEBUG', "${true}")
 }
 
 // Include all the dependencies of the library
