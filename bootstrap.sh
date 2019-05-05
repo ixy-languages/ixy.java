@@ -8,7 +8,7 @@ wget -q https://download.java.net/java/GA/jdk12.0.1/69cfe15208a647278a19ef0990ee
 echo '  openjdk-12.0.1_linux-x64_bin.tar.gz' >> openjdk-12.0.1_linux-x64_bin.tar.gz.sha256
 
 # Check the integrity of the downloaded file
-if ! sha256sum --check --strict openjdk-12.0.2_linux-x64_bin.tar.gz.sha256; then
+if ! sha256sum --check --strict openjdk-12.0.1_linux-x64_bin.tar.gz.sha256; then
     echo 'The downloaded OpenJDK release is not valid because the SHA-256 integrity check failed'
     exit 1
 fi
