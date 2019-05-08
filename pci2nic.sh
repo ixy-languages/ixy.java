@@ -3,11 +3,14 @@
 # Get the location of the ethtool command
 ethtool=$(which "ethtool")
 
-# If the command does not exist and is not in /sbin, assume it is not installed
-if ([[ -z "$ethtool" ]] && [[ -x "/sbin/ethtool" ]]) || ! [[ -x "$ethtool" ]]; then
+# Guess if the command is installed although not in the path
+if ([[ -z "$ethtool" ]] || ! [[ -x "$ethtool" ]]) && [[ -x "/sbin/ethtool" ]]; then
 	ethtool=/sbin/ethtool
-else
-	echo 'The program "ethtool" could not be found or it is not executable'
+fi
+
+# If not found or not executable, we can't continue
+if [[ -z "$ethtool" ]] || ! [[ -x "$ethtool" ]]; then
+	echo '# The program "ethtool" could not be found or it is not executable'
 	exit 1
 fi
 
@@ -16,6 +19,7 @@ ifaces=$(ip link | grep -E '^[[:digit:]]+: ' | awk '{print $2}' | sed 's/:\s*$//
 
 # Loop counter
 i=1
+v=1
 
 # Iterate over all devices
 for iface in ${ifaces}; do
@@ -24,21 +28,37 @@ for iface in ${ifaces}; do
 	drv=$(readlink /sys/class/net/${iface}/device/driver/module)
 	[[ -z "$drv" ]] && continue
 
-	# Get the driver module name and skip this iteration if it is not the Virtio driver
+	# Get the driver module name and act accordingly to the driver
 	drv=$(basename ${drv})
-	[[ "$drv" != "virtio_net" ]] && continue
 
-	# Get the PCI bus device
-	addr=$(${ethtool} -i ${iface} | grep bus-info | cut -d' ' -f2)
+	# Virtio devices
+	if [[ "$drv" == "virtio_net" ]]; then
 
-	# Output the exports
-	echo "export IXY_VIRTIO_ADDR_$i='$addr'"
-	echo "export IXY_VIRTIO_NAME_$i='$iface'"
+		# Get the PCI bus device
+		addr=$(${ethtool} -i ${iface} | grep bus-info | cut -d' ' -f2)
 
-	# Loop counter increment
-	i=$(($i + 1))
+		# Output the exports
+		echo "export IXY_VIRTIO_ADDR_$i='$addr'"
+		echo "export IXY_VIRTIO_NAME_$i='$iface'"
 
+		# Loop counter increment
+		v=$(($v + 1))
+
+	elif [[ "$drv" == "ixgbe" ]]; then
+
+		# Get the PCI bus device
+		addr=$(${ethtool} -i ${iface} | grep bus-info | cut -d' ' -f2)
+
+		# Output the exports
+		echo "export IXY_IXGBE_ADDR_$i='$addr'"
+		echo "export IXY_IXGBE_NAME_$i='$iface'"
+
+		# Loop counter increment
+		i=$(($i + 1))
+
+	fi
 done
 
 # Export another variable that says how many variables were exported
-echo "export IXY_VIRTIO_COUNT=$(($i - 1))"
+echo "export IXY_IXGBE_COUNT=$(($i - 1))"
+echo "export IXY_VIRTIO_COUNT=$(($v - 1))"
