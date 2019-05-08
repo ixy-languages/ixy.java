@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+# Check if already installed
+if [[ -z "$(which java)" ]]; then
+    echo "Java is already installed, skipping"
+    exit 0
+fi
+
 # Download the latest release (OpenJDK 12.0.1)
 wget -q https://download.java.net/java/GA/jdk12.0.1/69cfe15208a647278a19ef0990eea691/12/GPL/openjdk-12.0.1_linux-x64_bin.tar.gz        -O openjdk-12.0.1_linux-x64_bin.tar.gz
 wget -q https://download.java.net/java/GA/jdk12.0.1/69cfe15208a647278a19ef0990eea691/12/GPL/openjdk-12.0.1_linux-x64_bin.tar.gz.sha256 -O openjdk-12.0.1_linux-x64_bin.tar.gz.sha256
