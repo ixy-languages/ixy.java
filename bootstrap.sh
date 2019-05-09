@@ -30,11 +30,17 @@ mv jdk-12.0.1 /usr/local
 echo 'export JAVA_HOME=/usr/local/jdk-12.0.1' >> /etc/profile.d/jdk.sh
 echo 'PATH=$PATH:$JAVA_HOME/bin'              >> /etc/profile.d/jdk.sh
 
-# Update all the sources
-DEBIAN_FRONTEND=noninteractive apt-get update
+# Execute the Git LFS installation script
+curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
+
+# Update all the sources (automatically done by the Git LFS script)
+# DEBIAN_FRONTEND=noninteractive apt-get update
 
 # Upgrade all the packages
-DEBIAN_FRONTEND=noninteractive apt-get upgrade
+DEBIAN_FRONTEND=noninteractive apt-get upgrade --yes
 
 # Install ethtool to get PCI bus of NICs
-DEBIAN_FRONTEND=noninteractive apt-get install ethtool
+DEBIAN_FRONTEND=noninteractive apt-get install --yes ethtool git git-lfs
+
+# Source the environment variables of the JDK installation
+source /etc/profile.d/jdk.sh
