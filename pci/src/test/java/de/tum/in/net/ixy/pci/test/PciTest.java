@@ -401,14 +401,15 @@ class PciTest {
 	 *
 	 * @param pciDevice The PCI device.
 	 * @return The {@link Pci} instance.
-	 * @throws IOException If there is an I/O error while guessing the driver of the PCI device.
 	 * @see Pci#Pci(String)
 	 */
-	private static Pci newPci(final String pciDevice) throws IOException {
+	private static Pci newPci(final String pciDevice) {
 		try {
 			return new Pci(pciDevice);
 		} catch (FileNotFoundException e) {
-			log.warn("Could not create PCI instance", e);
+			log.error("Could not create PCI instance because the PCI device does not exist", e);
+		} catch (IOException e) {
+			log.error("Could not create PCI instance because the PCI device driver could not be guessed", e);
 		}
 		return null;
 	}
