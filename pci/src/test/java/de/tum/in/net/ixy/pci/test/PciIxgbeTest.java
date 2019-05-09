@@ -213,6 +213,19 @@ class PciIxgbeTest {
 				});
 	}
 
+	/**
+	 * Checks that the resource {@code resource0} can be mapped.
+	 *
+	 * @param pciDevice A PCI device.
+	 * @see Pci#mapResource(String)
+	 */
+	@Order(-1)
+	@ParameterizedTest(name = "PCI device {0} resource0 can be mapped")
+	@MethodSource("ixgbeSource")
+	void mapResource(@NotNull final String pci) {
+		assertDoesNotThrow(() -> Pci.mapResource(pci), "resource0 mapping should not fail");
+	}
+
 	/** Checks the non-static methods. */
 	@Nested
 	@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -378,6 +391,19 @@ class PciIxgbeTest {
 		void isDmaDisabled(@NotNull final Pci pci) {
 			val status = assertDoesNotThrow(() -> pci.isDmaEnabled(), "DMA status retrieval should not fail");
 			assertFalse(status, "DMA should be disabled");
+		}
+
+		/**
+		 * Checks that the resource {@code resource0} can be mapped.
+		 *
+		 * @param pciDevice A {@link Pci} instance.
+		 * @see Pci#mapResource()
+		 */
+		@Order(-1)
+		@ParameterizedTest(name = "PCI device {0} resource0 can be mapped")
+		@MethodSource("de.tum.in.net.ixy.pci.test.PciIxgbeTest#ixgbePciSource")
+		void mapResource(@NotNull final Pci pci) {
+			assertDoesNotThrow(() -> pci.mapResource(), "resource0 mapping should not fail");
 		}
 
 	}

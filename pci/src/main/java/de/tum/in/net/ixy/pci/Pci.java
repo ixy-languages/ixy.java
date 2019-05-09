@@ -7,8 +7,12 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.channels.SeekableByteChannel;
 import java.util.Set;
+
+import org.jetbrains.annotations.NotNull;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -34,6 +38,8 @@ import de.tum.in.net.ixy.pci.BuildConstants;
  * <ul>
  *   <li>The {@code config} resource of the PCI device, usually found under {@code
  *       /sys/bus/pci/devices/<device>/config}.</li>
+ *   <li>The {@code resource0} resource of the PCI device, usually available under {@code
+ *       /sys/bus/pci/devices/<device>/resource0}.</li>
  *   <li>The {@code bind} resource of the driver of the PCI device, usually available under {@code
  *       /sys/bus/pci/devices/<device>/driver/bind}, but it has been <em>optimized</em> to use {@code
  *       /sys/bus/pci/drivers/(virtio-pci|ixgbe)/bind} because we use only the 10GbE {@code ixgbe} family and the {@code
@@ -117,6 +123,9 @@ public final class Pci {
 	/** The {@link SeekableByteChannel} instance used to access the resource {@code config} of PCI device. */
 	private SeekableByteChannel config;
 
+	/** The {@link FileChannel} instance used to access the resource {@code resource0} of PCI device. */
+	private FileChannel resource;
+
 	/** The {@link SeekableByteChannel} instance used to access the resource {@code unbind} of PCI device driver. */
 	private SeekableByteChannel unbind;
 
@@ -172,9 +181,10 @@ public final class Pci {
 	 * @throws IOException           If reading the {@code config} resource fails while trying to guess the driver.
 	 */
 	public Pci(@NonNull final String pciDevice, final boolean ixgbe, final boolean virtio) throws FileNotFoundException, IOException {
-		name   = pciDevice;
-		buffer = ByteBuffer.allocateDirect(Math.max(3, name.length())).order(ByteOrder.nativeOrder());
-		config = new RandomAccessFile(String.format(PCI_RES_PATH_FMT, name, "config"), "rwd").getChannel();
+		name     = pciDevice;
+		buffer   = ByteBuffer.allocateDirect(Math.max(3, name.length())).order(ByteOrder.nativeOrder());
+		config   = new RandomAccessFile(String.format(PCI_RES_PATH_FMT, name, "config"), "rwd").getChannel();
+		resource = new RandomAccessFile(String.format(PCI_RES_PATH_FMT, name, "resource0"), "rwd").getChannel();
 		if (ixgbe) {
 			unbind = new FileOutputStream(String.format(PCI_IXGBE_PATH_FMT, "unbind")).getChannel();
 			bind   = new FileOutputStream(String.format(PCI_IXGBE_PATH_FMT, "bind")).getChannel();
@@ -374,6 +384,16 @@ public final class Pci {
 	}
 
 	/**
+	 * Maps the resource {@code resource0} to a memory region.
+	 * 
+	 * @return The buffer mapped to the file.
+	 * @throws IOException If an I/O error occurs.
+	 */
+	public MappedByteBuffer mapResource() throws IOException {
+		return getMmap(resource);
+	}
+
+	/**
 	 * Releases all the resources that have been allocated.
 	 * <p>
 	 * Because Java does not have destructors, the convention is to provide a {@code close} method that releases all
@@ -383,6 +403,7 @@ public final class Pci {
 	 */
 	public void close() throws IOException {
 		config.close();
+		resource.close();
 		unbind.close();
 		bind.close();
 	}
@@ -575,6 +596,20 @@ public final class Pci {
 		}
 	}
 
+	/**
+	 * Maps the resource {@code resource0} from the PCI device to a memory region.
+	 * 
+	 * @param pciDevice The PCI device.
+	 * @return The memory mapped file.
+	 * @throws FileNotFoundException If the resource {@code resource0} does not exist.
+	 * @throws IOException           If an I/O error occurs.
+	 */
+	public static MappedByteBuffer mapResource(@NonNull final String pciDevice) throws FileNotFoundException,
+			IOException {
+		val fileChannel = new RandomAccessFile(pciDevice, "rw").getChannel();
+		return getMmap(fileChannel);
+	}
+
 	///////////////////////////////////////////////// INTERNAL METHODS /////////////////////////////////////////////////
 
 	/**
@@ -743,6 +778,22 @@ public final class Pci {
 		if (octets < 2) {
 			log.warn("Couldn't write the exact amount of bytes needed to set the DMA status");
 		}
+	}
+
+	/**
+	 * Creates a {@link MappedByteBuffer} using a {@link FileChannel} associated with a file.
+	 * <p>
+	 * This method exists only to reduce the amount of code used in the rest of publicly available methods. This method
+	 * should be inline, but Java does not support such specifier.
+	 * 
+	 * @param channel The channel used to map the file to memory.
+	 * @return The file mapped to memory.
+	 * @throws IOException If an I/O error occurs.
+	 */
+	private static MappedByteBuffer getMmap(final FileChannel channel) throws IOException {
+		val mmap = channel.map(FileChannel.MapMode.READ_WRITE, 0, channel.size());
+		mmap.order(ByteOrder.nativeOrder());
+		return mmap;
 	}
 
 }
