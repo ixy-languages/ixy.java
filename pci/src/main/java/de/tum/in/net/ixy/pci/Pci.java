@@ -64,26 +64,27 @@ public final class Pci {
 
 	/**
 	 * Bit mask used to manipulate the DMA status.
-	 * @see https://en.wikipedia.org/wiki/PCI_configuration_space#/media/File:Pci-config-space.svg
+	 * @see <a href="https://en.wikipedia.org/wiki/PCI_configuration_space#/media/File:Pci-config-space.svg">PCI
+	 *      Configuration Space</a>
 	 */
 	private static final byte DMA_BIT = 0b00000100;
 
 	/**
 	 * The vendor id used by Intel devices.
-	 * @see https://github.com/Juniper/contrail-dpdk/blob/2e83c81bade9a69197929490c68cb98289cb091e/lib/librte_eal/common/include/rte_pci_dev_ids.h#L145
+	 * @see <a href="https://github.com/Juniper/contrail-dpdk/blob/2e83c81bade9a69197929490c68cb98289cb091e/lib/librte_eal/common/include/rte_pci_dev_ids.h#L145">Intel's Vendor ID</a>
 	 */
 	private static final short VEN_ID_INTEL = (short) 0x8086;
 
 	/**
 	 * The vendor id used by Virtio devices.
-	 * @see https://github.com/Juniper/contrail-dpdk/blob/2e83c81bade9a69197929490c68cb98289cb091e/lib/librte_eal/common/include/rte_pci_dev_ids.h#L150
+	 * @see <a href="https://github.com/Juniper/contrail-dpdk/blob/2e83c81bade9a69197929490c68cb98289cb091e/lib/librte_eal/common/include/rte_pci_dev_ids.h#L150">RedHat's Vendor ID</a>
 	 */
 	private static final short VEN_ID_QUMRANET = (short) 0x1AF4;
 
 	/**
 	 * Set of device ids used by ixgbe devices.
-	 * @see https://github.com/Juniper/contrail-dpdk/blob/2e83c81bade9a69197929490c68cb98289cb091e/lib/librte_eal/common/include/rte_pci_dev_ids.h#L369-L409
-	 * @see https://github.com/Juniper/contrail-dpdk/blob/2e83c81bade9a69197929490c68cb98289cb091e/lib/librte_eal/common/include/rte_pci_dev_ids.h#L507-L514
+	 * @see <a href="https://github.com/Juniper/contrail-dpdk/blob/2e83c81bade9a69197929490c68cb98289cb091e/lib/librte_eal/common/include/rte_pci_dev_ids.h#L369-L409">Physical ixgbe device IDs</a>
+	 * @see <a href="https://github.com/Juniper/contrail-dpdk/blob/2e83c81bade9a69197929490c68cb98289cb091e/lib/librte_eal/common/include/rte_pci_dev_ids.h#L507-L514">Virtual ixgbe device IDs</a>
 	 */
 	private static final Set<Short> DEV_ID_IXGBE = Set.of(
 		// Physical devices
@@ -105,7 +106,7 @@ public final class Pci {
 
 	/**
 	 * Set of device ids used by virtio devices.
-	 * @see https://github.com/Juniper/contrail-dpdk/blob/2e83c81bade9a69197929490c68cb98289cb091e/lib/librte_eal/common/include/rte_pci_dev_ids.h#L535
+	 * @see <a href="https://github.com/Juniper/contrail-dpdk/blob/2e83c81bade9a69197929490c68cb98289cb091e/lib/librte_eal/common/include/rte_pci_dev_ids.h#L535">Virtual virtio device IDs</a>
 	 */
 	private static final Set<Short> DEV_ID_VIRTIO = Set.of((short) 0x1000);
 
@@ -461,7 +462,7 @@ public final class Pci {
 	 */
 	public static byte getClassId(@NonNull String pciDevice) throws FileNotFoundException, IOException {
 		log.trace("Reading class id of PCI device {}", pciDevice);
-		val buffer = ByteBuffer.allocate(3);
+		val buffer = ByteBuffer.allocate(3).order(ByteOrder.nativeOrder());
 		val resource = String.format(PCI_RES_PATH_FMT, pciDevice, "config");
 		try (val stream = new FileInputStream(resource)) {
 			return getClassId(buffer, stream.getChannel());
@@ -475,13 +476,15 @@ public final class Pci {
 	 * to the resource {@code driver/unbind} of the given PCI device.
 	 *
 	 * @param pciDevice The name of the PCI device.
-	 * @throws IOException If an I/O error occurs when calling {@link #unbindDriver(ByteBuffer, SeekableByteChannel)}.
+	 * @throws FileNotFoundException If the driver is already unbound or is bound to another driver.
+	 * @throws IOException           If an I/O error occurs when calling {@link #unbindDriver(ByteBuffer,
+	 *                               SeekableByteChannel)}.
 	 * @see #unbindDriver(ByteBuffer, SeekableByteChannel)
 	 */
 	public static void unbindDriver(@NonNull final String pciDevice) throws FileNotFoundException, IOException {
 		log.trace("Unbinding driver of PCI device {}", pciDevice);
 		val buffer = ByteBuffer.wrap(pciDevice.getBytes());
-		val resource = String.format(PCI_RES_PATH_FMT, "driver/unbind");
+		val resource = String.format(PCI_RES_PATH_FMT, pciDevice, "driver/unbind");
 		try (val stream = new FileOutputStream(resource, false)) {
 			unbindDriver(buffer, stream.getChannel());
 		}
@@ -494,13 +497,15 @@ public final class Pci {
 	 * to the resource {@code driver/bind} of the given PCI device.
 	 *
 	 * @param pciDevice The name of the PCI device.
-	 * @throws IOException If an I/O error occurs when calling {@link #bindDriver(ByteBuffer, SeekableByteChannel)}.
+	 * @throws FileNotFoundException If the driver is already unbound or is bound to another driver.
+	 * @throws IOException           If an I/O error occurs when calling {@link #bindDriver(ByteBuffer,
+	 *                               SeekableByteChannel)}.
 	 * @see #bindDriver(ByteBuffer, SeekableByteChannel)
 	 */
 	public static void bindDriver(@NonNull final String pciDevice) throws FileNotFoundException, IOException {
 		log.trace("Binding driver of PCI device {}", pciDevice);
 		val buffer = ByteBuffer.wrap(pciDevice.getBytes());
-		val resource = String.format(PCI_RES_PATH_FMT, "driver/bind");
+		val resource = String.format(PCI_RES_PATH_FMT, pciDevice, "driver/bind");
 		try (val stream = new FileOutputStream(resource, false)) {
 			bindDriver(buffer, stream.getChannel());
 		}
@@ -514,7 +519,9 @@ public final class Pci {
 	 * 
 	 * @param pciDevice The name of the PCI device.
 	 * @return The status of the DMA bit.
-	 * @throws IOException If an I/O error occurs when calling {@link #getCommand(ByteBuffer, SeekableByteChannel)}.
+	 * @throws FileNotFoundException If the driver is already unbound or is bound to another driver.
+	 * @throws IOException           If an I/O error occurs when calling {@link #getCommand(ByteBuffer,
+	 *                               SeekableByteChannel)}.
 	 * @see #getCommand(ByteBuffer, SeekableByteChannel)
 	 */
 	public static boolean isDmaEnabled(@NonNull final String pciDevice) throws FileNotFoundException, IOException {
@@ -533,8 +540,9 @@ public final class Pci {
 	 * config} from the given PCI device.
 	 * 
 	 * @param pciDevice The name of the PCI device.
-	 * @throws IOException If an I/O error occurs when calling {@link #setDma(ByteBuffer, SeekableByteChannel,
-	 *                     boolean)}.
+	 * @throws FileNotFoundException If the driver is already unbound or is bound to another driver.
+	 * @throws IOException           If an I/O error occurs when calling {@link #setDma(ByteBuffer, SeekableByteChannel,
+	 *                               boolean)}.
 	 * @see #setDma(ByteBuffer, SeekableByteChannel, boolean)
 	 */
 	public static void enableDma(@NonNull final String pciDevice) throws FileNotFoundException, IOException {
@@ -553,8 +561,9 @@ public final class Pci {
 	 * config} from the given PCI device.
 	 * 
 	 * @param pciDevice The name of the PCI device.
-	 * @throws IOException If an I/O error occurs when calling {@link #setDma(ByteBuffer, SeekableByteChannel,
-	 *                     boolean)}.
+	 * @throws FileNotFoundException If the driver is already unbound or is bound to another driver.
+	 * @throws IOException           If an I/O error occurs when calling {@link #setDma(ByteBuffer, SeekableByteChannel,
+	 *                               boolean)}.
 	 * @see #setDma(ByteBuffer, SeekableByteChannel, boolean)
 	 */
 	public static void disableDma(@NonNull final String pciDevice) throws FileNotFoundException, IOException {
@@ -678,6 +687,7 @@ public final class Pci {
 	 */
 	private static void bindDriver(final ByteBuffer buffer, final SeekableByteChannel channel) throws IOException {
 		val bytes = channel.write(buffer);
+		log.trace("Internal call to private implementation of bindDriver");
 		if (bytes < 12) {
 			log.warn("Couldn't write the exact amount of bytes needed to bind the driver");
 		}
