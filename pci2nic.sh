@@ -24,6 +24,9 @@ v=1
 # Iterate over all devices
 for iface in ${ifaces}; do
 
+	# Check if the interface is the excluded one
+	[[ "$iface" == "$1" ]] && continue
+
 	# Get the driver module used by the interface and skip this iteration if it does not exist
 	drv=$(readlink /sys/class/net/${iface}/device/driver/module)
 	[[ -z "$drv" ]] && continue
