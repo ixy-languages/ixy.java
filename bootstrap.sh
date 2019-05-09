@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Check if already installed
-if [[ -z "$(which java)" ]]; then
+if [[ ! -z "$(which java)" ]]; then
     echo "Java is already installed, skipping"
     exit 0
 fi
