@@ -93,10 +93,10 @@ test {
 	}
 
 	// Exclude the tests that will fail always if no NICs are available
-	if (System.env['IXY_VIRTIO_COUNT'] == null) {
+	if (System.env['IXY_VIRTIO_COUNT'] == null || System.env['IXY_VIRTIO_COUNT'] !=~ '/^[1-9]+[0-9]*$/') {
 		exclude '**/PciVirtioTest.class'
 	}
-	if (System.env['IXY_IXGBE_COUNT'] == null) {
+	if (System.env['IXY_IXGBE_COUNT'] == null || System.env['IXY_VIRTIO_COUNT'] !=~ '/^[1-9]+[0-9]*$/') {
 		exclude '**/PciIxgbeTest.class'
 	}
 }

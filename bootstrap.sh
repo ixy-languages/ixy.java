@@ -41,6 +41,3 @@ DEBIAN_FRONTEND=noninteractive apt-get upgrade --yes
 
 # Install ethtool to get PCI bus of NICs
 DEBIAN_FRONTEND=noninteractive apt-get install --yes ethtool git git-lfs
-
-# Source the environment variables of the JDK installation
-source /etc/profile.d/jdk.sh
