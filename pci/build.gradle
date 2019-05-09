@@ -96,4 +96,7 @@ test {
 	if (System.env['IXY_VIRTIO_COUNT'] == null) {
 		exclude '**/PciVirtioTest.class'
 	}
+	if (System.env['IXY_IXGBE_COUNT'] == null) {
+		exclude '**/PciIxgbeTest.class'
+	}
 }
