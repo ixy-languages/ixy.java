@@ -1,0 +1,137 @@
+// Include some useful Gradle plugins
+plugins {
+	id 'java-library'                                  // Java library support
+	id 'c'                                             // C/C++ support
+	id 'io.freefair.lombok'            version '3.2.0' // Lombok support
+	id 'com.github.gmazzo.buildconfig' version '1.5.0' // Build config support
+	id 'com.adarshr.test-logger'       version '1.6.0' // Gradle test logging beautifier
+}
+
+// Set the source and target compatibility of this subproject to Java 11
+sourceCompatibility = 1.11
+targetCompatibility = 1.11
+
+// Exclude the module-info.java file, because Gradle is not intelligent enough and tries to compile it
+sourceSets {
+	main {
+		java {
+			exclude 'module-info.java'
+		}
+	}
+	test {
+		java {
+			exclude 'module-info.java'
+		}
+	}
+}
+
+// Configure the C library
+model {
+	// Define a custom platform which has no operative system but it is x64
+	platforms {
+		amd64 {
+			architecture 'x86-64'
+		}
+	}
+	// Define our components, which will be basically our C library, targeting our custom platform
+	// and add to the compiler flags the include paths of the JNI framework
+    components {
+        ixy(NativeLibrarySpec) {
+			targetPlatform 'amd64'
+			binaries.all {
+				if (targetPlatform.operatingSystem.macOsX) {
+					cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include"
+					cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include/darwin"
+					cCompiler.args '-mmacosx-version-min=10.4'
+					linker.args '-mmacosx-version-min=10.4'
+				} else if (targetPlatform.operatingSystem.linux) {
+					cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include"
+					cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include/linux"
+					cCompiler.args '-D_FILE_OFFSET_BITS=64'
+				} else if (targetPlatform.operatingSystem.windows) {
+					cCompiler.args "-I${org.gradle.internal.jvm.Jvm.current().javaHome}/include"
+					cCompiler.args "-I${org.gradle.internal.jvm.Jvm.current().javaHome}/include/win32"
+					linker.args "Shlwapi.lib", "Advapi32.lib"
+				} else if (targetPlatform.operatingSystem.freeBSD) {
+					cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include"
+					cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include/freebsd"
+				}
+			}
+		}
+    }
+}
+
+// The @Generated annotation causes compilation problems, so let's disable it
+tasks.withType(com.github.gmazzo.gradle.plugins.tasks.BuildConfigTask) {
+	addGeneratedAnnotation = false
+}
+
+// Setup some build configuration fields that can be optimized by the compiler
+buildConfig {
+	className('BuildConstants')
+	packageName("${project.group}.ixy.${project.name}")
+	language('java')
+	buildConfigField('boolean', 'DEBUG',        "${project.rootProject.ext.DEBUG}")
+	buildConfigField('boolean', 'UNSAFE',       "${project.rootProject.ext.UNSAFE}")
+	buildConfigField('boolean', 'FORCE_VIRTIO', "${project.rootProject.ext.FORCE_VIRTIO}")
+	buildConfigField('boolean', 'FORCE_IXGBE',  "${project.rootProject.ext.FORCE_IXGBE}")
+}
+
+// Include all the dependencies of the library
+// * JetBrains annotations
+// * Simple Logging Facade for Java API
+//   * Simple Logging Facade for Java NOP (testing)
+//   * Logback (testing)
+// * JUnit 5
+//   * JUnit 5 Parameterized Tests
+dependencies {
+	implementation     group: 'org.jetbrains',     name: 'annotations',          version: '16.0.2'
+	testImplementation group: 'org.jetbrains',     name: 'annotations',          version: '16.0.2'
+	compileOnly        group: 'org.slf4j',         name: 'slf4j-api',            version: '1.8.0-beta4'
+	testCompile        group: 'org.slf4j',         name: 'slf4j-nop',            version: '1.8.0-beta4'
+//	testCompile        group: 'ch.qos.logback',    name: 'logback-classic',      version: '1.2.3'
+	testRuntimeOnly    group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.5.0-M1'
+	testCompile        group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: '5.5.0-M1'
+}
+
+// Configure the test task
+test {
+
+	// Configure the native library path
+	systemProperty 'java.library.path', file("${buildDir}/libs/ixy/shared").absolutePath
+
+	// Configure Logback
+	systemProperty 'logback.configurationFile', 'logback-test.xml'
+
+	// Enable and configure JUnit 5
+	useJUnitPlatform {
+		failFast = true
+	}
+
+	// Consider that tests are never up to date
+	outputs.upToDateWhen { false }
+
+	// Configure the Gradle test logging, even if it's overwritten by the Gradle Test Logger plugin
+	testLogging {
+		events = ['passed', 'failed', 'skipped']
+		showStandardStreams = true
+	}
+
+	// Configure the Gradle Test Logger Plugin
+	testlogger {
+		theme                      'mocha'
+		showExceptions             true
+		slowThreshold              2000
+		showSummary                true
+		showPassed                 true
+		showSkipped                true
+		showFailed                 true
+		showStandardStreams        true
+		showPassedStandardStreams  true
+		showSkippedStandardStreams true
+		showFailedStandardStreams  true
+	}
+
+	// Make the test depend on the shared library
+	dependsOn 'ixySharedLibrary'
+}
