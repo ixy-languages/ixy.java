@@ -1,6 +1,6 @@
 // Define the testing module
 module ixy.pci.test {
-	requires ixy.pci;                  // Ixy's PCI  module
+	requires ixy.pci;                  // Ixy's PCI module
 	requires lombok;                   // Lombok annotations
 	requires annotations;              // JetBrains annotations
 	requires org.junit.jupiter.api;    // JUnit 5 annotations API
