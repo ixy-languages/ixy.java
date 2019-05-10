@@ -27,3 +27,11 @@ dependencies {
 aggregateJavadoc {
 	options.memberLevel = JavadocMemberLevel.PRIVATE
 }
+
+// Custom properties that subproject may read
+ext {
+	DEBUG        = true
+	UNSAFE       = true
+	FORCE_VIRTIO = false
+	FORCE_IXGBE  = false
+}
