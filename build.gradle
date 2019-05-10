@@ -21,6 +21,7 @@ subprojects {
 // Compile all subprojects
 dependencies {
 	compile project(':pci')
+	compile project(':memory')
 }
 
 // When aggregating the JavaDocs, make sure the JavaDocs have been generated
