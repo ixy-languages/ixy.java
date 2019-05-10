@@ -12,8 +12,6 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.SeekableByteChannel;
 import java.util.Set;
 
-import org.jetbrains.annotations.NotNull;
-
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.val;
@@ -606,7 +604,8 @@ public final class Pci {
 	 */
 	public static MappedByteBuffer mapResource(@NonNull final String pciDevice) throws FileNotFoundException,
 			IOException {
-		val fileChannel = new RandomAccessFile(pciDevice, "rw").getChannel();
+		val path = String.format(PCI_RES_PATH_FMT, pciDevice, "resource0");
+		val fileChannel = new RandomAccessFile(path, "rwd").getChannel();
 		return getMmap(fileChannel);
 	}
 
@@ -791,9 +790,14 @@ public final class Pci {
 	 * @throws IOException If an I/O error occurs.
 	 */
 	private static MappedByteBuffer getMmap(final FileChannel channel) throws IOException {
-		val mmap = channel.map(FileChannel.MapMode.READ_WRITE, 0, channel.size());
-		mmap.order(ByteOrder.nativeOrder());
-		return mmap;
+		try {
+			val mmap = channel.map(FileChannel.MapMode.READ_WRITE, 0, channel.size());
+			mmap.order(ByteOrder.nativeOrder());
+			return mmap;
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw e;
+		}
 	}
 
 }

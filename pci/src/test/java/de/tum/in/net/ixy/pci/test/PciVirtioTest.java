@@ -203,8 +203,9 @@ class PciVirtioTest {
 	 * @see Pci#mapResource(String)
 	 */
 	@Order(-1)
-	@ParameterizedTest(name = "PCI device {0} resource0 can be mapped")
+	@ParameterizedTest(name = "[static] PCI device {0} resource0 can be mapped")
 	@MethodSource("virtioSource")
+	@Disabled
 	void mapResource(@NotNull final String pci) {
 		assertDoesNotThrow(() -> Pci.mapResource(pci), "resource0 mapping should not fail");
 	}
@@ -384,7 +385,8 @@ class PciVirtioTest {
 		 */
 		@Order(-1)
 		@ParameterizedTest(name = "PCI device {0} resource0 can be mapped")
-		@MethodSource("de.tum.in.net.ixy.pci.test.PciIxgbeTest#virtioPciSource")
+		@MethodSource("de.tum.in.net.ixy.pci.test.PciVirtioTest#virtioPciSource")
+		@Disabled
 		void mapResource(@NotNull final Pci pci) {
 			assertDoesNotThrow(() -> pci.mapResource(), "resource0 mapping should not fail");
 		}
