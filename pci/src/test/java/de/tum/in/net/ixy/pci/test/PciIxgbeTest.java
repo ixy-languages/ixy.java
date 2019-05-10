@@ -11,6 +11,7 @@ import java.util.stream.Stream;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.MethodOrderer;
@@ -219,7 +220,7 @@ class PciIxgbeTest {
 	 * @param pciDevice A PCI device.
 	 * @see Pci#mapResource(String)
 	 */
-	@Order(-1)
+	@Order(8)
 	@ParameterizedTest(name = "PCI device {0} resource0 can be mapped")
 	@MethodSource("ixgbeSource")
 	@Disabled
@@ -400,7 +401,7 @@ class PciIxgbeTest {
 		 * @param pciDevice A {@link Pci} instance.
 		 * @see Pci#mapResource()
 		 */
-		@Order(-1)
+		@Order(8)
 		@ParameterizedTest(name = "PCI device {0} resource0 can be mapped")
 		@MethodSource("de.tum.in.net.ixy.pci.test.PciIxgbeTest#ixgbePciSource")
 		@Disabled
