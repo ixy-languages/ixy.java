@@ -44,7 +44,7 @@ buildConfig {
 // * JetBrains annotations
 // * Simple Logging Facade for Java API
 //   * Simple Logging Facade for Java NOP (testing)
-//   * Simple Logging Facade for Java Simple (testing)
+//   * Logback (testing)
 // * JUnit 5
 //   * JUnit 5 Parameterized Tests
 dependencies {
