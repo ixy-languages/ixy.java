@@ -34,9 +34,10 @@ buildConfig {
 	className('BuildConstants')
 	packageName("${project.group}.ixy.${project.name}")
 	language('java')
-	buildConfigField('boolean', 'DEBUG',        "${true}")
-	buildConfigField('boolean', 'FORCE_VIRTIO', "${false}")
-	buildConfigField('boolean', 'FORCE_IXGBE',  "${false}")
+	buildConfigField('boolean', 'DEBUG',        "${project.rootProject.ext.DEBUG}")
+	buildConfigField('boolean', 'UNSAFE',       "${project.rootProject.ext.UNSAFE}")
+	buildConfigField('boolean', 'FORCE_VIRTIO', "${project.rootProject.ext.FORCE_VIRTIO}")
+	buildConfigField('boolean', 'FORCE_IXGBE',  "${project.rootProject.ext.FORCE_IXGBE}")
 }
 
 // Include all the dependencies of the library
