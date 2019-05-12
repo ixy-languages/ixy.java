@@ -39,5 +39,5 @@ curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.s
 # Upgrade all the packages
 DEBIAN_FRONTEND=noninteractive apt-get upgrade --yes
 
-# Install ethtool to get PCI bus of NICs
-DEBIAN_FRONTEND=noninteractive apt-get install --yes ethtool git git-lfs
+# Install ethtool to get PCI bus of NICs and the C/C++ compilers
+DEBIAN_FRONTEND=noninteractive apt-get install --yes ethtool gcc g++ git git-lfs
