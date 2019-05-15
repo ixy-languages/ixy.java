@@ -12,3 +12,7 @@ for i in {0..7}; do
 		echo 512 > /sys/devices/system/node/node${i}/hugepages/hugepages-2048kB/nr_hugepages
 	fi
 done
+
+# Also update the number of hugepages in the sysctl configuration file
+echo 'vm.nr_hugepages=512' > /etc/sysctl.d/ixy.conf
+sysctl --system
