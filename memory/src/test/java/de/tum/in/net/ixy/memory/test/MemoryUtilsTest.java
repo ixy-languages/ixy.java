@@ -29,4 +29,19 @@ class MemoryUtilsTest {
 		assertEquals(cached, smart, "cached pagesize should be the same as the computed by the smart method");
 	}
 
+	/** Checks that the address size of the system can be correctly computed. */
+	@Test
+	@DisplayName("Virtual address size can be computed")
+	void addrsize() {
+		val cached = MemoryUtils.getAddrsize();
+		val jni    = MemoryUtils.c_addrsize();
+		val unsafe = MemoryUtils.u_addrsize();
+		val smart  = MemoryUtils.addrsize();
+		assertNotEquals(cached, 0, "address size is not 0");
+		assertEquals(cached & -cached, cached, "address size is a power of two");
+		assertEquals(cached, jni, "cached address size should be the same as the computed by JNI");
+		assertEquals(cached, unsafe, "cached address size should be the same as the computed by the Unsafe object");
+		assertEquals(cached, smart, "cached address size should be the same as the computed by the smart method");
+	}
+
 }

@@ -16,6 +16,10 @@ public final class MemoryUtils {
 	@Getter
 	private static int pagesize;
 
+	/** The address size of the host system. */
+	@Getter
+	private static int addrsize;
+
 	/** Load things statically. */
 	static {
 		
@@ -34,10 +38,12 @@ public final class MemoryUtils {
 		}
 
 		// Cache the values in private static fields with public getters using the configured method
-		if (BuildConstants.UNSAFE) {
+		if (BuildConstants.UNSAFE && unsafe != null) {
 			pagesize = unsafe.pageSize();
+			addrsize = unsafe.addressSize();
 		} else {
 			pagesize = c_pagesize();
+			addrsize = c_addrsize();
 		}
 	}
 
@@ -65,6 +71,15 @@ public final class MemoryUtils {
 	 */
 	public static native int c_pagesize();
 
+	/**
+	 * Computes the size of a memory address.
+	 * <p>
+	 * This method is portable and should work in all operative systems. The result will always be a power of two.
+	 * 
+	 * @return The address size of the system.
+	 */
+	public static native int c_addrsize();
+
 	////////////////////////////////////////////////// UNSAFE METHODS //////////////////////////////////////////////////
 
 	/**
@@ -75,6 +90,18 @@ public final class MemoryUtils {
 	public static int u_pagesize() {
 		log.trace("Computing page size using Unsafe object");
 		return unsafe.pageSize();
+	}
+
+	/**
+	 * Computes the size of a memory address.
+	 * <p>
+	 * The result will always be a power of two.
+	 * 
+	 * @return The address size of the system.
+	 */
+	public static int u_addrsize() {
+		log.trace("Computing virtual address size using Unsafe object");
+		return unsafe.addressSize();
 	}
 
 	/////////////////////////////////////////////////// SAFE METHODS ///////////////////////////////////////////////////
@@ -92,6 +119,21 @@ public final class MemoryUtils {
 	public static int pagesize() {
 		log.trace("Smart page size computation");
 		return BuildConstants.UNSAFE && unsafe != null ? u_pagesize() : c_pagesize();
+	}
+
+	/**
+	 * Computes the size of a memory address.
+	 * <p>
+	 * This method delegates to {@link #u_addrsize()} or {@link #c_addrsize()} based on the value of {@link
+	 * BuildConstants#UNSAFE}.
+	 * 
+	 * @return The address size of the system.
+	 * @see #c_addrsize()
+	 * @see #u_addrsize()
+	 */
+	public static int addrsize() {
+		log.trace("Smart virtual address size computation");
+		return BuildConstants.UNSAFE && unsafe != null ? u_addrsize() : c_addrsize();
 	}
 
 }
