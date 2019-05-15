@@ -31,10 +31,10 @@ echo 'export JAVA_HOME=/usr/local/jdk-12.0.1' >> /etc/profile.d/jdk.sh
 echo 'PATH=$PATH:$JAVA_HOME/bin'              >> /etc/profile.d/jdk.sh
 
 # Execute the Git LFS installation script
-curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
+wget -O - https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
 
-# Update all the sources (automatically done by the Git LFS script)
-# DEBIAN_FRONTEND=noninteractive apt-get update
+# Update all the sources
+DEBIAN_FRONTEND=noninteractive apt-get update
 
 # Upgrade all the packages
 DEBIAN_FRONTEND=noninteractive apt-get upgrade --yes
