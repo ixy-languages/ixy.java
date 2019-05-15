@@ -35,4 +35,5 @@ ext {
 	UNSAFE       = true
 	FORCE_VIRTIO = false
 	FORCE_IXGBE  = false
+	HUGE_MNT     = "/mnt/huge"
 }

@@ -38,6 +38,7 @@ buildConfig {
 	buildConfigField('boolean', 'UNSAFE',       "${project.rootProject.ext.UNSAFE}")
 	buildConfigField('boolean', 'FORCE_VIRTIO', "${project.rootProject.ext.FORCE_VIRTIO}")
 	buildConfigField('boolean', 'FORCE_IXGBE',  "${project.rootProject.ext.FORCE_IXGBE}")
+	buildConfigField('String',  'HUGE_MNT',     "\"${project.rootProject.ext.HUGE_MNT}\"")
 }
 
 // Include all the dependencies of the library
