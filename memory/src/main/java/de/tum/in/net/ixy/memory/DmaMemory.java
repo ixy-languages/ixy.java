@@ -2,7 +2,6 @@ package de.tum.in.net.ixy.memory;
 
 import lombok.AccessLevel;
 import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * This data class holds a memory address in two different formats, virtual and physical.
@@ -27,7 +26,7 @@ public final class DmaMemory {
 	 * @param physical The physical address.
 	 */
 	public DmaMemory(final long virtual, final long physical) {
-		this.virtual  = virtual;
+		this.virtual = virtual;
 		this.physical = physical;
 	}
 
