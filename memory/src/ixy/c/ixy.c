@@ -1,21 +1,30 @@
 #include "ixy.h"
 
-// Common imports
-#include <string.h> // strcmp
-
 // Linux dependencies
 #ifdef __linux__
-#include <unistd.h> // getpagesize, sysconf, _SC_PAGESIZE
-#include <stdio.h>  // FILE, fopen, perror, feof, fscanf, fclose
-#include <mntent.h> // struct mntent, getmntent
+#include <unistd.h>       // getpagesize, sysconf, _SC_PAGESIZE, ftruncate, getpid, close
+#include <stdio.h>        // FILE, fopen, perror, feof, fscanf, fclose, snprintf, unlink
+#include <mntent.h>       // struct mntent, getmntent
+#include <string.h>       // strcmp
+#include <linux/limits.h> // PATH_MAX
+#include <fcntl.h>        // open
+#include <sys/types.h>    // O_CREAT, O_RDWR, S_IRWXU
+#include <sys/mman.h>     // mmap, mlock, PROT_READ, PROT_WRITE, PROT_EXEC, MAP_SHARED, MAP_HUGETLB, MAP_LOCKED, MAP_NORESERVE, MAP_FAILED
 
 // Windows dependencies
 #elif _WIN32
-#include <windows.h>    // Needed so that the compiler shuts up about "No Target Architecture"
-#include <sysinfoapi.h> // SYSTEM_INFO, GetSystemInfo
-#include <winnt.h>      // PVOID
-#include <memoryapi.h>  // GetLargePageMinimum
-#include <basetsd.h>    // SIZE_T
+#include <windows.h>           // Needed so that the compiler shuts up about "No Target Architecture"
+#include <sysinfoapi.h>        // SYSTEM_INFO, GetSystemInfo
+#include <winnt.h>             // PVOID, MEM_LARGE_PAGES, MEM_RESERVE, MEM_COMMIT, PAGE_READWRITE
+#include <memoryapi.h>         // GetLargePageMinimum, VirtualAlloc, VirtualLock
+#include <basetsd.h>           // SIZE_T
+#include <winnt.h>             // HANDLE, TOKEN_PRIVILEGES, TOKEN_ADJUST_PRIVILEGES, TOKEN_QUERY, SE_PRIVILEGE_ENABLED, TOKEN_PRIVILEGES
+#include <processthreadsapi.h> // GetCurrentProcess, OpenProcessToken
+#include <errhandlingapi.h>    // GetLastError
+#include <winbase.h>           // LookupPrivilegeValue
+#include <minwindef.h>         // SE_PRIVILEGE_ENABLED, BOOL, DWORD
+#include <securitybaseapi.h>   // AdjustTokenPrivileges
+#include <handleapi.h>         // CloseHandle
 #endif
 
 // Custom macros
@@ -129,6 +138,138 @@ Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1hugepage(JNIEnv *env, jclass class)
     return hugepagesize;
 #else
     return -1;
+#endif
+}
+
+// Hugepage id counter
+static unsigned int hugepageid = 0;
+
+JNIEXPORT jlong JNICALL
+Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1allocate(JNIEnv *env, jclass class, jlong size, jboolean contiguous) {
+
+    // Skip if the pagesize is not a valid value
+    if (hugepagesize <= 0) {
+        return 0;
+    }
+
+	// Round the size to a multiple of the pagesize
+    jlong mask = (hugepagesize - 1);
+	if ((size & mask) != 0) {
+		size = (size + hugepagesize) & ~mask;
+	}
+
+	// Skip if we cannot guarantee contiguity
+    if (contiguous && size > hugepagesize) {
+        return 0;
+    }
+
+#ifdef __linux__
+	// Build the path of random hugepagea
+    char path[PATH_MAX];
+    unsigned int id = __atomic_fetch_add(&hugepageid, 1, __ATOMIC_SEQ_CST);
+    snprintf(path, PATH_MAX, "/mnt/huge/ixy-%d-%d", getpid(), id);
+    int fd = open(path, O_CREAT | O_RDWR, S_IRWXU);
+    if(!fd) {
+        perror("Could not create hugepage file");
+        return 0;
+    }
+
+	// Make it as big as requested
+    int code = ftruncate(fd, (off_t) size);
+    if (code != 0) {
+        perror("Error setting the size of the hugepage file");
+        return 0;
+    }
+
+	// Map the hugepage file to memory
+    // void *virt_addr = mmap(NULL, size, PROT_EXEC, MAP_PRIVATE | MAP_HUGETLB | MAP_LOCKED | MAP_NORESERVE, fd, 0);
+    void *virt_addr = mmap(NULL, size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED | MAP_HUGETLB | MAP_LOCKED | MAP_NORESERVE, fd, 0);
+    if (virt_addr == MAP_FAILED) {
+        perror("Error mmap-ing the hugepage file");
+        return 0;
+    }
+
+    // Prevent the allocated memory to be swapped
+    code = mlock(virt_addr, size);
+    if (code != 0) {
+        perror("Error locking the allocated memory");
+    }
+
+    // Close the hugepage file
+    code = close(fd);
+    if (code != 0) {
+        perror("Error closing the hugepage file");
+    }
+
+    code = unlink(path);
+    if (code != 0) {
+        perror("Error removing the hugepage file");
+    }
+
+	// Return the virtual address of the mapped hugepage
+	return (jlong) virt_addr;
+#elif _WIN32
+    // Open process token
+    HANDLE token;
+    if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token)) {
+        printf("OpenProcessToken error (%d)\n", GetLastError());
+    }
+
+    // Get the luid
+    TOKEN_PRIVILEGES tp;
+    if (!LookupPrivilegeValue(NULL, "SeLockMemoryPrivilege", &tp.Privileges[0].Luid)) {
+        printf("LookupPrivilegeValue error (%d)\n", GetLastError());
+    }
+
+    // Enable the privilege for the process
+    tp.PrivilegeCount = 1;
+    tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+
+    // Update the privileges
+    BOOL status = AdjustTokenPrivileges(token, FALSE, &tp, 0, (PTOKEN_PRIVILEGES) NULL, 0);
+
+    // It is possible for AdjustTokenPrivileges to return TRUE and still not succeed.
+    // So always check for the last error value.
+    DWORD error = GetLastError();
+    if (!status || (error != ERROR_SUCCESS)) {
+        printf("AdjustTokenPrivileges error (%d)\n", GetLastError());
+    }
+
+    // Allocate the memory
+    PVOID virt_addr = VirtualAlloc(NULL, size, MEM_LARGE_PAGES | MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+    if (virt_addr == NULL) {
+        printf("VirtualAlloc error (%d)\n", GetLastError());
+        return 0;
+    }
+
+    // Lock the memory so that it cannot be swapped
+    if (VirtualLock(virt_addr, size)) {
+        printf("VirtualLock error (%d)\n", GetLastError());
+    }
+
+    // Disable the privilege for the process
+    tp.PrivilegeCount -= 1;
+    tp.Privileges[0].Attributes = 0;
+
+    // Update the privileges
+    status = AdjustTokenPrivileges(token, FALSE, &tp, 0, (PTOKEN_PRIVILEGES) NULL, 0);
+
+    // It is possible for AdjustTokenPrivileges to return TRUE and still not succeed.
+    // So always check for the last error value.
+    error = GetLastError();
+    if (!status || (error != ERROR_SUCCESS)) {
+        printf("AdjustTokenPrivileges error (%d)\n", GetLastError());
+    }
+
+    // Close the handle
+    if (!CloseHandle(token)) {
+        printf("CloseHandle error (%d)\n", GetLastError());
+    }
+
+    // Return the address as a Java long
+    return (jlong) virt_addr;
+#else
+    return 0;
 #endif
 }
 

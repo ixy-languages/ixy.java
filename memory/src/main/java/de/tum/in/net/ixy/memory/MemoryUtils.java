@@ -129,6 +129,22 @@ public final class MemoryUtils {
 	 */
 	public static native long c_hugepage();
 
+	/**
+	 * Allocates {@code size} bytes.
+	 * <p>
+	 * The allocated memory region can be contiguous if requested, but since the implementation uses {@code hugepages}
+	 * to do so, if the requested size is bigger than the bytes a hugepage can allocate, the allocation will return the
+	 * invalid address {@code 0}.
+	 * <p>
+	 * The implementation assumes that a {@code hugetlbfs} is mounted at {@link BuildConstants#HUGE_MNT} on Linux.
+	 * On Windows it uses {@code VirtualAlloc} to allocate a huge page.
+	 * 
+	 * @param size       The number of bytes to allocate.
+	 * @param contiguous If the allocated bytes should be contiguous.
+	 * @return The base address of the allocated memory region.
+	 */
+	public static native long c_allocate(final long size, final boolean contiguous);
+
 	////////////////////////////////////////////////// UNSAFE METHODS //////////////////////////////////////////////////
 
 	/**
@@ -161,6 +177,19 @@ public final class MemoryUtils {
 	 */
 	public static long u_hugepage() throws UnsupportedOperationException {
 		log.trace("Computing bigger page size using Unsafe object");
+		throw new UnsupportedOperationException("Unsafe object does not provide any facility for this check");
+	}
+
+	/**
+	 * The {@link Unsafe} object does not have any method to check for bigger memory pages.
+	 * 
+	 * @param size       The number of bytes to allocate.
+	 * @param contiguous If the allocated bytes should be contiguous.
+	 * @return The base address of the allocated memory region.
+	 * @throws UnsupportedOperationException Always.
+	 */
+	public static long u_allocate(final long size, final boolean contiguous) throws UnsupportedOperationException {
+		log.trace("Allocating bigger memory page size using Unsafe object");
 		throw new UnsupportedOperationException("Unsafe object does not provide any facility for this check");
 	}
 
@@ -274,6 +303,21 @@ public final class MemoryUtils {
 			log.error("Error while reading or closing the file /proc/meminfo", e);
 		}
 		return 0;
+	}
+
+	/**
+	 * Allocates {@code size} bytes.
+	 * <p>
+	 * This method delegates to {@link #c_allocate()} since there is no other way to allocate memory using big memory
+	 * pages in Java.
+	 * 
+	 * @param size       The number of bytes to allocate.
+	 * @param contiguous If the allocated bytes should be contiguous.
+	 * @return The base address of the allocated memory region.
+	 */
+	public static long allocate(long size, final boolean contiguous) {
+		log.trace("Smart memory allocation");
+		return c_allocate(size, contiguous);
 	}
 
 }
