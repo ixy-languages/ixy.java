@@ -9,14 +9,14 @@
 #include <linux/limits.h> // PATH_MAX
 #include <fcntl.h>        // open
 #include <sys/types.h>    // O_CREAT, O_RDWR, S_IRWXU
-#include <sys/mman.h>     // mmap, mlock, PROT_READ, PROT_WRITE, PROT_EXEC, MAP_SHARED, MAP_HUGETLB, MAP_LOCKED, MAP_NORESERVE, MAP_FAILED
+#include <sys/mman.h>     // mmap, mlock, PROT_READ, PROT_WRITE, PROT_EXEC, MAP_SHARED, MAP_HUGETLB, MAP_LOCKED, MAP_NORESERVE, MAP_FAILED, munmap
 
 // Windows dependencies
 #elif _WIN32
 #include <windows.h>           // Needed so that the compiler shuts up about "No Target Architecture"
 #include <sysinfoapi.h>        // SYSTEM_INFO, GetSystemInfo
 #include <winnt.h>             // PVOID, MEM_LARGE_PAGES, MEM_RESERVE, MEM_COMMIT, PAGE_READWRITE
-#include <memoryapi.h>         // GetLargePageMinimum, VirtualAlloc, VirtualLock
+#include <memoryapi.h>         // GetLargePageMinimum, VirtualAlloc, VirtualLock, VirtualFree
 #include <basetsd.h>           // SIZE_T
 #include <winnt.h>             // HANDLE, TOKEN_PRIVILEGES, TOKEN_ADJUST_PRIVILEGES, TOKEN_QUERY, SE_PRIVILEGE_ENABLED, TOKEN_PRIVILEGES
 #include <processthreadsapi.h> // GetCurrentProcess, OpenProcessToken
@@ -270,6 +270,47 @@ Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1allocate(JNIEnv *env, jclass class,
     return (jlong) virt_addr;
 #else
     return 0;
+#endif
+}
+
+JNIEXPORT jboolean JNICALL
+Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1deallocate(JNIEnv *env, jclass class, jlong address, jlong size) {
+
+    // Skip if the pagesize is not a valid value
+    if (hugepagesize <= 0) {
+        return JNI_FALSE;
+    }
+
+	// Compute the mask to get the base address
+    jlong mask = (hugepagesize - 1);
+    if ((address & mask) != 0) {
+		address &= ~mask;
+	}
+
+#ifdef __linux__
+
+    // Round up the size as we did with the allocation
+    if ((size & mask) != 0) {
+		size = (size + hugepagesize) & ~mask;
+	}
+
+    // Deallocate the memory region
+    int status = munmap((void *) address, size);
+    if (status != 0) {
+        perror("Error munmap-ing the hugepage file");
+        return JNI_FALSE;
+    }
+    return JNI_TRUE;
+
+#elif _WIN32
+    // Deallocate the memory region
+    if (!VirtualFree(address, 0, MEM_RELEASE)) {
+        printf("VirtualFree error (%d)\n", GetLastError());
+        return JNI_FALSE;
+    }
+    return JNI_TRUE;
+#else
+    return JNI_FALSE;
 #endif
 }
 

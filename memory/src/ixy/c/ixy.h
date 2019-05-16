@@ -16,7 +16,10 @@ JNIEXPORT jlong JNICALL
 Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1hugepage(JNIEnv *, jclass);
 
 JNIEXPORT jlong JNICALL
-Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1allocate(JNIEnv *, jclass, jlong size, jboolean contiguous);
+Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1allocate(JNIEnv *, jclass, jlong, jboolean);
+
+JNIEXPORT jboolean JNICALL
+Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1deallocate(JNIEnv *, jclass, jlong, jlong);
 
 #ifdef __cplusplus
 }

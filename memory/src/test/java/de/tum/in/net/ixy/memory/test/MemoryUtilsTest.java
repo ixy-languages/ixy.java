@@ -6,12 +6,18 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -21,10 +27,12 @@ import sun.misc.Unsafe;
 
 /** Checks the class {@link MemoryUtils}. */
 @DisplayName("DMA manipulation")
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class MemoryUtilsTest {
 
 	/** Checks that the page size of the system can be correctly computed. */
 	@Test
+	@Order(-1)
 	@DisplayName("Pagesize can be computed")
 	void pagesize() {
 		val cached = MemoryUtils.getPagesize();
@@ -40,6 +48,7 @@ class MemoryUtilsTest {
 
 	/** Checks that the address size of the system can be correctly computed. */
 	@Test
+	@Order(-1)
 	@DisplayName("Virtual address size can be computed")
 	void addrsize() {
 		val cached = MemoryUtils.getAddrsize();
@@ -55,6 +64,7 @@ class MemoryUtilsTest {
 
 	/** Checks that the address size of the system can be correctly computed. */
 	@Test
+	@Order(-1)
 	@DisplayName("Hugepage size can be computed")
 	void hugepage() {
 		val cached = MemoryUtils.getHugepagesize();
@@ -67,9 +77,13 @@ class MemoryUtilsTest {
 		assertEquals(cached, smart, "cached hugepage size should be the same as the computed by the smart method");
 	}
 
+	/** Contains all the allcated pages during the test execution of {@link #allocate(Long, Boolean)}. */
+	private static Deque<Long> pages = new ArrayDeque<Long>();
+
 	/** Checks that the address size of the system can be correctly computed. */
 	@ParameterizedTest(name = "Memory can be allocated using bigger memory pages (size={0}; contiguous={1})")
 	@MethodSource("allocateSource")
+	@Order(0)
 	void allocate(final Long size, final Boolean contiguous) {
 
 		// The Unsafe-based implementation should not work
@@ -93,6 +107,10 @@ class MemoryUtilsTest {
 		// Allocate memory with the JNI call and with the smart method
 		val caddr = MemoryUtils.c_allocate(size, contiguous);
 		val addr = MemoryUtils.allocate(size, contiguous);
+
+		// Add them to the tracking list
+		pages.add(caddr);
+		pages.add(addr);
 		
 		// Allocating more than a memory page can hold results in the allocation being aborted
 		if (contiguous && size > MemoryUtils.getHugepagesize()) {
@@ -116,18 +134,22 @@ class MemoryUtilsTest {
 			
 			// Byte granularity
 			assertDoesNotThrow(() -> {
+				unsafe.putByte(caddr + fj, one);
 				unsafe.putByte(addr + fj, one);
 			}, String.format("address 0x%x + offset 0x%x is byte-writable", addr, fj));
 			assertDoesNotThrow(() -> {
+				assertEquals(one, unsafe.getByte(caddr + fj), "the read number should be correct");
 				assertEquals(one, unsafe.getByte(addr + fj), "the read number should be correct");
 			}, String.format("address 0x%x + offset 0x%x is byte-readable", addr, fj));
 
 			// Short granularity
 			if (j < hpsz - 1) {
 				assertDoesNotThrow(() -> {
+					unsafe.putShort(caddr + fj, two);
 					unsafe.putShort(addr + fj, two);
 				}, String.format("address 0x%x + offset 0x%x is short-writable", addr, fj));
 				assertDoesNotThrow(() -> {
+					assertEquals(two, unsafe.getShort(caddr + fj), "the read number should be correct");
 					assertEquals(two, unsafe.getShort(addr + fj), "the read number should be correct");
 				}, String.format("address 0x%x + offset 0x%x is short-readable", addr, fj));
 			}
@@ -135,9 +157,11 @@ class MemoryUtilsTest {
 			// Integer granularity
 			if (j < hpsz - 3) {
 				assertDoesNotThrow(() -> {
+					unsafe.putInt(caddr + fj, four);
 					unsafe.putInt(addr + fj, four);
 				}, String.format("address 0x%x + offset 0x%x is int-writable", addr, fj));
 				assertDoesNotThrow(() -> {
+					assertEquals(four, unsafe.getInt(caddr + fj), "the read number should be correct");
 					assertEquals(four, unsafe.getInt(addr + fj), "the read number should be correct");
 				}, String.format("address 0x%x + offset 0x%x is int-readable", addr, fj));
 			}
@@ -145,13 +169,49 @@ class MemoryUtilsTest {
 			// Long granularity
 			if (j < hpsz - 7) {
 				assertDoesNotThrow(() -> {
+					unsafe.putLong(caddr + fj, eight);
 					unsafe.putLong(addr + fj, eight);
 				}, String.format("address 0x%x + offset 0x%x is long-writable", addr, fj));
 				assertDoesNotThrow(() -> {
+					assertEquals(eight, unsafe.getLong(caddr + fj), "the read number should be correct");
 					assertEquals(eight, unsafe.getLong(addr + fj), "the read number should be correct");
 				}, String.format("address 0x%x + offset 0x%x is long-readable", addr, fj));
 			}
 		}
+	}
+
+	/** Checks that the address size of the system can be correctly computed. */
+	@ParameterizedTest(name = "Memory can be deallocated using bigger memory pages (size={0}; contiguous={1})")
+	@MethodSource("allocateSource")
+	@Order(1)
+	void deallocate(final Long size, final Boolean contiguous) {
+
+		// There is two address per "allocate" test
+		val caddr = pages.remove();
+		val addr = pages.remove();
+
+		// Skip the test if the addresses are not valid
+		if (caddr == 0 || addr == 0) {
+			return;
+		}
+
+		// The Unsafe-based implementation should not work
+		assertThrows(UnsupportedOperationException.class, () -> {
+			MemoryUtils.u_deallocate(caddr, size);
+		}, "the Unsafe-based implementation should throw");
+		assertThrows(UnsupportedOperationException.class, () -> {
+			MemoryUtils.u_deallocate(addr, size);
+		}, "the Unsafe-based implementation should throw");
+
+		// Wrong address should succeed as long as the base address can be deduced
+		assertTrue(MemoryUtils.c_deallocate(caddr + 1, size), "wrong offset should succeed");
+		assertTrue(MemoryUtils.deallocate(addr + 1, size), "wrong offset should succeed");
+
+		// The base address should also succeed
+		assertTrue(MemoryUtils.c_deallocate(MemoryUtils.c_allocate(size, contiguous), size),
+				"correct deallocation should succeed");
+		assertTrue(MemoryUtils.deallocate(MemoryUtils.allocate(size, contiguous), size),
+				"correct deallocation should succeed");
 	}
 
 	/**

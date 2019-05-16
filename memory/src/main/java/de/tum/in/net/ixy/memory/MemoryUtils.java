@@ -145,6 +145,18 @@ public final class MemoryUtils {
 	 */
 	public static native long c_allocate(final long size, final boolean contiguous);
 
+	/**
+	 * Deallocates a previously allocated memory region.
+	 * <p>
+	 * If the given address is not a multiple of the pagesize it won't fail because it will be converted to the base
+	 * address.
+	 * 
+	 * @param address The address of the previously allocated region.
+	 * @param size    The size of the allocated region.
+	 * @return If the operation succeeded.
+	 */
+	public static native boolean c_deallocate(final long address, final long size);
+
 	////////////////////////////////////////////////// UNSAFE METHODS //////////////////////////////////////////////////
 
 	/**
@@ -190,6 +202,19 @@ public final class MemoryUtils {
 	 */
 	public static long u_allocate(final long size, final boolean contiguous) throws UnsupportedOperationException {
 		log.trace("Allocating bigger memory page size using Unsafe object");
+		throw new UnsupportedOperationException("Unsafe object does not provide any facility for this check");
+	}
+
+	/**
+	 * The {@link Unsafe} object does not have any method to check for bigger memory pages.
+	 * 
+	 * @param address The address of the previously allocated region.
+	 * @param size    The size of the allocated region.
+	 * @return If the operation succeeded.
+	 * @throws UnsupportedOperationException Always.
+	 */
+	public static boolean u_deallocate(final long address, final long size) throws UnsupportedOperationException {
+		log.trace("Deallocating bigger memory page size using Unsafe object");
 		throw new UnsupportedOperationException("Unsafe object does not provide any facility for this check");
 	}
 
@@ -315,9 +340,24 @@ public final class MemoryUtils {
 	 * @param contiguous If the allocated bytes should be contiguous.
 	 * @return The base address of the allocated memory region.
 	 */
-	public static long allocate(long size, final boolean contiguous) {
+	public static long allocate(final long size, final boolean contiguous) {
 		log.trace("Smart memory allocation");
 		return c_allocate(size, contiguous);
+	}
+
+	/**
+	 * Deallocates a previously allocated memory region.
+	 * <p>
+	 * This method delegates to {@link #c_deallocate(long)} since there is no other way to deallocate memory using big
+	 * memory pages in Java.
+	 * 
+	 * @param address The address of the previously allocated region.
+	 * @param size    The size of the allocated region.
+	 * @return If the operation succeeded.
+	 */
+	public static boolean deallocate(final long address, final long size) {
+		log.trace("Smart memory deallocation");
+		return c_deallocate(address, size);
 	}
 
 }
