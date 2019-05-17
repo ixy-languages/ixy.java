@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.DisplayName;
@@ -125,60 +126,45 @@ class MemoryUtilsTest {
 			assertNotEquals(0, addr, "the base address is not null");
 		}
 
-		// Test each memory address for read and write using the Unsafe object
-		val hpsz = MemoryUtils.getHugepagesize();
-		for (var j = 0; j < hpsz; j += 1) {
-			val fj    = j;
-			val rand  = Math.random();
-			val one   = (byte)  (rand * Byte.MAX_VALUE);
-			val two   = (short) (rand * Short.MAX_VALUE);
-			val four  = (int)   (rand * Integer.MAX_VALUE);
-			val eight = (long)  (rand * Long.MAX_VALUE);
-			
-			// Byte granularity
-			assertDoesNotThrow(() -> {
-				unsafe.putByte(caddr + fj, one);
-				unsafe.putByte(addr + fj, one);
-			}, String.format("address 0x%x + offset 0x%x is byte-writable", addr, fj));
-			assertDoesNotThrow(() -> {
-				assertEquals(one, unsafe.getByte(caddr + fj), "the read number should be correct");
-				assertEquals(one, unsafe.getByte(addr + fj), "the read number should be correct");
-			}, String.format("address 0x%x + offset 0x%x is byte-readable", addr, fj));
-
-			// Short granularity
-			if (j < hpsz - 1) {
-				assertDoesNotThrow(() -> {
-					unsafe.putShort(caddr + fj, two);
-					unsafe.putShort(addr + fj, two);
-				}, String.format("address 0x%x + offset 0x%x is short-writable", addr, fj));
-				assertDoesNotThrow(() -> {
-					assertEquals(two, unsafe.getShort(caddr + fj), "the read number should be correct");
-					assertEquals(two, unsafe.getShort(addr + fj), "the read number should be correct");
-				}, String.format("address 0x%x + offset 0x%x is short-readable", addr, fj));
-			}
-
-			// Integer granularity
-			if (j < hpsz - 3) {
-				assertDoesNotThrow(() -> {
-					unsafe.putInt(caddr + fj, four);
-					unsafe.putInt(addr + fj, four);
-				}, String.format("address 0x%x + offset 0x%x is int-writable", addr, fj));
-				assertDoesNotThrow(() -> {
-					assertEquals(four, unsafe.getInt(caddr + fj), "the read number should be correct");
-					assertEquals(four, unsafe.getInt(addr + fj), "the read number should be correct");
-				}, String.format("address 0x%x + offset 0x%x is int-readable", addr, fj));
-			}
-
-			// Long granularity
-			if (j < hpsz - 7) {
-				assertDoesNotThrow(() -> {
-					unsafe.putLong(caddr + fj, eight);
-					unsafe.putLong(addr + fj, eight);
-				}, String.format("address 0x%x + offset 0x%x is long-writable", addr, fj));
-				assertDoesNotThrow(() -> {
-					assertEquals(eight, unsafe.getLong(caddr + fj), "the read number should be correct");
-					assertEquals(eight, unsafe.getLong(addr + fj), "the read number should be correct");
-				}, String.format("address 0x%x + offset 0x%x is long-readable", addr, fj));
+		// Test each memory address for read and write using the Unsafe object for each different aritmethic size and
+		// avoid overlapping reads and writes by parallizing all the operations that use addresses with enough distance
+		// This is 5x faster than doing a sequential loop for each address
+		val hpsz  = MemoryUtils.getHugepagesize();
+		for (val bytes : new int[]{1, 2, 4, 8}) {
+			for (var i = 0; i < bytes; i += 1) {
+				val alignment = i;
+				val indexes = LongStream.range(0, hpsz - bytes - 1)
+						.parallel()
+						.filter(index -> index % bytes == alignment);
+				val msb  = 1 << (bytes * 8 - 2);
+				val max  = (msb - 1) | msb;
+				val rand = (long) (Math.random() * max);
+				switch (bytes) {
+					case Byte.BYTES:
+						indexes.forEach(index -> {
+							testWriteByte(unsafe, caddr + index, (byte) rand);
+							testWriteByte(unsafe, addr + index, (byte) rand);
+						});
+						break;
+					case Short.BYTES:
+						indexes.forEach(index -> {
+							testWriteShort(unsafe, caddr + index, (short) rand);
+							testWriteShort(unsafe, addr + index, (short) rand);
+						});
+						break;
+					case Integer.BYTES:
+						indexes.forEach(index -> {
+							testWriteInt(unsafe, caddr + index, (int) rand);
+							testWriteInt(unsafe, addr + index, (int) rand);
+						});
+						break;
+					case Long.BYTES:
+						indexes.forEach(index -> {
+							testWriteLong(unsafe, caddr + index, (long) rand);
+							testWriteLong(unsafe, addr + index, (long) rand);
+						});
+						break;
+				}
 			}
 		}
 	}
@@ -328,6 +314,70 @@ class MemoryUtilsTest {
 			assertEquals(number, MemoryUtils.getLong(virt), "the long should be correct");
 		}
 		MemoryUtils.deallocate(virt, 8);
+	}
+
+	/**
+	 * Asserts that an arbitrary random address can be written and read.
+	 * 
+	 * @param unsafe  The unsafe object that allows writting arbitrary memory regions.
+	 * @param address The address to read/write from/to.
+	 * @param value   The value to read/write.
+	 */
+	private static void testWriteByte(final Unsafe unsafe, final long address, final byte value) {
+		assertDoesNotThrow(() -> {
+			unsafe.putByte(address, value);
+		}, String.format("address 0x%x is byte-writable", address));
+		assertDoesNotThrow(() -> {
+			assertEquals(value, unsafe.getByte(address), "the read number should be correct");
+		}, String.format("address 0x%x is byte-readable", address));
+	}
+
+	/**
+	 * Asserts that an arbitrary random address can be written and read.
+	 * 
+	 * @param unsafe  The unsafe object that allows writting arbitrary memory regions.
+	 * @param address The address to read/write from/to.
+	 * @param value   The value to read/write.
+	 */
+	private static void testWriteShort(final Unsafe unsafe, final long address, final short value) {
+		assertDoesNotThrow(() -> {
+			unsafe.putShort(address, value);
+		}, String.format("address 0x%x is short-writable", address));
+		assertDoesNotThrow(() -> {
+			assertEquals(value, unsafe.getShort(address), "the read number should be correct");
+		}, String.format("address 0x%x is short-readable", address));
+	}
+
+	/**
+	 * Asserts that an arbitrary random address can be written and read.
+	 * 
+	 * @param unsafe  The unsafe object that allows writting arbitrary memory regions.
+	 * @param address The address to read/write from/to.
+	 * @param value   The value to read/write.
+	 */
+	private static void testWriteInt(final Unsafe unsafe, final long address, final int value) {
+		assertDoesNotThrow(() -> {
+			unsafe.putInt(address, value);
+		}, String.format("address 0x%x is int-writable", address));
+		assertDoesNotThrow(() -> {
+			assertEquals(value, unsafe.getInt(address), "the read number should be correct");
+		}, String.format("address 0x%x is int-readable", address));
+	}
+
+	/**
+	 * Asserts that an arbitrary random address can be written and read.
+	 * 
+	 * @param unsafe  The unsafe object that allows writting arbitrary memory regions.
+	 * @param address The address to read/write from/to.
+	 * @param value   The value to read/write.
+	 */
+	private static void testWriteLong(final Unsafe unsafe, final long address, final long value) {
+		assertDoesNotThrow(() -> {
+			unsafe.putLong(address, value);
+		}, String.format("address 0x%x is long-writable", address));
+		assertDoesNotThrow(() -> {
+			assertEquals(value, unsafe.getLong(address), "the read number should be correct");
+		}, String.format("address 0x%x is long-readable", address));
 	}
 
 	/**
