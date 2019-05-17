@@ -1,5 +1,7 @@
 package de.tum.in.net.ixy.pci;
 
+import de.tum.in.net.ixy.pci.BuildConstants;
+
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -10,14 +12,13 @@ import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.SeekableByteChannel;
+
 import java.util.Set;
 
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
-
-import de.tum.in.net.ixy.pci.BuildConstants;
 
 /**
  * PCI static utils with instantiation support.
@@ -178,17 +179,19 @@ public final class Pci {
 	 * @throws FileNotFoundException If the specified PCI device does not exist or any of its required resources.
 	 * @throws IOException           If reading the {@code config} resource fails while trying to guess the driver.
 	 */
-	public Pci(@NonNull final String pciDevice, final boolean ixgbe, final boolean virtio) throws FileNotFoundException, IOException {
-		name     = pciDevice;
-		buffer   = ByteBuffer.allocateDirect(Math.max(3, name.length())).order(ByteOrder.nativeOrder());
-		config   = new RandomAccessFile(String.format(PCI_RES_PATH_FMT, name, "config"), "rwd").getChannel();
+	public Pci(@NonNull final String pciDevice, final boolean ixgbe, final boolean virtio) throws FileNotFoundException,
+			IOException {
+		if (BuildConstants.DEBUG) log.trace("Creating a PCI instance to manipulate the device {}", pciDevice);
+		name = pciDevice;
+		buffer = ByteBuffer.allocateDirect(Math.max(3, name.length())).order(ByteOrder.nativeOrder());
+		config = new RandomAccessFile(String.format(PCI_RES_PATH_FMT, name, "config"), "rwd").getChannel();
 		resource = new RandomAccessFile(String.format(PCI_RES_PATH_FMT, name, "resource0"), "rwd").getChannel();
 		if (ixgbe) {
 			unbind = new FileOutputStream(String.format(PCI_IXGBE_PATH_FMT, "unbind")).getChannel();
-			bind   = new FileOutputStream(String.format(PCI_IXGBE_PATH_FMT, "bind")).getChannel();
+			bind = new FileOutputStream(String.format(PCI_IXGBE_PATH_FMT, "bind")).getChannel();
 		} else if (virtio) {
 			unbind = new FileOutputStream(String.format(PCI_VIRTIO_PATH_FMT, "unbind")).getChannel();
-			bind   = new FileOutputStream(String.format(PCI_VIRTIO_PATH_FMT, "bind")).getChannel();
+			bind = new FileOutputStream(String.format(PCI_VIRTIO_PATH_FMT, "bind")).getChannel();
 		} else {
 			val vendor = getVendorId(buffer, config);
 			boolean isIxgbe = true;
@@ -232,7 +235,7 @@ public final class Pci {
 	 * @see #getVendorId(ByteBuffer, SeekableByteChannel)
 	 */
 	public short getVendorId() throws IOException {
-		log.trace("Reading vendor id of PCI device {}", name);
+		if (BuildConstants.DEBUG) log.trace("Reading vendor id of PCI device {}", name);
 		val pos = buffer.position();
 		if (buffer.capacity() - pos >= 2) {
 			buffer.limit(pos + 2);
@@ -255,7 +258,7 @@ public final class Pci {
 	 * @see #getDeviceId(ByteBuffer, SeekableByteChannel)
 	 */
 	public short getDeviceId() throws IOException {
-		log.trace("Reading device id of PCI device {}", name);
+		if (BuildConstants.DEBUG) log.trace("Reading device id of PCI device {}", name);
 		val pos = buffer.position();
 		if (buffer.capacity() - pos >= 2) {
 			buffer.limit(pos + 2);
@@ -278,7 +281,7 @@ public final class Pci {
 	 * @see #getClassId(ByteBuffer, SeekableByteChannel)
 	 */
 	public byte getClassId() throws IOException {
-		log.trace("Reading class id of PCI device {}", name);
+		if (BuildConstants.DEBUG) log.trace("Reading class id of PCI device {}", name);
 		val pos = buffer.position();
 		if (buffer.capacity() - pos >= 3) {
 			buffer.limit(pos + 3);
@@ -298,7 +301,7 @@ public final class Pci {
 	 * @see #unbindDriver(ByteBuffer, SeekableByteChannel)
 	 */
 	public void unbindDriver() throws IOException {
-		log.trace("Unbinding the driver of PCI device {}", name);
+		if (BuildConstants.DEBUG) log.trace("Unbinding the driver of PCI device {}", name);
 		buffer.clear().put(name.getBytes()).flip();
 		unbindDriver(buffer, unbind);
 	}
@@ -313,7 +316,7 @@ public final class Pci {
 	 * @see #bindDriver(ByteBuffer, SeekableByteChannel)
 	 */
 	public void bindDriver() throws IOException {
-		log.trace("Binding driver of PCI device {}", name);
+		if (BuildConstants.DEBUG) log.trace("Binding driver of PCI device {}", name);
 		buffer.clear().put(name.getBytes()).flip();
 		bindDriver(buffer, bind);
 	}
@@ -329,7 +332,7 @@ public final class Pci {
 	 * @see #getCommand(ByteBuffer, SeekableByteChannel)
 	 */
 	public boolean isDmaEnabled() throws IOException {
-		log.trace("Checking if DMA is enabled on PCI device {}", name);
+		if (BuildConstants.DEBUG) log.trace("Checking if DMA is enabled on PCI device {}", name);
 		val pos = buffer.position();
 		if (buffer.capacity() - pos >= 2) {
 			buffer.limit(pos + 2);
@@ -350,7 +353,7 @@ public final class Pci {
 	 * @see #setDma(ByteBuffer, SeekableByteChannel, boolean)
 	 */
 	public void enableDma() throws IOException {
-		log.trace("Enabling DMA on PCI device {}", name);
+		if (BuildConstants.DEBUG) log.trace("Enabling DMA on PCI device {}", name);
 		val pos = buffer.position();
 		if (buffer.capacity() - pos >= 2) {
 			buffer.limit(pos + 2);
@@ -371,7 +374,7 @@ public final class Pci {
 	 * @see #setDma(ByteBuffer, SeekableByteChannel, boolean)
 	 */
 	public void disableDma() throws IOException {
-		log.trace("Disabling DMA on PCI device {}", name);
+		if (BuildConstants.DEBUG) log.trace("Disabling DMA on PCI device {}", name);
 		val pos = buffer.position();
 		if (buffer.capacity() - pos >= 2) {
 			buffer.limit(pos + 2);
@@ -436,7 +439,7 @@ public final class Pci {
 	 * @see #getVendorId(ByteBuffer, SeekableByteChannel)
 	 */
 	public static short getVendorId(@NonNull final String pciDevice) throws FileNotFoundException, IOException {
-		log.trace("Reading vendor id of PCI device {}", pciDevice);
+		if (BuildConstants.DEBUG) log.trace("Reading vendor id of PCI device {}", pciDevice);
 		val buffer = ByteBuffer.allocate(2).order(ByteOrder.nativeOrder());
 		val resource = String.format(PCI_RES_PATH_FMT, pciDevice, "config");
 		try (val file = new FileInputStream(resource)) {
@@ -458,7 +461,7 @@ public final class Pci {
 	 * @see #getDeviceId(ByteBuffer, SeekableByteChannel)
 	 */
 	public static short getDeviceId(@NonNull final String pciDevice) throws FileNotFoundException, IOException {
-		log.trace("Reading device id of PCI device {}", pciDevice);
+		if (BuildConstants.DEBUG) log.trace("Reading device id of PCI device {}", pciDevice);
 		val buffer = ByteBuffer.allocate(2).order(ByteOrder.nativeOrder());
 		val resource = String.format(PCI_RES_PATH_FMT, pciDevice, "config");
 		try (val file = new FileInputStream(resource)) {
@@ -480,7 +483,7 @@ public final class Pci {
 	 * @see #getClassId(ByteBuffer, SeekableByteChannel)
 	 */
 	public static byte getClassId(@NonNull String pciDevice) throws FileNotFoundException, IOException {
-		log.trace("Reading class id of PCI device {}", pciDevice);
+		if (BuildConstants.DEBUG) log.trace("Reading class id of PCI device {}", pciDevice);
 		val buffer = ByteBuffer.allocate(3).order(ByteOrder.nativeOrder());
 		val resource = String.format(PCI_RES_PATH_FMT, pciDevice, "config");
 		try (val stream = new FileInputStream(resource)) {
@@ -501,7 +504,7 @@ public final class Pci {
 	 * @see #unbindDriver(ByteBuffer, SeekableByteChannel)
 	 */
 	public static void unbindDriver(@NonNull final String pciDevice) throws FileNotFoundException, IOException {
-		log.trace("Unbinding driver of PCI device {}", pciDevice);
+		if (BuildConstants.DEBUG) log.trace("Unbinding driver of PCI device {}", pciDevice);
 		val buffer = ByteBuffer.wrap(pciDevice.getBytes());
 		val resource = String.format(PCI_RES_PATH_FMT, pciDevice, "driver/unbind");
 		try (val stream = new FileOutputStream(resource, false)) {
@@ -522,7 +525,7 @@ public final class Pci {
 	 * @see #bindDriver(ByteBuffer, SeekableByteChannel)
 	 */
 	public static void bindDriver(@NonNull final String pciDevice) throws FileNotFoundException, IOException {
-		log.trace("Binding driver of PCI device {}", pciDevice);
+		if (BuildConstants.DEBUG) log.trace("Binding driver of PCI device {}", pciDevice);
 		val buffer = ByteBuffer.wrap(pciDevice.getBytes());
 		val resource = String.format(PCI_RES_PATH_FMT, pciDevice, "driver/bind");
 		try (val stream = new FileOutputStream(resource, false)) {
@@ -544,7 +547,7 @@ public final class Pci {
 	 * @see #getCommand(ByteBuffer, SeekableByteChannel)
 	 */
 	public static boolean isDmaEnabled(@NonNull final String pciDevice) throws FileNotFoundException, IOException {
-		log.trace("Checking if DMA is enabled on PCI device {}", pciDevice);
+		if (BuildConstants.DEBUG) log.trace("Checking if DMA is enabled on PCI device {}", pciDevice);
 		val buffer = ByteBuffer.allocate(2);
 		val resource = String.format(PCI_RES_PATH_FMT, pciDevice, "config");
 		try (val stream = new FileInputStream(resource)) {
@@ -565,7 +568,7 @@ public final class Pci {
 	 * @see #setDma(ByteBuffer, SeekableByteChannel, boolean)
 	 */
 	public static void enableDma(@NonNull final String pciDevice) throws FileNotFoundException, IOException {
-		log.trace("Enabling DMA on PCI device {}", pciDevice);
+		if (BuildConstants.DEBUG) log.trace("Enabling DMA on PCI device {}", pciDevice);
 		val buffer = ByteBuffer.allocate(2);
 		val resource = String.format(PCI_RES_PATH_FMT, pciDevice, "config");
 		try (val raf = new RandomAccessFile(resource, "rwd")) {
@@ -586,7 +589,7 @@ public final class Pci {
 	 * @see #setDma(ByteBuffer, SeekableByteChannel, boolean)
 	 */
 	public static void disableDma(@NonNull final String pciDevice) throws FileNotFoundException, IOException {
-		log.trace("Disabling CMA on PCI device {}", pciDevice);
+		if (BuildConstants.DEBUG) log.trace("Disabling DMA on PCI device {}", pciDevice);
 		val buffer = ByteBuffer.allocate(2);
 		val resource = String.format(PCI_RES_PATH_FMT, pciDevice, "config");
 		try (val raf = new RandomAccessFile(resource, "rwd")) {
@@ -604,6 +607,7 @@ public final class Pci {
 	 */
 	public static MappedByteBuffer mapResource(@NonNull final String pciDevice) throws FileNotFoundException,
 			IOException {
+		if (BuildConstants.DEBUG) log.trace("Mapping resource0 of PCI device {}", pciDevice); 
 		val path = String.format(PCI_RES_PATH_FMT, pciDevice, "resource0");
 		val fileChannel = new RandomAccessFile(path, "rwd").getChannel();
 		return getMmap(fileChannel);
@@ -628,7 +632,7 @@ public final class Pci {
 	 */
 	private static short getVendorId(final ByteBuffer buffer, final SeekableByteChannel channel) throws IOException {
 		val bytes = channel.position(0).read(buffer.mark());
-		if (bytes < 2) {
+		if (BuildConstants.DEBUG && bytes < 2) {
 			log.warn("Could't read the exact amount of bytes needed to read the vendor id");
 		}
 		return buffer.reset().getShort();
@@ -651,7 +655,7 @@ public final class Pci {
 	 */
 	private static short getDeviceId(final ByteBuffer buffer, final SeekableByteChannel channel) throws IOException {
 		val bytes = channel.position(2).read(buffer.mark());
-		if (bytes < 2) {
+		if (BuildConstants.DEBUG && bytes < 2) {
 			log.warn("Could't read the exact amount of bytes needed to read the device id");
 		}
 		return buffer.reset().getShort();
@@ -675,7 +679,7 @@ public final class Pci {
 	private static byte getClassId(final ByteBuffer buffer, final SeekableByteChannel channel) throws IOException {
 		val pos = buffer.position();
 		val bytes = channel.position(9).read(buffer);
-		if (bytes < 3) {
+		if (BuildConstants.DEBUG && bytes < 3) {
 			log.warn("Could't read the exact amount of bytes needed to read the class id");
 		}
 		if (buffer.order() == ByteOrder.BIG_ENDIAN) {
@@ -700,7 +704,7 @@ public final class Pci {
 	 */
 	private static void unbindDriver(final ByteBuffer buffer, final SeekableByteChannel channel) throws IOException {
 		val bytes = channel.write(buffer);
-		if (bytes < 12) {
+		if (BuildConstants.DEBUG && bytes < 12) {
 			log.warn("Couldn't write the exact amount of bytes needed to unbind the driver");
 		}
 	}
@@ -721,8 +725,7 @@ public final class Pci {
 	 */
 	private static void bindDriver(final ByteBuffer buffer, final SeekableByteChannel channel) throws IOException {
 		val bytes = channel.write(buffer);
-		log.trace("Internal call to private implementation of bindDriver");
-		if (bytes < 12) {
+		if (BuildConstants.DEBUG && bytes < 12) {
 			log.warn("Couldn't write the exact amount of bytes needed to bind the driver");
 		}
 	}
@@ -743,7 +746,7 @@ public final class Pci {
 	 */
 	private static short getCommand(final ByteBuffer buffer, final SeekableByteChannel channel) throws IOException {
 		val bytes = channel.position(4).read(buffer.mark());
-		if (bytes < 2) {
+		if (BuildConstants.DEBUG && bytes < 2) {
 			log.warn("Couldn't read the exact amount of bytes needed to read the command");
 		}
 		return buffer.reset().getShort();
@@ -774,7 +777,7 @@ public final class Pci {
 		}
 		buffer.position(pos).putShort(command);
 		val octets = channel.position(4).write(buffer.position(pos));
-		if (octets < 2) {
+		if (BuildConstants.DEBUG && octets < 2) {
 			log.warn("Couldn't write the exact amount of bytes needed to set the DMA status");
 		}
 	}
@@ -795,7 +798,7 @@ public final class Pci {
 			mmap.order(ByteOrder.nativeOrder());
 			return mmap;
 		} catch (IOException e) {
-			e.printStackTrace();
+			if (BuildConstants.DEBUG) log.error("Could not map file to memory", e);
 			throw e;
 		}
 	}
