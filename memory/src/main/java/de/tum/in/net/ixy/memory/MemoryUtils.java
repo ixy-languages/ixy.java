@@ -377,7 +377,7 @@ public final class MemoryUtils {
 		log.trace("Smart memory translation");
 
 		// If we are on a non-Linux OS or forcing the C implementation, call the JNI method
-		if (!System.getProperty("os.name").toLowerCase().contains("lin") || !BuildConstants.UNSAFE || unsafe == null) {
+		if (!System.getProperty("os.name").toLowerCase().contains("lin")) {
 			return 0;
 		}
 
