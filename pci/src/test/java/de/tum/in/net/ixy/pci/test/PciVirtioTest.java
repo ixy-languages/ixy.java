@@ -18,6 +18,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -39,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @DisplayName("PCI device access (read & write)")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@EnabledOnOs(OS.LINUX)
 class PciVirtioTest {
 
 	/** The expected class id. */

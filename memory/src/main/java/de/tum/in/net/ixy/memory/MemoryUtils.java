@@ -376,7 +376,7 @@ public final class MemoryUtils {
 	public static long virt2phys(final long address) {
 		log.trace("Smart memory translation");
 
-		// If we are on a non-Linux OS or forcing the C implementation, call the JNI method
+		// If we are on a non-Linux OS this won't work
 		if (!System.getProperty("os.name").toLowerCase().contains("lin")) {
 			return 0;
 		}
