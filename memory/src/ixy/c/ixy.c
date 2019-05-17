@@ -304,7 +304,7 @@ Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1deallocate(JNIEnv *env, jclass clas
 
 #elif _WIN32
     // Deallocate the memory region
-    if (!VirtualFree(address, 0, MEM_RELEASE)) {
+    if (!VirtualFree((void *) address, 0, MEM_RELEASE)) {
         printf("VirtualFree error (%d)\n", GetLastError());
         return JNI_FALSE;
     }
@@ -312,6 +312,48 @@ Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1deallocate(JNIEnv *env, jclass clas
 #else
     return JNI_FALSE;
 #endif
+}
+
+/////////////////////////////////////////////// UNSAFE REIMPLEMENTATIONS ///////////////////////////////////////////////
+
+JNIEXPORT jbyte JNICALL
+Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1getByte(JNIEnv *env, jclass class, jlong address) {
+    return *((jbyte *) address);
+}
+
+JNIEXPORT jshort JNICALL
+Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1getShort(JNIEnv *env, jclass class, jlong address) {
+    return *((jshort *) address);
+}
+
+JNIEXPORT jint JNICALL
+Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1getInt(JNIEnv *env, jclass class, jlong address) {
+    return *((jint *) address);
+}
+
+JNIEXPORT jlong JNICALL
+Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1getLong(JNIEnv *env, jclass class, jlong address) {
+    return *((jlong *) address);
+}
+
+JNIEXPORT void JNICALL
+Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1putByte(JNIEnv *env, jclass class, jlong address, jbyte value) {
+    *((jbyte *) address) = value;
+}
+
+JNIEXPORT void JNICALL
+Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1putShort(JNIEnv *env, jclass class, jlong address, jshort value) {
+    *((jshort *) address) = value;
+}
+
+JNIEXPORT void JNICALL
+Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1putInt(JNIEnv *env, jclass class, jlong address, jint value) {
+    *((jint *) address) = value;
+}
+
+JNIEXPORT void JNICALL
+Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1putLong(JNIEnv *env, jclass class, jlong address, jlong value) {
+    *((jlong *) address) = value;
 }
 
 #ifdef __cplusplus

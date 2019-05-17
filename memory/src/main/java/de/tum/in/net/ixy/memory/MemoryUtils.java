@@ -161,6 +161,70 @@ public final class MemoryUtils {
 	 */
 	public static native boolean c_deallocate(final long address, final long size);
 
+	/**
+	 * Reads a {@code byte} from an arbitrary memory address.
+	 * 
+	 * @param address The address to read from.
+	 * @return The read value.
+	 */
+	public static native byte c_getByte(final long address);
+
+	/**
+	 * Reads a {@code short} from an arbitrary memory address.
+	 * 
+	 * @param address The address to read from.
+	 * @return The read value.
+	 */
+	public static native short c_getShort(final long address);
+
+	/**
+	 * Reads a {@code int} from an arbitrary memory address.
+	 * 
+	 * @param address The address to read from.
+	 * @return The read value.
+	 */
+	public static native int c_getInt(final long address);
+
+	/**
+	 * Reads a {@code long} from an arbitrary memory address.
+	 * 
+	 * @param address The address to read from.
+	 * @return The read value.
+	 */
+	public static native long c_getLong(final long address);
+
+	/**
+	 * Writes a {@code byte} to an arbitrary memory address.
+	 * 
+	 * @param address The address to write to.
+	 * @param value   The value to write.
+	 */
+	public static native void c_putByte(final long address, final byte value);
+
+	/**
+	 * Writes a {@code short} to an arbitrary memory address.
+	 * 
+	 * @param address The address to write to.
+	 * @param value   The value to write.
+	 */
+	public static native void c_putShort(final long address, final short value);
+
+	/**
+	 * Writes an {@code int} to an arbitrary memory address.
+	 * 
+	 * @param address The address to write to.
+	 * @param value   The value to write.
+	 */
+	public static native void c_putInt(final long address, final int value);
+	
+	/**
+	 * Writes a {@code long} to an arbitrary memory address.
+	 * 
+	 * @param address The address to write to.
+	 * @param value   The value to write.
+	 */
+	public static native void c_putLong(final long address, final long value);
+
 	////////////////////////////////////////////////// UNSAFE METHODS //////////////////////////////////////////////////
 
 	/**
@@ -220,6 +284,86 @@ public final class MemoryUtils {
 	public static boolean u_deallocate(final long address, final long size) throws UnsupportedOperationException {
 		log.trace("Deallocating bigger memory page size using Unsafe object");
 		throw new UnsupportedOperationException("Unsafe object does not provide any facility for this operation");
+	}
+
+	/**
+	 * Delegates to the method {@link Unsafe#getByte(long)}.
+	 * 
+	 * @param address The virtual address to read from.
+	 * @return The read value.
+	 */
+	public static byte u_getByte(final long address) {
+		return unsafe.getByte(address);
+	}
+
+	/**
+	 * Delegates to the method {@link Unsafe#getShort(long)}.
+	 * 
+	 * @param address The virtual address to read from.
+	 * @return The read value.
+	 */
+	public static short u_getShort(final long address) {
+		return unsafe.getShort(address);
+	}
+
+	/**
+	 * Delegates to the method {@link Unsafe#getInt(long)}.
+	 * 
+	 * @param address The virtual address to read from.
+	 * @return The read value.
+	 */
+	public static int u_getInt(final long address) {
+		return unsafe.getInt(address);
+	}
+
+	/**
+	 * Delegates to the method {@link Unsafe#getLong(long)}.
+	 * 
+	 * @param address The virtual address to read from.
+	 * @return The read value.
+	 */
+	public static long u_getLong(final long address) {
+		return unsafe.getLong(address);
+	}
+
+	/**
+	 * Delegates to the method {@link Unsafe#putByte(long, byte)}.
+	 * 
+	 * @param address The virtual address to write to.
+	 * @param value   The value to write.
+	 */
+	public static void u_putByte(final long address, final byte value) {
+		unsafe.putByte(address, value);
+	}
+
+	/**
+	 * Delegates to the method {@link Unsafe#putShort(long, short)}.
+	 * 
+	 * @param address The virtual address to write to.
+	 * @param value   The value to write.
+	 */
+	public static void u_putShort(final long address, final short value) {
+		unsafe.putShort(address, value);
+	}
+
+	/**
+	 * Delegates to the method {@link Unsafe#putInt(long, int)}.
+	 * 
+	 * @param address The virtual address to write to.
+	 * @param value   The value to write.
+	 */
+	public static void u_putInt(final long address, final int value) {
+		unsafe.putInt(address, value);
+	}
+
+	/**
+	 * Delegates to the method {@link Unsafe#putLong(long, long)}.
+	 * 
+	 * @param address The virtual address to write to.
+	 * @param value   The value to write.
+	 */
+	public static void u_putLong(final long address, final long value) {
+		unsafe.putLong(address, value);
 	}
 
 	/////////////////////////////////////////////////// SAFE METHODS ///////////////////////////////////////////////////
@@ -434,6 +578,112 @@ public final class MemoryUtils {
 		}
 		val phys = virt2phys(virt);
 		return new DmaMemory(virt, phys);
+	}
+
+	/**
+	 * Uses the unsafe implementation or the JNI call based on the value of {@link BuildConstants#UNSAFE}.
+	 * 
+	 * @param address The address to read from.
+	 * @return The read value.
+	 */
+	public static byte getByte(final long address) {
+		return BuildConstants.UNSAFE ? u_getByte(address) : c_getByte(address);
+	}
+
+	/**
+	 * Uses the unsafe implementation or the JNI call based on the value of {@link BuildConstants#UNSAFE}.
+	 * 
+	 * @param address The address to read from.
+	 * @return The read value.
+	 */
+	public static short getShort(final long address) {
+		return BuildConstants.UNSAFE ? u_getShort(address) : c_getShort(address);
+	}
+
+	/**
+	 * Uses the unsafe implementation or the JNI call based on the value of {@link BuildConstants#UNSAFE}.
+	 * 
+	 * @param address The address to read from.
+	 * @return The read value.
+	 */
+	public static int getInt(final long address) {
+		return BuildConstants.UNSAFE ? u_getInt(address) : c_getInt(address);
+	}
+
+	/**
+	 * Uses the unsafe implementation or the JNI call based on the value of {@link BuildConstants#UNSAFE}.
+	 * 
+	 * @param address The address to read from.
+	 * @return The read value.
+	 */
+	public static long getLong(final long address) {
+		return BuildConstants.UNSAFE ? u_getLong(address) : c_getLong(address);
+	}
+
+	/**
+	 * Uses the unsafe implementation or the JNI call based on the value of {@link BuildConstants#UNSAFE}.
+	 * 
+	 * @param address The address to read from.
+	 * @return The read value.
+	 */
+	public static long putLong(final long address) {
+		return BuildConstants.UNSAFE ? u_getLong(address) : c_getLong(address);
+	}
+
+	/**
+	 * Uses the unsafe implementation or the JNI call based on the value of {@link BuildConstants#UNSAFE}.
+	 * 
+	 * @param address The address to write to.
+	 * @param value   The value to write.
+	 */
+	public static void putByte(final long address, final byte value) {
+		if (BuildConstants.UNSAFE) {
+			u_putByte(address, value);
+		} else {
+			c_putByte(address, value);
+		}
+	}
+
+	/**
+	 * Uses the unsafe implementation or the JNI call based on the value of {@link BuildConstants#UNSAFE}.
+	 * 
+	 * @param address The address to write to.
+	 * @param value   The value to write.
+	 */
+	public static void putShort(final long address, final short value) {
+		if (BuildConstants.UNSAFE) {
+			u_putShort(address, value);
+		} else {
+			c_putShort(address, value);
+		}
+	}
+
+	/**
+	 * Uses the unsafe implementation or the JNI call based on the value of {@link BuildConstants#UNSAFE}.
+	 * 
+	 * @param address The address to write to.
+	 * @param value   The value to write.
+	 */
+	public static void putInt(final long address, final int value) {
+		if (BuildConstants.UNSAFE) {
+			u_putInt(address, value);
+		} else {
+			c_putInt(address, value);
+		}
+	}
+
+	/**
+	 * Uses the unsafe implementation or the JNI call based on the value of {@link BuildConstants#UNSAFE}.
+	 * 
+	 * @param address The address to write to.
+	 * @param value   The value to write.
+	 */
+	public static void putLong(final long address, final long value) {
+		if (BuildConstants.UNSAFE) {
+			u_putLong(address, value);
+		} else {
+			c_putLong(address, value);
+		}
 	}
 
 }

@@ -250,6 +250,86 @@ class MemoryUtilsTest {
 		MemoryUtils.deallocate(virt, 1);
 	}
 
+	/** Checks that memory can be written and read arbitrarily using bytes. */
+	@Test
+	@Order(3)
+	@DisplayName("Arbitrary bytes can be written and read")
+	void getputByte() {
+		val virt = MemoryUtils.allocate(1, true);
+		assertNotEquals(0, virt, "virtual address is not null");
+		assertEquals(0, virt & MemoryUtils.getPagesize(), "virtual address is a page base address");
+		for (var i = 0; i < 3; i += 1) {
+			val number = (byte) (Math.random() * Byte.MAX_VALUE);
+			if      (i == 0) MemoryUtils.c_putByte(virt, number); 
+			else if (i == 1) MemoryUtils.u_putByte(virt, number); 
+			else if (i == 2) MemoryUtils.putByte(virt, number);
+			assertEquals(number, MemoryUtils.c_getByte(virt), "the byte should be correct");
+			assertEquals(number, MemoryUtils.u_getByte(virt), "the byte should be correct");
+			assertEquals(number, MemoryUtils.getByte(virt), "the byte should be correct");
+		}
+		MemoryUtils.deallocate(virt, 1);
+	}
+
+	/** Checks that memory can be written and read arbitrarily using short. */
+	@Test
+	@Order(3)
+	@DisplayName("Arbitrary shorts can be written and read")
+	void getputShort() {
+		val virt = MemoryUtils.allocate(2, true);
+		assertNotEquals(0, virt, "virtual address is not null");
+		assertEquals(0, virt & MemoryUtils.getPagesize(), "virtual address is a page base address");
+		for (var i = 0; i < 3; i += 1) {
+			val number = (short) (Math.random() * Short.MAX_VALUE);
+			if      (i == 0) MemoryUtils.c_putShort(virt, number); 
+			else if (i == 1) MemoryUtils.u_putShort(virt, number); 
+			else if (i == 2) MemoryUtils.putShort(virt, number);
+			assertEquals(number, MemoryUtils.c_getShort(virt), "the short should be correct");
+			assertEquals(number, MemoryUtils.u_getShort(virt), "the short should be correct");
+			assertEquals(number, MemoryUtils.getShort(virt), "the short should be correct");
+		}
+		MemoryUtils.deallocate(virt, 2);
+	}
+
+	/** Checks that memory can be written and read arbitrarily using int. */
+	@Test
+	@Order(3)
+	@DisplayName("Arbitrary ints can be written and read")
+	void getputInt() {
+		val virt = MemoryUtils.allocate(4, true);
+		assertNotEquals(0, virt, "virtual address is not null");
+		assertEquals(0, virt & MemoryUtils.getPagesize(), "virtual address is a page base address");
+		for (var i = 0; i < 3; i += 1) {
+			val number = (int) (Math.random() * Integer.MAX_VALUE);
+			if      (i == 0) MemoryUtils.c_putInt(virt, number); 
+			else if (i == 1) MemoryUtils.u_putInt(virt, number); 
+			else if (i == 2) MemoryUtils.putInt(virt, number);
+			assertEquals(number, MemoryUtils.c_getInt(virt), "the int should be correct");
+			assertEquals(number, MemoryUtils.u_getInt(virt), "the int should be correct");
+			assertEquals(number, MemoryUtils.getInt(virt), "the int should be correct");
+		}
+		MemoryUtils.deallocate(virt, 4);
+	}
+
+	/** Checks that memory can be written and read arbitrarily using long. */
+	@Test
+	@Order(4)
+	@DisplayName("Arbitrary longs can be written and read")
+	void getputLong() {
+		val virt = MemoryUtils.allocate(8, true);
+		assertNotEquals(0, virt, "virtual address is not null");
+		assertEquals(0, virt & MemoryUtils.getPagesize(), "virtual address is a page base address");
+		for (var i = 0; i < 3; i += 1) {
+			val number = (long) (Math.random() * Long.MAX_VALUE);
+			if      (i == 0) MemoryUtils.c_putLong(virt, number); 
+			else if (i == 1) MemoryUtils.u_putLong(virt, number); 
+			else if (i == 2) MemoryUtils.putLong(virt, number);
+			assertEquals(number, MemoryUtils.c_getLong(virt), "the long should be correct");
+			assertEquals(number, MemoryUtils.u_getLong(virt), "the long should be correct");
+			assertEquals(number, MemoryUtils.getLong(virt), "the long should be correct");
+		}
+		MemoryUtils.deallocate(virt, 8);
+	}
+
 	/**
 	 * Creates a {@link Stream} of {@link Arguments} that contains all the possible combinations used with the {@code
 	 * allocate} methods.
