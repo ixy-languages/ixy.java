@@ -5,6 +5,7 @@ import de.tum.in.net.ixy.memory.MemoryUtils;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -227,8 +228,26 @@ class MemoryUtilsTest {
 		assertNotEquals(0, virt, "the virtual address is not null");
 		assertNotEquals(0, phys, "the physical address is not null");
 		assertEquals(0, virt & MemoryUtils.getPagesize(), "the virtual address is a page base address");
-		assertEquals(0, virt & MemoryUtils.getHugepagesize(), "the virtual address is a hugepage base address");
 		assertEquals(0, phys & MemoryUtils.getPagesize(), "the physical address is a page base address");
+		MemoryUtils.deallocate(virt, 1);
+	}
+
+	/** Checks that memory can be allocated using {@link DmaMemory}. */
+	@Test
+	@Order(2)
+	@DisplayName("DmaMemory can be allocated")
+	void allocateDma() {
+		val dma = MemoryUtils.allocateDma(1, true);
+		assertNotNull(dma, "allocation is successful");
+		val virt = dma.getVirtual();
+		val phys = dma.getPhysical();
+		assertNotEquals(0, virt, "virtual address is not null");
+		assertEquals(0, virt & MemoryUtils.getPagesize(), "virtual address is a page base address");
+		if (System.getProperty("os.name").toLowerCase().contains("lin")) {
+			assertNotEquals(0, phys, "physical address is not null");
+		}
+		assertEquals(0, phys & MemoryUtils.getPagesize(), "physical address is a page base address");
+		MemoryUtils.deallocate(virt, 1);
 	}
 
 	/**

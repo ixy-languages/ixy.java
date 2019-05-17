@@ -411,9 +411,29 @@ public final class MemoryUtils {
 		} catch (IOException e) {
 			log.error("Error while reading or closing the file /proc/self/pagemap", e);
 		}
-		
+
 		// Return the computed physical address
 		return phys;
+	}
+
+	/**
+	 * Allocates memory using big memory pages and creates a {@link DmaMemory} instance containing both the virtual and
+	 * physical addresses.
+	 * <p>
+	 * This method will return {@code null} if the allocation could not be completed successfully, but nothing
+	 * guarantees that the physical address is correct.
+	 * 
+	 * @param size       The amount of bytes to allocate.
+	 * @param contiguous If the allocated memory should be contiguous.
+	 * @return The pair of virtual-physical addresses representing the allocated memory.
+	 */
+	public static DmaMemory allocateDma(final long size, final boolean contiguous) {
+		val virt = allocate(size, contiguous);
+		if (virt == 0) {
+			return null;
+		}
+		val phys = virt2phys(virt);
+		return new DmaMemory(virt, phys);
 	}
 
 }

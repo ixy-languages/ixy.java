@@ -1,6 +1,7 @@
 package de.tum.in.net.ixy.memory;
 
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.Setter;
 
 /**
@@ -12,10 +13,12 @@ import lombok.Setter;
 public final class DmaMemory {
 
 	/** The virtual address. */
+	@Getter
 	@Setter(AccessLevel.NONE)
 	private long virtual;
 
 	/** The physical address. */
+	@Getter
 	@Setter(AccessLevel.NONE)
 	private long physical;
 
