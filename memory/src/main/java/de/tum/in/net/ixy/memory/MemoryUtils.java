@@ -1,9 +1,13 @@
 package de.tum.in.net.ixy.memory;
 
 import java.io.BufferedReader;
+import java.io.EOFException;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 import lombok.Getter;
 import lombok.val;
@@ -61,7 +65,7 @@ public final class MemoryUtils {
 		val size = hugepage();
 		if (size > 0) {
 			HUGE_PAGE_SIZE = size;
-			HUGE_PAGE_BITS = Long.numberOfTrailingZeros(HUGE_PAGE_SIZE);
+			HUGE_PAGE_BITS = Long.numberOfTrailingZeros(size);
 		}
 	}
 
@@ -193,7 +197,7 @@ public final class MemoryUtils {
 	}
 
 	/**
-	 * The {@link Unsafe} object does not have any method to check for bigger memory pages.
+	 * The {@link Unsafe} object does not have any method to allocate using bigger memory pages.
 	 * 
 	 * @param size       The number of bytes to allocate.
 	 * @param contiguous If the allocated bytes should be contiguous.
@@ -202,11 +206,11 @@ public final class MemoryUtils {
 	 */
 	public static long u_allocate(final long size, final boolean contiguous) throws UnsupportedOperationException {
 		log.trace("Allocating bigger memory page size using Unsafe object");
-		throw new UnsupportedOperationException("Unsafe object does not provide any facility for this check");
+		throw new UnsupportedOperationException("Unsafe object does not provide any facility for this operation");
 	}
 
 	/**
-	 * The {@link Unsafe} object does not have any method to check for bigger memory pages.
+	 * The {@link Unsafe} object does not have any method to deallocate using bigger memory pages.
 	 * 
 	 * @param address The address of the previously allocated region.
 	 * @param size    The size of the allocated region.
@@ -215,7 +219,7 @@ public final class MemoryUtils {
 	 */
 	public static boolean u_deallocate(final long address, final long size) throws UnsupportedOperationException {
 		log.trace("Deallocating bigger memory page size using Unsafe object");
-		throw new UnsupportedOperationException("Unsafe object does not provide any facility for this check");
+		throw new UnsupportedOperationException("Unsafe object does not provide any facility for this operation");
 	}
 
 	/////////////////////////////////////////////////// SAFE METHODS ///////////////////////////////////////////////////
@@ -262,8 +266,8 @@ public final class MemoryUtils {
 	public static long hugepage() {
 		log.trace("Smart bigger page size computation");
 
-		// If we are on Windows or forcing the C implementation, call the JNI method
-		if (System.getProperty("os.name").toLowerCase().contains("win") || !BuildConstants.UNSAFE || unsafe == null) {
+		// If we are on a non-Linux OS or forcing the C implementation, call the JNI method
+		if (!System.getProperty("os.name").toLowerCase().contains("lin") || !BuildConstants.UNSAFE || unsafe == null) {
 			return c_hugepage();
 		}
 
@@ -358,6 +362,58 @@ public final class MemoryUtils {
 	public static boolean deallocate(final long address, final long size) {
 		log.trace("Smart memory deallocation");
 		return c_deallocate(address, size);
+	}
+
+	/**
+	 * Translates a virtual address to a physical address.
+	 * <p>
+	 * This method delegates to {@link #c_deallocate(long)} since there is no other way to deallocate memory using big
+	 * memory pages in Java.
+	 * 
+	 * @param address The virtual address to translate.
+	 * @return The physical address.
+	 */
+	public static long virt2phys(final long address) {
+		log.trace("Smart memory translation");
+
+		// If we are on a non-Linux OS or forcing the C implementation, call the JNI method
+		if (!System.getProperty("os.name").toLowerCase().contains("lin") || !BuildConstants.UNSAFE || unsafe == null) {
+			return 0;
+		}
+
+		// Compute the offset, the base address and the page number
+		val mask   = pagesize - 1;
+		val offset = address & mask;
+		val base   = address - offset;
+		val page   = base / pagesize * addrsize;
+
+		// Try parsing the file /proc/self/pagemap
+		var phys = 0L;
+		try (val pagemap = new RandomAccessFile("/proc/self/pagemap", "r")) {
+			val buffer = ByteBuffer.allocate(addrsize).order(ByteOrder.nativeOrder());
+			pagemap.getChannel().position(page).read(buffer);
+			switch (addrsize) {
+				case Long.BYTES:
+					phys = buffer.flip().getLong();
+					break;
+				case Integer.BYTES:
+					phys = buffer.flip().getInt();
+					break;
+			}
+
+			// Convert the physical page number to an address
+			phys *= pagesize;
+			phys += offset;
+		} catch (FileNotFoundException e) {
+			log.error("The /proc/self/pagemap cannot be found, maybe we screwed detecting the operative system", e);
+		} catch (EOFException e) {
+			log.error("Error while computing the page number offset for /proc/self/pagemap", e);
+		} catch (IOException e) {
+			log.error("Error while reading or closing the file /proc/self/pagemap", e);
+		}
+		
+		// Return the computed physical address
+		return phys;
 	}
 
 }

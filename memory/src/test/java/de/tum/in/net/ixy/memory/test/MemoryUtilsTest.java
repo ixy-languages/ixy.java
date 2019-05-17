@@ -13,11 +13,13 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.stream.Stream;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.condition.DisabledIf;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -84,6 +86,7 @@ class MemoryUtilsTest {
 	@ParameterizedTest(name = "Memory can be allocated using bigger memory pages (size={0}; contiguous={1})")
 	@MethodSource("allocateSource")
 	@Order(0)
+	@Disabled
 	void allocate(final Long size, final Boolean contiguous) {
 
 		// The Unsafe-based implementation should not work
@@ -184,6 +187,7 @@ class MemoryUtilsTest {
 	@ParameterizedTest(name = "Memory can be deallocated using bigger memory pages (size={0}; contiguous={1})")
 	@MethodSource("allocateSource")
 	@Order(1)
+	@Disabled
 	void deallocate(final Long size, final Boolean contiguous) {
 
 		// There is two address per "allocate" test
@@ -212,6 +216,20 @@ class MemoryUtilsTest {
 				"correct deallocation should succeed");
 		assertTrue(MemoryUtils.deallocate(MemoryUtils.allocate(size, contiguous), size),
 				"correct deallocation should succeed");
+	}
+
+	/** Checks that the virtual addresses can be translated to physical addresses. */
+	@Test
+	@Order(2)
+	@DisplayName("Virtual addresses can be translated to physical addresses")
+	void virt2phys() {
+		val virt = MemoryUtils.allocate(1, true);
+		val phys = MemoryUtils.virt2phys(virt);
+		assertNotEquals(0, virt, "the virtual address is not null");
+		assertNotEquals(0, phys, "the physical address is not null");
+		assertEquals(0, virt & MemoryUtils.getPagesize(), "the virtual address is a page base address");
+		assertEquals(0, virt & MemoryUtils.getHugepagesize(), "the virtual address is a hugepage base address");
+		assertEquals(0, phys & MemoryUtils.getPagesize(), "the physical address is a page base address");
 	}
 
 	/**
