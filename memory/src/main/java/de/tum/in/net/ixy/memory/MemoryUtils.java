@@ -6,12 +6,14 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 import lombok.Getter;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
+
 import sun.misc.Unsafe;
 
 /** Collection of static methods used to directly manipulate memory. */
@@ -78,6 +80,7 @@ public final class MemoryUtils {
 	 */
 	@Deprecated
 	private MemoryUtils() {
+		if (BuildConstants.DEBUG) log.trace("Creating MemoryUtils instance");
 		throw new UnsupportedOperationException("This class cannot be instantiated");
 	}
 
@@ -233,7 +236,7 @@ public final class MemoryUtils {
 	 * @return The page size of the system.
 	 */
 	public static int u_pagesize() {
-		log.trace("Computing page size using Unsafe object");
+		if (BuildConstants.DEBUG) log.trace("Computing page size using the Unsafe object");
 		return unsafe.pageSize();
 	}
 
@@ -245,7 +248,7 @@ public final class MemoryUtils {
 	 * @return The address size of the system.
 	 */
 	public static int u_addrsize() {
-		log.trace("Computing virtual address size using Unsafe object");
+		if (BuildConstants.DEBUG) log.trace("Computing virtual address size using the Unsafe object");
 		return unsafe.addressSize();
 	}
 
@@ -256,7 +259,7 @@ public final class MemoryUtils {
 	 * @throws UnsupportedOperationException Always.
 	 */
 	public static long u_hugepage() throws UnsupportedOperationException {
-		log.trace("Computing bigger page size using Unsafe object");
+		if (BuildConstants.DEBUG) log.trace("Computing bigger page size using the Unsafe object");
 		throw new UnsupportedOperationException("Unsafe object does not provide any facility for this check");
 	}
 
@@ -269,7 +272,7 @@ public final class MemoryUtils {
 	 * @throws UnsupportedOperationException Always.
 	 */
 	public static long u_allocate(final long size, final boolean contiguous) throws UnsupportedOperationException {
-		log.trace("Allocating bigger memory page size using Unsafe object");
+		if (BuildConstants.DEBUG) log.trace("Allocating {} bytes using bigger memory page and the Unsafe object", size);
 		throw new UnsupportedOperationException("Unsafe object does not provide any facility for this operation");
 	}
 
@@ -282,7 +285,9 @@ public final class MemoryUtils {
 	 * @throws UnsupportedOperationException Always.
 	 */
 	public static boolean u_deallocate(final long address, final long size) throws UnsupportedOperationException {
-		log.trace("Deallocating bigger memory page size using Unsafe object");
+		if (BuildConstants.DEBUG) {
+			log.trace("Deallocating {} bytes @ 0x{} using the Unsafe object", size, Long.toHexString(address));
+		}
 		throw new UnsupportedOperationException("Unsafe object does not provide any facility for this operation");
 	}
 
@@ -293,6 +298,7 @@ public final class MemoryUtils {
 	 * @return The read value.
 	 */
 	public static byte u_getByte(final long address) {
+		if (BuildConstants.DEBUG) log.trace("Reading byte @ 0x{} using the Unsafe object", Long.toHexString(address));
 		return unsafe.getByte(address);
 	}
 
@@ -303,6 +309,7 @@ public final class MemoryUtils {
 	 * @return The read value.
 	 */
 	public static short u_getShort(final long address) {
+		if (BuildConstants.DEBUG) log.trace("Reading short @ 0x{} using the Unsafe object", Long.toHexString(address));
 		return unsafe.getShort(address);
 	}
 
@@ -313,6 +320,7 @@ public final class MemoryUtils {
 	 * @return The read value.
 	 */
 	public static int u_getInt(final long address) {
+		if (BuildConstants.DEBUG) log.trace("Reading int @ 0x{} using the Unsafe object", Long.toHexString(address));
 		return unsafe.getInt(address);
 	}
 
@@ -323,6 +331,7 @@ public final class MemoryUtils {
 	 * @return The read value.
 	 */
 	public static long u_getLong(final long address) {
+		if (BuildConstants.DEBUG) log.trace("Reading long @ 0x{} using the Unsafe object", Long.toHexString(address));
 		return unsafe.getLong(address);
 	}
 
@@ -333,6 +342,11 @@ public final class MemoryUtils {
 	 * @param value   The value to write.
 	 */
 	public static void u_putByte(final long address, final byte value) {
+		if (BuildConstants.DEBUG) {
+			val xaddress = Long.toHexString(address);
+			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
+			log.trace("Writing byte 0x{} @ 0x{} using the Unsafe object", xvalue, xaddress);
+		}
 		unsafe.putByte(address, value);
 	}
 
@@ -343,6 +357,11 @@ public final class MemoryUtils {
 	 * @param value   The value to write.
 	 */
 	public static void u_putShort(final long address, final short value) {
+		if (BuildConstants.DEBUG) {
+			val xaddress = Long.toHexString(address);
+			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
+			log.trace("Writing short 0x{} @ 0x{} using the Unsafe object", xvalue, xaddress);
+		}
 		unsafe.putShort(address, value);
 	}
 
@@ -353,6 +372,11 @@ public final class MemoryUtils {
 	 * @param value   The value to write.
 	 */
 	public static void u_putInt(final long address, final int value) {
+		if (BuildConstants.DEBUG) {
+			val xaddress = Long.toHexString(address);
+			val xvalue = Integer.toHexString(value);
+			log.trace("Writing byte 0x{} @ 0x{} using the Unsafe object", xvalue, xaddress);
+		}
 		unsafe.putInt(address, value);
 	}
 
@@ -363,6 +387,11 @@ public final class MemoryUtils {
 	 * @param value   The value to write.
 	 */
 	public static void u_putLong(final long address, final long value) {
+		if (BuildConstants.DEBUG) {
+			val xaddress = Long.toHexString(address);
+			val xvalue = Long.toHexString(value);
+			log.trace("Writing long 0x{} @ 0x{} using the Unsafe object", xvalue, xaddress);
+		}
 		unsafe.putLong(address, value);
 	}
 
@@ -379,7 +408,7 @@ public final class MemoryUtils {
 	 * @see #u_pagesize()
 	 */
 	public static int pagesize() {
-		log.trace("Smart page size computation");
+		if (BuildConstants.DEBUG) log.trace("Smart page size computation");
 		return BuildConstants.UNSAFE && unsafe != null ? u_pagesize() : c_pagesize();
 	}
 
@@ -394,7 +423,7 @@ public final class MemoryUtils {
 	 * @see #u_addrsize()
 	 */
 	public static int addrsize() {
-		log.trace("Smart virtual address size computation");
+		if (BuildConstants.DEBUG) log.trace("Smart virtual address size computation");
 		return BuildConstants.UNSAFE && unsafe != null ? u_addrsize() : c_addrsize();
 	}
 
@@ -408,14 +437,15 @@ public final class MemoryUtils {
 	 * @see #c_hugepage()
 	 */
 	public static long hugepage() {
-		log.trace("Smart bigger page size computation");
+		if (BuildConstants.DEBUG) log.trace("Smart bigger page size computation");
 
 		// If we are on a non-Linux OS or forcing the C implementation, call the JNI method
-		if (!System.getProperty("os.name").toLowerCase().contains("lin") || !BuildConstants.UNSAFE || unsafe == null) {
+		if (!System.getProperty("os.name").toLowerCase().contains("lin") || !BuildConstants.UNSAFE) {
 			return c_hugepage();
 		}
 
 		// Try parsing the file /etc/mtab
+		if (BuildConstants.DEBUG) log.trace("Parsing file /etc/mtab");
 		var found = false;
 		try (val mtab = new FileReader("/etc/mtab")) {
 			val bufferedReader = new BufferedReader(mtab);
@@ -445,6 +475,7 @@ public final class MemoryUtils {
 		}
 
 		// Parse the /proc/meminfo
+		if (BuildConstants.DEBUG) log.trace("Parsing file /proc/meminfo");
 		try (val mtab = new FileReader("/proc/meminfo")) {
 			val bufferedReader = new BufferedReader(mtab);
 			for (var line = bufferedReader.readLine(); line != null; line = bufferedReader.readLine()) {
@@ -489,7 +520,9 @@ public final class MemoryUtils {
 	 * @return The base address of the allocated memory region.
 	 */
 	public static long allocate(final long size, final boolean contiguous) {
-		log.trace("Smart memory allocation");
+		if (BuildConstants.DEBUG) {
+			log.trace("Smart memory allocation of {} bytes", size);
+		}
 		return c_allocate(size, contiguous);
 	}
 
@@ -504,7 +537,10 @@ public final class MemoryUtils {
 	 * @return If the operation succeeded.
 	 */
 	public static boolean deallocate(final long address, final long size) {
-		log.trace("Smart memory deallocation");
+		if (BuildConstants.DEBUG) {
+			val xaddress = Long.toHexString(address);
+			log.trace("Smart memory deallocation of {} bytes @ 0x", size, xaddress);
+		}
 		return c_deallocate(address, size);
 	}
 
@@ -518,7 +554,7 @@ public final class MemoryUtils {
 	 * @return The physical address.
 	 */
 	public static long virt2phys(final long address) {
-		log.trace("Smart memory translation");
+		if (BuildConstants.DEBUG) log.trace("Smart memory translation of address 0x{}", Long.toHexString(address));
 
 		// If we are on a non-Linux OS this won't work
 		if (!System.getProperty("os.name").toLowerCase().contains("lin")) {
@@ -532,6 +568,7 @@ public final class MemoryUtils {
 		val page   = base / pagesize * addrsize;
 
 		// Try parsing the file /proc/self/pagemap
+		if (BuildConstants.DEBUG) log.trace("Parsing file /proc/self/pagemap");
 		var phys = 0L;
 		try (val pagemap = new RandomAccessFile("/proc/self/pagemap", "r")) {
 			val buffer = ByteBuffer.allocate(addrsize).order(ByteOrder.nativeOrder());
@@ -572,6 +609,7 @@ public final class MemoryUtils {
 	 * @return The pair of virtual-physical addresses representing the allocated memory.
 	 */
 	public static DmaMemory allocateDma(final long size, final boolean contiguous) {
+		if (BuildConstants.DEBUG) log.trace("Allocating {} bytes with DmaMemory", size);
 		val virt = allocate(size, contiguous);
 		if (virt == 0) {
 			return null;
@@ -587,6 +625,7 @@ public final class MemoryUtils {
 	 * @return The read value.
 	 */
 	public static byte getByte(final long address) {
+		if (BuildConstants.DEBUG) log.trace("Smart memory read of byte @ 0x{}", Long.toHexString(address));
 		return BuildConstants.UNSAFE ? u_getByte(address) : c_getByte(address);
 	}
 
@@ -597,6 +636,7 @@ public final class MemoryUtils {
 	 * @return The read value.
 	 */
 	public static short getShort(final long address) {
+		if (BuildConstants.DEBUG) log.trace("Smart memory read of short @ 0x{}", Long.toHexString(address));
 		return BuildConstants.UNSAFE ? u_getShort(address) : c_getShort(address);
 	}
 
@@ -607,6 +647,7 @@ public final class MemoryUtils {
 	 * @return The read value.
 	 */
 	public static int getInt(final long address) {
+		if (BuildConstants.DEBUG) log.trace("Smart memory read of int @ 0x{}", Long.toHexString(address));
 		return BuildConstants.UNSAFE ? u_getInt(address) : c_getInt(address);
 	}
 
@@ -617,16 +658,7 @@ public final class MemoryUtils {
 	 * @return The read value.
 	 */
 	public static long getLong(final long address) {
-		return BuildConstants.UNSAFE ? u_getLong(address) : c_getLong(address);
-	}
-
-	/**
-	 * Uses the unsafe implementation or the JNI call based on the value of {@link BuildConstants#UNSAFE}.
-	 * 
-	 * @param address The address to read from.
-	 * @return The read value.
-	 */
-	public static long putLong(final long address) {
+		if (BuildConstants.DEBUG) log.trace("Smart memory read of long @ 0x{}", Long.toHexString(address));
 		return BuildConstants.UNSAFE ? u_getLong(address) : c_getLong(address);
 	}
 
@@ -637,6 +669,11 @@ public final class MemoryUtils {
 	 * @param value   The value to write.
 	 */
 	public static void putByte(final long address, final byte value) {
+		if (BuildConstants.DEBUG) {
+			val xaddress = Long.toHexString(address);
+			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
+			log.trace("Smart memory write of byte 0x{} @ 0x{}", xvalue, xaddress);
+		}
 		if (BuildConstants.UNSAFE) {
 			u_putByte(address, value);
 		} else {
@@ -651,6 +688,11 @@ public final class MemoryUtils {
 	 * @param value   The value to write.
 	 */
 	public static void putShort(final long address, final short value) {
+		if (BuildConstants.DEBUG) {
+			val xaddress = Long.toHexString(address);
+			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
+			log.trace("Smart memory write of short 0x{} @ 0x{}", xvalue, xaddress);
+		}
 		if (BuildConstants.UNSAFE) {
 			u_putShort(address, value);
 		} else {
@@ -665,6 +707,9 @@ public final class MemoryUtils {
 	 * @param value   The value to write.
 	 */
 	public static void putInt(final long address, final int value) {
+		if (BuildConstants.DEBUG) {
+			log.trace("Smart memory write of int 0x{} @ 0x{}", Integer.toHexString(value), Long.toHexString(address));
+		}
 		if (BuildConstants.UNSAFE) {
 			u_putInt(address, value);
 		} else {
@@ -679,6 +724,9 @@ public final class MemoryUtils {
 	 * @param value   The value to write.
 	 */
 	public static void putLong(final long address, final long value) {
+		if (BuildConstants.DEBUG) {
+			log.trace("Smart memory write of long 0x{} @ 0x{}", Long.toHexString(value), Long.toHexString(address));
+		}
 		if (BuildConstants.UNSAFE) {
 			u_putLong(address, value);
 		} else {
