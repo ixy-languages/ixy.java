@@ -130,22 +130,22 @@ public final class PacketBuffer {
 	}
 
 	/**
-	 * Reads the memory pool index of the underlying packet buffer.
+	 * Reads the memory pool id of the underlying packet buffer.
 	 * 
-	 * @return The memory pool index.
+	 * @return The memory pool id.
 	 */
-	public int getMemoryPoolIndex() {
-		if (BuildConstants.DEBUG) log.trace("Reading memory pool index");
+	public int getMemoryPoolId() {
+		if (BuildConstants.DEBUG) log.trace("Reading memory pool id");
 		return MemoryUtils.getInt(baseAddress + MPI_OFFSET);
 	}
 
 	/**
-	 * Writes the memory pool index to the underlying packet buffer.
+	 * Writes the memory pool id to the underlying packet buffer.
 	 * 
-	 * @param index The memory pool index to write.
+	 * @param index The memory pool id to write.
 	 */
-	public void setMemoryPoolIndex(final int index) {
-		if (BuildConstants.DEBUG) log.trace("Writing memory pool index 0x{}", Integer.toHexString(index));
+	public void setMemoryPoolId(final int index) {
+		if (BuildConstants.DEBUG) log.trace("Writing memory pool id 0x{}", Integer.toHexString(index));
 		MemoryUtils.putInt(baseAddress + MPI_OFFSET, index);
 	}
 
