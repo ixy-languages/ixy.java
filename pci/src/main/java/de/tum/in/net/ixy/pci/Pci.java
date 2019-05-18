@@ -229,9 +229,7 @@ public final class Pci {
 	 * the resource {@code config} of the PCI device.
 	 *
 	 * @return The vendor id of the PCI device.
-	 * @throws FileNotFoundException If the given {@code pciDevice} or its resource {@code config} do not exist.
-	 * @throws IOException           If an I/O error occurs when calling {@link #getVendorId(ByteBuffer,
-	 *                               SeekableByteChannel)}.
+	 * @throws IOException If an I/O error occurs when calling {@link #getVendorId(ByteBuffer, SeekableByteChannel)}.
 	 * @see #getVendorId(ByteBuffer, SeekableByteChannel)
 	 */
 	public short getVendorId() throws IOException {
@@ -252,9 +250,7 @@ public final class Pci {
 	 * the resource {@code config} from the PCI device.
 	 *
 	 * @return The device id of the PCI device.
-	 * @throws FileNotFoundException If the given {@code pciDevice} or its resource {@code config} do not exist.
-	 * @throws IOException           If an I/O error occurs when calling {@link #getDeviceId(ByteBuffer,
-	 *                               SeekableByteChannel)}.
+	 * @throws IOException If an I/O error occurs when calling {@link #getDeviceId(ByteBuffer, SeekableByteChannel)}.
 	 * @see #getDeviceId(ByteBuffer, SeekableByteChannel)
 	 */
 	public short getDeviceId() throws IOException {
@@ -275,9 +271,7 @@ public final class Pci {
 	 * the resource {@code config} from the PCI device.
 	 *
 	 * @return The class id of the PCI device.
-	 * @throws FileNotFoundException If the given {@code pciDevice} or its resource {@code config} do not exist.
-	 * @throws IOException           If an I/O error occurs when calling {@link #getClassId(ByteBuffer,
-	 *                               SeekableByteChannel)}.
+	 * @throws IOException If an I/O error occurs when calling {@link #getClassId(ByteBuffer, SeekableByteChannel)}.
 	 * @see #getClassId(ByteBuffer, SeekableByteChannel)
 	 */
 	public byte getClassId() throws IOException {
