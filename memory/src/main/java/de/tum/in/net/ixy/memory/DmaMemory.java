@@ -1,25 +1,21 @@
 package de.tum.in.net.ixy.memory;
 
-import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.Setter;
 
 /**
  * This data class holds a memory address in two different formats, virtual and physical.
  * <p>
  * This class does not offer any manipulation methods and is an immutable data class. It is meant to be used to simply
- * keep track of virtual address and their corresponding physical memory.
+ * keep track of virtual address and their corresponding physical counterpart.
  */
 public final class DmaMemory {
 
 	/** The virtual address. */
 	@Getter
-	@Setter(AccessLevel.NONE)
 	private long virtual;
 
 	/** The physical address. */
 	@Getter
-	@Setter(AccessLevel.NONE)
 	private long physical;
 
 	/**
