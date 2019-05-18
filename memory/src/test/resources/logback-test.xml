@@ -11,7 +11,7 @@
 		<appender-ref ref="STDOUT" />
 	</root>
 	<!-- Create another logger for JUnit which will inherit from the root -->
-	<logger name="de.tum.in.net.ixy" level="WARN">
+	<logger name="de.tum.in.net.ixy.memory" level="WARN">
 		<appender-ref ref="STDOUT" />
 	</logger>
 </configuration>
