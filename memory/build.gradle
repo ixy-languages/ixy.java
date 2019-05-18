@@ -1,29 +1,12 @@
 // Include some useful Gradle plugins
 plugins {
-	id 'java-library'                                  // Java library support
-	id 'c'                                             // C/C++ support
-	id 'io.freefair.lombok'            version '3.2.0' // Lombok support
-	id 'com.github.gmazzo.buildconfig' version '1.5.0' // Build config support
-	id 'com.adarshr.test-logger'       version '1.6.0' // Gradle test logging beautifier
+	id 'java-library' // Java library support
+	id 'c'            // C/C++ support
 }
 
 // Set the source and target compatibility of this subproject to Java 11
 sourceCompatibility = 1.11
 targetCompatibility = 1.11
-
-// Exclude the module-info.java file, because Gradle is not intelligent enough and tries to compile it
-sourceSets {
-	main {
-		java {
-			exclude 'module-info.java'
-		}
-	}
-	test {
-		java {
-			exclude 'module-info.java'
-		}
-	}
-}
 
 // Configure the C library
 model {
@@ -61,76 +44,53 @@ model {
     }
 }
 
-// The @Generated annotation causes compilation problems, so let's disable it
-tasks.withType(com.github.gmazzo.gradle.plugins.tasks.BuildConfigTask) {
-	addGeneratedAnnotation = false
-}
-
-// Setup some build configuration fields that can be optimized by the compiler
-buildConfig {
-	className('BuildConstants')
-	packageName("${project.group}.ixy.${project.name}")
-	language('java')
-	buildConfigField('boolean', 'DEBUG',        "${project.rootProject.ext.DEBUG}")
-	buildConfigField('boolean', 'UNSAFE',       "${project.rootProject.ext.UNSAFE}")
-	buildConfigField('boolean', 'FORCE_VIRTIO', "${project.rootProject.ext.FORCE_VIRTIO}")
-	buildConfigField('boolean', 'FORCE_IXGBE',  "${project.rootProject.ext.FORCE_IXGBE}")
-	buildConfigField('String',  'HUGE_MNT',     "\"${project.rootProject.ext.HUGE_MNT}\"")
-}
-
-// Include all the dependencies of the library
-// * JetBrains annotations
-// * Simple Logging Facade for Java API
-//   * Simple Logging Facade for Java NOP (testing)
-//   * Logback (testing)
-// * JUnit 5
-//   * JUnit 5 Parameterized Tests
+// Define the dependencies and their types (compile, runtime, test, etc.)
 dependencies {
 	implementation     group: 'org.jetbrains',     name: 'annotations',          version: '16.0.2'
 	testImplementation group: 'org.jetbrains',     name: 'annotations',          version: '16.0.2'
 	compileOnly        group: 'org.slf4j',         name: 'slf4j-api',            version: '1.8.0-beta4'
-	testCompile        group: 'org.slf4j',         name: 'slf4j-nop',            version: '1.8.0-beta4'
-//	testCompile        group: 'ch.qos.logback',    name: 'logback-classic',      version: '1.2.3'
 	testRuntimeOnly    group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.5.0-M1'
 	testCompile        group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: '5.5.0-M1'
+
+	// Add Logback based on if the DEBUG flag is enabled
+	if (project.DEBUG) {
+		testCompile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
+	} else {
+		testCompile group: 'org.slf4j', name: 'slf4j-nop', version: '1.8.0-beta4'
+	}
 }
 
-// Configure the test task
+// Exclude the tests that will fail always if no NICs are available
 test {
 
-	// Configure the native library path
+	// Add the native library path
 	systemProperty 'java.library.path', file("${buildDir}/libs/ixy/shared").absolutePath
 
-	// Configure Logback
-	systemProperty 'logback.configurationFile', 'logback-test.xml'
+	// If debug mode is enabled, configure Logback
+	if (project.DEBUG) systemProperty 'logback.configurationFile', 'logback-test.xml'
 
-	// Enable and configure JUnit 5
-	useJUnitPlatform {
-		failFast = true
-	}
+	// Enable JUnit 5 and execute all tests always
+	useJUnitPlatform { failFast = false }
 
-	// Consider that tests are never up to date
-	outputs.upToDateWhen { false }
-
-	// Configure the Gradle test logging, even if it's overwritten by the Gradle Test Logger plugin
+	// Configure Gradle's default test logger
 	testLogging {
 		events = ['passed', 'failed', 'skipped']
 		showStandardStreams = true
 	}
 
-	// Configure the Gradle Test Logger Plugin
+	// Configure the Gradle Test Logger plugin
 	testlogger {
-		theme                      'mocha'
-		showExceptions             true
-		slowThreshold              2000
-		showSummary                true
-		showPassed                 true
-		showSkipped                true
-		showFailed                 true
-		showStandardStreams        true
-		showPassedStandardStreams  true
+		theme 'mocha-parallel'
+		showExceptions true
+		slowThreshold 2000
+		showSummary true
+		showPassed true
+		showSkipped true
+		showFailed true
+		showStandardStreams true
+		showPassedStandardStreams true
 		showSkippedStandardStreams true
-		showFailedStandardStreams  true
+		showFailedStandardStreams true
 	}
 
 	// Make the test depend on the shared library

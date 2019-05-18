@@ -1,39 +1,112 @@
-// Include some useful Gradle plugins
+// Include all the Gradle plugins needed by the root project and the ones that are common to all subprojects
 plugins {
-	id 'java'                                               // Java applications support
-	id 'io.freefair.aggregate-javadoc-jar' version '3.2.1'  // Aggregated JavaDoc
-	id 'com.github.ben-manes.versions'     version '0.21.0' // Outdated dependencies detection support
+	id 'java'                                              // Java application plugin
+	id 'jacoco'                                            // Java Code Coverage
+	id 'io.freefair.aggregate-javadoc-jar' version '3.2.1' // Aggregated JavaDoc
+	id 'io.freefair.lombok' version '3.2.0'                // Lombok
+	id 'com.github.gmazzo.buildconfig' version '1.5.0'     // BuildConfig (like in Android)
+	id 'com.adarshr.test-logger' version '1.6.0'           // Gradle Test Logger (more beautiful than the default)
+	id 'com.github.ben-manes.versions' version '0.21.0'    // Outdated dependencies detection support
 }
 
-// Configure all projects (including root) to use the Bintray's JCenter repository
+// Configure all projects, including root, with the default values shared across all modules
 allprojects {
+	// Use Bintray's jCenter, because it's faster than Maven and contains more artifacts
 	repositories {
 		jcenter()
 	}
-}
 
-// Set the group and version of all subprojects
-subprojects {
-	group   = 'de.tum.in.net'
+	// Apply all the common plugins
+	apply plugin: 'jacoco'                        // Java Code Coverage
+	apply plugin: 'io.freefair.lombok'            // Lombok
+	apply plugin: 'com.github.gmazzo.buildconfig' // BuildConfig (like in Android)
+	apply plugin: 'com.adarshr.test-logger'       // Gradle Test Logger (more beautiful than the default)
+	apply plugin: 'com.github.ben-manes.versions' // Outdated dependencies detection support
+
+	// The group and the version doesn't really matter but some things depend on them
+	group = 'de.tum.in.net'
 	version = '1.0'
+
+	// Use the latest version if possible => https://www.eclemma.org/jacoco/
+	jacoco {
+		toolVersion = '0.8.4'
+	}
+
+	// Custom properties
+	ext {
+		DEBUG = false
+		UNSAFE = true
+		FORCE_VIRTIO = false
+		FORCE_IXGBE = false
+		HUGE_MNT = "/mnt/huge"
+	}
+
+	// Export the report in HTML format only
+	jacocoTestReport {
+        reports {
+            html.enabled true
+            xml.enabled false
+            csv.enabled false
+        }
+	}
+
+	// Disable the "@Generated" annotation used by the BuildConfig generated class
+	tasks.withType(com.github.gmazzo.gradle.plugins.tasks.BuildConfigTask) {
+		addGeneratedAnnotation = false
+	}
+
+	// Configure the BuildConstants class, which will allow the Java compiler to optimize the code at compile time
+	buildConfig {
+		className('BuildConstants')
+		packageName("${project.group}.ixy.${project.name}")
+		language('java')
+		buildConfigField('boolean', 'DEBUG', "${project.DEBUG}")
+		buildConfigField('boolean', 'UNSAFE', "${project.UNSAFE}")
+		buildConfigField('boolean', 'FORCE_VIRTIO', "${project.FORCE_VIRTIO}")
+		buildConfigField('boolean', 'FORCE_IXGBE', "${project.FORCE_IXGBE}")
+		buildConfigField('String', 'HUGE_MNT', "\"${project.HUGE_MNT}\"")
+	}
+
+	// Exclude the module-info.java file, because Gradle is not intelligent enough and tries to compile it
+	afterEvaluate {
+		sourceSets {
+			main.java.exclude 'module-info.java'
+			test.java.exclude 'module-info.java'
+		}
+	}
 }
 
-// Compile all subprojects
+// Compile all subprojects as dependencies
 dependencies {
 	compile project(':pci')
 	compile project(':memory')
 }
 
-// When aggregating the JavaDocs, make sure the JavaDocs have been generated
-aggregateJavadoc {
-	options.memberLevel = JavadocMemberLevel.PRIVATE
+// Merges all test execution data into a single file
+task jacocoMerge(type: JacocoMerge) {
+	destinationFile = file("${buildDir}/jacoco/all.exec")
 }
 
-// Custom properties that subproject may read
-ext {
-	DEBUG        = true
-	UNSAFE       = true
-	FORCE_VIRTIO = false
-	FORCE_IXGBE  = false
-	HUGE_MNT     = "/mnt/huge"
+// Use the execution data from all the projects to compute code coverage with JaCoCo
+jacocoTestReport {
+	dependsOn jacocoMerge
+	executionData.from = jacocoMerge.destinationFile
+}
+
+// Add all the execution data from the subprojects to the "jacocoMerge" task and
+// the sourceSets of the subprojects to the "jacocoTestReport" task.
+subprojects.each {
+	it.afterEvaluate {
+		if (jacocoMerge.executionData == null) {
+			jacocoMerge.executionData = files(it.test.jacoco.destinationFile)
+		} else {
+			jacocoMerge.executionData += files(it.test.jacoco.destinationFile)
+		}
+		jacocoTestReport.sourceSets it.sourceSets.main
+	}
+}
+
+// When aggregating the JavaDocs include the private members
+aggregateJavadoc {
+	options.memberLevel = JavadocMemberLevel.PRIVATE
 }
