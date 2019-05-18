@@ -4,7 +4,6 @@ import de.tum.in.net.ixy.pci.Pci;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.IntStream;
@@ -41,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
  * {@code get} has to be tested after each {@code set}.
  */
 @Slf4j
-@DisplayName("PCI device access (read & write)")
+@DisplayName("PCI device manipulation")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @EnabledOnOs(OS.LINUX)
 class PciIxgbeTest {
@@ -71,13 +70,43 @@ class PciIxgbeTest {
 		(short) 0x1564, (short) 0x1565, (short) 0x15A8, (short) 0x15A9
 	);
 
+	/** Checks that all the static methods throw a {@link NullPointerException} right away. */
+	@Test
+	@DisplayName("All static methods throw a NullPointerException when the PCI device is null")
+	@Order(-1)
+	void nullPointerException() {
+		assertThrows(NullPointerException.class, () -> Pci.getVendorId(null), "vendor id retrieval should fail");
+		assertThrows(NullPointerException.class, () -> Pci.getDeviceId(null), "device id retrieval should fail");
+		assertThrows(NullPointerException.class, () -> Pci.getClassId(null), "class id retrieval should fail");
+		assertThrows(NullPointerException.class, () -> Pci.bindDriver(null), "binding should fail");
+		assertThrows(NullPointerException.class, () -> Pci.unbindDriver(null), "unbinding should fail");
+		assertThrows(NullPointerException.class, () -> Pci.enableDma(null), "DMA enabling should fail");
+		assertThrows(NullPointerException.class, () -> Pci.isDmaEnabled(null), "DMA status checking should fail");
+		assertThrows(NullPointerException.class, () -> Pci.disableDma(null), "DMA disabling should fail");
+	}
+
+	/** Checks that all the static methods throw a {@link FileNotFoundException} as soon as the FS is accessed. */
+	@Test
+	@DisplayName("All static methods throw a FileNotFoundException when the PCI device does not exist")
+	@Order(-1)
+	void fileNotFoundException() {
+		assertThrows(FileNotFoundException.class, () -> Pci.getVendorId(""), "vendor id retrieval should fail");
+		assertThrows(FileNotFoundException.class, () -> Pci.getDeviceId(""), "device id retrieval should fail");
+		assertThrows(FileNotFoundException.class, () -> Pci.getClassId(""), "class id retrieval should fail");
+		assertThrows(FileNotFoundException.class, () -> Pci.bindDriver(""), "binding should fail");
+		assertThrows(FileNotFoundException.class, () -> Pci.unbindDriver(""), "unbinding should fail");
+		assertThrows(FileNotFoundException.class, () -> Pci.enableDma(""), "DMA enabling should fail");
+		assertThrows(FileNotFoundException.class, () -> Pci.isDmaEnabled(""), "DMA status checking should fail");
+		assertThrows(FileNotFoundException.class, () -> Pci.disableDma(""), "DMA disabling should fail");
+	}
+
 	/**
 	 * Checks that the vendor id is correct.
 	 *
 	 * @param pciDevice A PCI device.
 	 * @see Pci#getVendorId(String)
 	 */
-	@ParameterizedTest(name = "[static] Vendor id of {0} should be " + EXPECTED_VENDOR + " (Red Hat, Inc)")
+	@ParameterizedTest(name = "Vendor id of {0} should be " + EXPECTED_VENDOR + " (Intel Corporation)")
 	@MethodSource("ixgbeSource")
 	@Order(-1)
 	void getVendorId(@NotNull final String pciDevice) {
@@ -91,7 +120,7 @@ class PciIxgbeTest {
 	 * @param pciDevice A PCI device.
 	 * @see Pci#getDeviceId(String)
 	 */
-	@ParameterizedTest(name = "[static] Device id of {0} should be valid (Ixgbe network device)")
+	@ParameterizedTest(name = "Device id of {0} should be correct (Ixgbe network device)")
 	@MethodSource("ixgbeSource")
 	@Order(-1)
 	void getDeviceId(@NotNull final String pciDevice) {
@@ -105,7 +134,7 @@ class PciIxgbeTest {
 	 * @param pciDevice A PCI device.
 	 * @see Pci#getClassId(String)
 	 */
-	@ParameterizedTest(name = "[static] Class id of {0} should be " + EXPECTED_CLASS + " (Network device)")
+	@ParameterizedTest(name = "Class id of {0} should be " + EXPECTED_CLASS + " (Network device)")
 	@MethodSource("ixgbeSource")
 	@Order(-1)
 	void getClassId(@NotNull final String pciDevice) {
@@ -119,7 +148,7 @@ class PciIxgbeTest {
 	 * @param pciDevice A PCI device.
 	 * @see Pci#bindDriver(String)
 	 */
-	@ParameterizedTest(name = "[static] PCI device {0} driver cannot be bound twice")
+	@ParameterizedTest(name = "PCI device {0} driver cannot be bound twice")
 	@MethodSource("ixgbeSource")
 	@Order(0)
 	void bindDriverException(@NotNull final String pciDevice) {
@@ -133,24 +162,37 @@ class PciIxgbeTest {
 	 * @param pciDevice A PCI device.
 	 * @see Pci#unbindDriver(String)
 	 */
-	@ParameterizedTest(name = "[static] PCI device {0} driver can be unbound")
+	@ParameterizedTest(name = "PCI device {0} driver can be unbound")
 	@MethodSource("ixgbeSource")
 	@Order(1)
 	void unbindDriver(@NotNull final String pciDevice) {
-		assertDoesNotThrow(() -> Pci.unbindDriver(pciDevice), "binding should not fail");
+		assertDoesNotThrow(() -> Pci.unbindDriver(pciDevice), "unbinding should not fail");
+	}
+
+	/**
+	 * Checks that the driver cannot be unbound again.
+	 *
+	 * @param pciDevice A PCI device.
+	 * @see Pci#unbindDriver(String)
+	 */
+	@ParameterizedTest(name = "PCI device {0} driver cannot be unbound twice")
+	@MethodSource("ixgbeSource")
+	@Order(2)
+	void unbindDriverException(@NotNull final String pciDevice) {
+		assertThrows(FileNotFoundException.class, () -> Pci.unbindDriver(pciDevice), "unbinding should fail");
 	}
 
 	/**
 	 * Checks that the driver cannot be bound back.
 	 *
 	 * @param pciDevice A PCI device.
-	 * @see Pci#unbindDriver(String)
+	 * @see Pci#bindDriver(String)
 	 */
-	@ParameterizedTest(name = "[static] PCI device {0} driver cannot be unbound twice")
+	@ParameterizedTest(name = "PCI device {0} driver cannot be bound again")
 	@MethodSource("ixgbeSource")
 	@Order(2)
-	void unbindDriverException(@NotNull final String pciDevice) {
-		assertThrows(FileNotFoundException.class, () -> Pci.unbindDriver(pciDevice), "unbinding should fail");
+	void bindDriverException2(@NotNull final String pciDevice) {
+		assertThrows(FileNotFoundException.class, () -> Pci.bindDriver(pciDevice), "binding should fail");
 	}
 
 	/**
@@ -159,7 +201,7 @@ class PciIxgbeTest {
 	 * @param pciDevice A PCI device.
 	 * @see Pci#enableDma(String)
 	 */
-	@ParameterizedTest(name = "[static] PCI device {0} DMA can be enabled")
+	@ParameterizedTest(name = "PCI device {0} DMA can be enabled")
 	@MethodSource("ixgbeSource")
 	@Order(3)
 	void enableDma(@NotNull final String pciDevice) {
@@ -172,7 +214,7 @@ class PciIxgbeTest {
 	 * @param pciDevice A PCI device.
 	 * @see Pci#isDmaEnabled(String)
 	 */
-	@ParameterizedTest(name = "[static] PCI device {0} DMA is enabled check")
+	@ParameterizedTest(name = "PCI device {0} DMA is enabled check")
 	@MethodSource("ixgbeSource")
 	@Order(4)
 	void isDmaEnabled(@NotNull final String pciDevice) {
@@ -186,7 +228,7 @@ class PciIxgbeTest {
 	 * @param pciDevice A PCI device.
 	 * @see Pci#disableDma(String)
 	 */
-	@ParameterizedTest(name = "[static] PCI device {0} DMA can be disabled")
+	@ParameterizedTest(name = "PCI device {0} DMA can be disabled")
 	@MethodSource("ixgbeSource")
 	@Order(5)
 	void disableDma(@NotNull final String pciDevice) {
@@ -199,7 +241,7 @@ class PciIxgbeTest {
 	 * @param pciDevice A PCI device.
 	 * @see Pci#isDmaEnabled(String)
 	 */
-	@ParameterizedTest(name = "[static] PCI device {0} DMA is disabled check")
+	@ParameterizedTest(name = "PCI device {0} DMA is disabled check")
 	@MethodSource("ixgbeSource")
 	@Order(6)
 	void isDmaDisabled(@NotNull final String pciDevice) {
@@ -212,10 +254,9 @@ class PciIxgbeTest {
 	@DisplayName("All devices can be restored")
 	@Order(7)
 	void cleanUp() {
-		PciIxgbeTest.ixgbeSource()
-				.forEach(pciDevice -> {
-					assertDoesNotThrow(() -> new Pci(pciDevice).bindDriver(), "driver binding can be restored");
-				});
+		PciIxgbeTest.ixgbeSource().forEach(pciDevice -> {
+			assertDoesNotThrow(() -> new Pci(pciDevice).bindDriver(), "driver binding can be restored");
+		});
 	}
 
 	/**
@@ -232,50 +273,86 @@ class PciIxgbeTest {
 		assertDoesNotThrow(() -> Pci.mapResource(pci), "resource0 mapping should not fail");
 	}
 
+	/**
+	 * Make sure the constructor will fail in certain situations.
+	 * 
+	 * @param pciDevice A PCI device.
+	 * @see Pci#Pci(String)
+	 * @see Pci#Pci(String, boolean, boolean)
+	 */
+	@ParameterizedTest(name = "PCI device {0} cannot be used Ixgbe")
+	@MethodSource("ixgbeSource")
+	@Order(9)
+	void constructorException(@NotNull final String pciDevice) {
+		assertThrows(NullPointerException.class, () -> new Pci(null), "instantiation should fail");
+		assertThrows(FileNotFoundException.class, () -> new Pci(pciDevice, false, true), "instantiation should fail");
+		assertDoesNotThrow(() -> new Pci(pciDevice, true, false), "instantiation should not fail");
+	}
+
 	/** Checks the non-static methods. */
 	@Nested
 	@DisplayName("PCI device access for Ixgbe device using non-static methods")
 	@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 	class NonStatic {
 
-		/** Checks that creating a new instance with an invalid PCI device throws a {@link FileNotFoundException}. */
+		/**
+		 * Checks that creating a new instance with an invalid PCI device throws a
+		 * {@link FileNotFoundException}.
+		 */
 		@Test
 		@DisplayName("Invalid PCI device fails")
 		@Order(-2)
 		void constructorException() {
+			assertThrows(NullPointerException.class, () -> new Pci(null), "instantiation should fail");
 			assertThrows(FileNotFoundException.class, () -> new Pci(""), "instantiation should fail");
 		}
 
 		/**
 		 * Checks that the vendor id is correct.
+		 * <p>
+		 * Internally it tests the method {@link Pci#getVendorId()} multiple times so that we can be sure everything
+		 * works even if the internal buffer's position is at the end and there is not enough room to read the required
+		 * amount of bytes.
 		 *
 		 * @param pci A {@link Pci} instance.
 		 * @see Pci#getVendorId()
 		 */
-		@ParameterizedTest(name = "Vendor id of {0} should be " + EXPECTED_VENDOR + " (Red Hat, Inc)")
+		@ParameterizedTest(name = "Vendor id of {0} should be " + EXPECTED_VENDOR + " (Intel Corporation)")
 		@MethodSource("de.tum.in.net.ixy.pci.test.PciIxgbeTest#ixgbePciSource")
 		@Order(-1)
 		void getVendorId(@NotNull final Pci pci) {
-			val vendor = assertDoesNotThrow(() -> pci.getVendorId(), "vendor id retrieval should not fail");
-			assertEquals(EXPECTED_VENDOR, vendor, "vendor id should be correct");
+			for (var i = 0; i < pci.getName().length(); i += 1) {
+				val vendor = assertDoesNotThrow(() -> pci.getVendorId(), "vendor id retrieval should not fail");
+				assertEquals(EXPECTED_VENDOR, vendor, "vendor id should be correct");
+			}
 		}
 
 		/**
 		 * Checks that the device id is correct.
+		 * <p>
+		 * Internally it tests the method {@link Pci#getDeviceId()} multiple times so that we can be sure everything
+		 * works even if the internal buffer's position is at the end and there is not enough room to read the required
+		 * amount of bytes.
 		 *
 		 * @param pci A {@link Pci} instance.
 		 * @see Pci#getDeviceId()
 		 */
-		@ParameterizedTest(name = "Device id of {0} should be valid (Ixgbe network device)")
+		@ParameterizedTest(name = "Device id of {0} should be correct (Ixgbe network device)")
 		@MethodSource("de.tum.in.net.ixy.pci.test.PciIxgbeTest#ixgbePciSource")
 		@Order(-1)
 		void getDeviceId(@NotNull final Pci pci) {
-			val device = assertDoesNotThrow(() -> pci.getDeviceId(), "device id retrieval should not fail");
-			assertTrue(EXPECTED_DEVICES.contains(device), "device id should be correct");
+			for (var i = 0; i < pci.getName().length(); i += 1) {
+				val device = assertDoesNotThrow(() -> pci.getDeviceId(), "device id retrieval should not fail");
+				assertTrue(EXPECTED_DEVICES.contains(device), "device id should be correct");
+			}
 		}
 
 		/**
 		 * Checks that the class id is correct.
+		 * <p>
+		 * Internally it tests the method {@link Pci#getClassId()} multiple times so that we can be sure everything
+		 * works even if the internal buffer's position is at the end and there is not enough room to read the required
+		 * amount of bytes.
 		 *
 		 * @param pci A {@link Pci} instance.
 		 * @see Pci#getClassId()
@@ -284,8 +361,10 @@ class PciIxgbeTest {
 		@MethodSource("de.tum.in.net.ixy.pci.test.PciIxgbeTest#ixgbePciSource")
 		@Order(-1)
 		void getClassId(@NotNull final Pci pci) {
-			val klass = assertDoesNotThrow(() -> pci.getClassId(), "class id retrieval should not fail");
-			assertEquals(EXPECTED_CLASS, klass, "class id should be correct");
+			for (var i = 0; i < pci.getName().length(); i += 1) {
+				val klass = assertDoesNotThrow(() -> pci.getClassId(), "class id retrieval should not fail");
+				assertEquals(EXPECTED_CLASS, klass, "class id should be correct");
+			}
 		}
 
 		/**
@@ -295,9 +374,9 @@ class PciIxgbeTest {
 		 * @throws IOException If an I/O error occurs.
 		 * @see Pci#bindDriver()
 		 */
+		@Order(0)
 		@ParameterizedTest(name = "PCI device {0} driver cannot be bound twice")
 		@MethodSource("de.tum.in.net.ixy.pci.test.PciIxgbeTest#ixgbePciSource")
-		@Order(0)
 		void bindDriverException(@NotNull final Pci pci) {
 			val exception = assertThrows(IOException.class, () -> pci.bindDriver(), "binding should fail");
 			assertEquals(exception.getMessage(), "No such device", "the reason should be that the device is not found");
@@ -326,7 +405,7 @@ class PciIxgbeTest {
 		@MethodSource("de.tum.in.net.ixy.pci.test.PciIxgbeTest#ixgbePciSource")
 		@Order(2)
 		void unbindDriverException(@NotNull final Pci pci) {
-			val exception = assertThrows(IOException.class, () -> pci.unbindDriver(), "binding should fail");
+			val exception = assertThrows(IOException.class, () -> pci.unbindDriver(), "unbinding should fail");
 			assertEquals(exception.getMessage(), "No such device", "the reason should be that the device is not found");
 		}
 
@@ -340,12 +419,16 @@ class PciIxgbeTest {
 		@MethodSource("de.tum.in.net.ixy.pci.test.PciIxgbeTest#ixgbePciSource")
 		@Order(3)
 		void bindDriver(@NotNull final Pci pci) {
-			assertDoesNotThrow(() -> pci.bindDriver());
+			assertDoesNotThrow(() -> pci.bindDriver(), "binding should not fail");
 		}
 
 		/**
 		 * Checks that the DMA can be enabled.
-		 *
+		 * <p>
+		 * Internally it tests the method {@link Pci#enableDma(String)} multiple times so that we can be sure everything
+		 * works even if the internal buffer's position is at the end and there is not enough room to read the required
+		 * amount of bytes.
+		 * 
 		 * @param pciDevice A {@link Pci} instance.
 		 * @throws IOException If an I/O error occurs.
 		 * @see Pci#enableDma()
@@ -354,11 +437,17 @@ class PciIxgbeTest {
 		@MethodSource("de.tum.in.net.ixy.pci.test.PciIxgbeTest#ixgbePciSource")
 		@Order(4)
 		void enableDma(@NotNull final Pci pci) {
-			assertDoesNotThrow(() -> pci.enableDma(), "DMA enabling should not fail");
+			for (var i = 0; i < pci.getName().length(); i += 1) {
+				assertDoesNotThrow(() -> pci.enableDma(), "DMA enabling should not fail");
+			}
 		}
 
 		/**
 		 * Checks that the DMA is enabled.
+		 * <p>
+		 * Internally it tests the method {@link Pci#isDmaEnabled()} multiple times so that we can be sure everything
+		 * works even if the internal buffer's position is at the end and there is not enough room to read the required
+		 * amount of bytes.
 		 *
 		 * @param pciDevice A {@link Pci} instance.
 		 * @see Pci#isDmaEnabled()
@@ -367,12 +456,18 @@ class PciIxgbeTest {
 		@MethodSource("de.tum.in.net.ixy.pci.test.PciIxgbeTest#ixgbePciSource")
 		@Order(5)
 		void isDmaEnabled(@NotNull final Pci pci) {
-			val status = assertDoesNotThrow(() -> pci.isDmaEnabled(), "DMA status retrieval should not fail");
-			assertTrue(status, "DMA should be enabled");
+			for (var i = 0; i < pci.getName().length(); i += 1) {
+				val status = assertDoesNotThrow(() -> pci.isDmaEnabled(), "DMA status retrieval should not fail");
+				assertTrue(status, "DMA should be enabled");
+			}
 		}
 
 		/**
 		 * Checks that the DMA can be enabled.
+		 * <p>
+		 * Internally it tests the method {@link Pci#disableDma()} multiple times so that we can be sure everything
+		 * works even if the internal buffer's position is at the end and there is not enough room to read the required
+		 * amount of bytes.
 		 *
 		 * @param pciDevice A {@link Pci} instance.
 		 * @see Pci#disableDma()
@@ -381,11 +476,17 @@ class PciIxgbeTest {
 		@MethodSource("de.tum.in.net.ixy.pci.test.PciIxgbeTest#ixgbePciSource")
 		@Order(6)
 		void disableDma(@NotNull final Pci pci) {
-			assertDoesNotThrow(() -> pci.disableDma(), "DMA disabling should not fail");
+			for (var i = 0; i < pci.getName().length(); i += 1) {
+				assertDoesNotThrow(() -> pci.disableDma(), "DMA disabling should not fail");
+			}
 		}
 
 		/**
 		 * Checks that the DMA is disabled.
+		 * <p>
+		 * Internally it tests the method {@link Pci#isDmaEnabled()} multiple times so that we can be sure everything
+		 * works even if the internal buffer's position is at the end and there is not enough room to read the required
+		 * amount of bytes.
 		 *
 		 * @param pciDevice A {@link Pci} instance.
 		 * @see Pci#isDmaEnabled()
@@ -394,8 +495,10 @@ class PciIxgbeTest {
 		@MethodSource("de.tum.in.net.ixy.pci.test.PciIxgbeTest#ixgbePciSource")
 		@Order(7)
 		void isDmaDisabled(@NotNull final Pci pci) {
-			val status = assertDoesNotThrow(() -> pci.isDmaEnabled(), "DMA status retrieval should not fail");
-			assertFalse(status, "DMA should be disabled");
+			for (var i = 0; i < pci.getName().length(); i += 1) {
+				val status = assertDoesNotThrow(() -> pci.isDmaEnabled(), "DMA status retrieval should not fail");
+				assertFalse(status, "DMA should be disabled");
+			}
 		}
 
 		/**
@@ -410,6 +513,27 @@ class PciIxgbeTest {
 		@Disabled
 		void mapResource(@NotNull final Pci pci) {
 			assertDoesNotThrow(() -> pci.mapResource(), "resource0 mapping should not fail");
+		}
+
+		/**
+		 * Checks that the resource {@code resource0} can be mapped.
+		 *
+		 * @param pciDevice A {@link Pci} instance.
+		 * @see Pci#mapResource()
+		 */
+		@ParameterizedTest(name = "PCI device {0} stops working if closed")
+		@MethodSource("de.tum.in.net.ixy.pci.test.PciIxgbeTest#ixgbePciSource")
+		@Order(9)
+		void close(@NotNull final Pci pci) {
+			assertDoesNotThrow(() -> pci.close(), "closing should not fail");
+			assertThrows(IOException.class, () -> pci.getVendorId(),  "vendor id retrieval should fail");
+			assertThrows(IOException.class, () -> pci.getDeviceId(),  "device id retrieval should fail");
+			assertThrows(IOException.class, () -> pci.getClassId(),   "class id retrieval should fail");
+			assertThrows(IOException.class, () -> pci.bindDriver(),   "binding should fail");
+			assertThrows(IOException.class, () -> pci.unbindDriver(), "unbinding should fail");
+			assertThrows(IOException.class, () -> pci.enableDma(),    "DMA enabling should fail");
+			assertThrows(IOException.class, () -> pci.isDmaEnabled(), "DMA status checking should fail");
+			assertThrows(IOException.class, () -> pci.disableDma(),   "DMA disabling should fail");
 		}
 
 	}
@@ -435,7 +559,7 @@ class PciIxgbeTest {
 	/**
 	 * Source of {@code ixgbe} PCI devices.
 	 * <p>
-	 * Reads the environment variable {@code IXY_IXGBE_COUNT} and creates a {@link Stream<String>} containing all the
+	 * Reads the environment variable {@code IXY_VIRTIO_COUNT} and creates a {@link Stream<String>} containing all the
 	 * names.
 	 * <p>
 	 * This method does not filter the PCI devices by checking the existence of the devices themselves, it only
@@ -446,9 +570,9 @@ class PciIxgbeTest {
 	 */
 	@NotNull
 	private static Stream<@NotNull String> ixgbeSource() {
-		val count = System.getenv("IXY_IXGBE_COUNT");
+		val count = System.getenv("IXY_VIRTIO_COUNT");
 		return IntStream.range(1, 1 + Integer.parseInt(count))
-				.mapToObj(i -> System.getenv("IXY_IXGBE_ADDR_" + i))
+				.mapToObj(i -> System.getenv("IXY_VIRTIO_ADDR_" + i))
 				.filter(Objects::nonNull)
 				.filter(it -> !it.isEmpty());
 	}
