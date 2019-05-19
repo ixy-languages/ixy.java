@@ -110,8 +110,7 @@ public final class MemoryPool implements Comparable<MemoryPool> {
 	public PacketBuffer getFreePacketBuffer() {
 		if (BuildConstants.DEBUG) {
 			log.trace("Obtaining a free packet buffer");
-			val empty = buffers.isEmpty();
-			if (empty) {
+			if (buffers.isEmpty()) {
 				log.warn("There are no free packet buffers, a dummy packet buffer will be returned");
 				return PacketBuffer.empty();
 			}
@@ -131,9 +130,9 @@ public final class MemoryPool implements Comparable<MemoryPool> {
 	public void freePacketBuffer(final PacketBuffer buffer) {
 		if (buffers.size() >= entrySize) {
 			log.warn("The packet buffer cannot be freed because the stack is full");
-			return;
+		} else {
+			buffers.push(buffer);
 		}
-		buffers.push(buffer);
 	}
 
 	//////////////////////////////////////////////// OVERRIDEN METHODS /////////////////////////////////////////////////
