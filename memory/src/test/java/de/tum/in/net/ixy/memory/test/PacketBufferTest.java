@@ -19,7 +19,7 @@ import lombok.val;
 
 /** Checks the class {@link Packetbuffer}. */
 @DisplayName("PacketBuffer")
-class PacketbufferTest {
+class PacketBufferTest {
 
 	//////////////////////////////////////////////// ASSERTION MESSAGES ////////////////////////////////////////////////
 

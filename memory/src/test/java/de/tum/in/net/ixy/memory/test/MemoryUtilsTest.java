@@ -28,14 +28,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
 /** Checks the class {@link MemoryUtils}. */
 @Slf4j
-@DisplayName("DMA manipulation")
+@DisplayName("MemoryUtils")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class MemoryUtilsTest {
 
