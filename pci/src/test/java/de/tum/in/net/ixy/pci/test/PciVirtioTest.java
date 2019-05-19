@@ -45,6 +45,9 @@ import lombok.extern.slf4j.Slf4j;
 @EnabledOnOs(OS.LINUX)
 class PciVirtioTest {
 
+	/** The driver used by the VirtIO devices. */
+	private static final String DRIVER = "virtio-pci";
+
 	/** The expected class id. */
 	private static final byte EXPECTED_CLASS = (byte) 0x02;
 
@@ -89,149 +92,149 @@ class PciVirtioTest {
 	/**
 	 * Checks that the vendor id is correct.
 	 *
-	 * @param pciDevice A PCI device.
+	 * @param device A PCI device.
 	 * @see Pci#getVendorId(String)
 	 */
 	@ParameterizedTest(name = "Vendor id of {0} should be " + EXPECTED_VENDOR + " (Red Hat, Inc)")
 	@MethodSource("virtioSource")
 	@Order(-1)
-	void getVendorId(@NotNull final String pciDevice) {
-		val vendor = assertDoesNotThrow(() -> Pci.getVendorId(pciDevice), MSG_VENDOR_METHOD_NOT);
+	void getVendorId(@NotNull final String device) {
+		val vendor = assertDoesNotThrow(() -> Pci.getVendorId(device), MSG_VENDOR_METHOD_NOT);
 		assertEquals(EXPECTED_VENDOR, vendor, MSG_VENDOR_VALUE);
 	}
 
 	/**
 	 * Checks that the device id is correct.
 	 *
-	 * @param pciDevice A PCI device.
+	 * @param device A PCI device.
 	 * @see Pci#getDeviceId(String)
 	 */
 	@ParameterizedTest(name = "Device id of {0} should be " + EXPECTED_DEVICE + " (VirtIO network device)")
 	@MethodSource("virtioSource")
 	@Order(-1)
-	void getDeviceId(@NotNull final String pciDevice) {
-		val device = assertDoesNotThrow(() -> Pci.getDeviceId(pciDevice), MSG_DEVICE_METHOD_NOT);
-		assertEquals(EXPECTED_DEVICE, device, MSG_DEVICE_VALUE);
+	void getDeviceId(@NotNull final String device) {
+		val id = assertDoesNotThrow(() -> Pci.getDeviceId(device), MSG_DEVICE_METHOD_NOT);
+		assertEquals(EXPECTED_DEVICE, id, MSG_DEVICE_VALUE);
 	}
 
 	/**
 	 * Checks that the class id is correct.
 	 *
-	 * @param pciDevice A PCI device.
+	 * @param device A PCI device.
 	 * @see Pci#getClassId(String)
 	 */
 	@ParameterizedTest(name = "Class id of {0} should be " + EXPECTED_CLASS + " (Network device)")
 	@MethodSource("virtioSource")
 	@Order(-1)
-	void getClassId(@NotNull final String pciDevice) {
-		val klass = assertDoesNotThrow(() -> Pci.getClassId(pciDevice), MSG_CLASS_METHOD_NOT);
+	void getClassId(@NotNull final String device) {
+		val klass = assertDoesNotThrow(() -> Pci.getClassId(device), MSG_CLASS_METHOD_NOT);
 		assertEquals(EXPECTED_CLASS, klass, MSG_CLASS_VALUE);
 	}
 
 	/**
 	 * Checks that the driver cannot be bound twice.
 	 *
-	 * @param pciDevice A PCI device.
+	 * @param device A PCI device.
 	 * @see Pci#bindDriver(String)
 	 */
 	@ParameterizedTest(name = "PCI device {0} driver cannot be bound twice")
 	@MethodSource("virtioSource")
 	@Order(0)
-	void bindDriverException(@NotNull final String pciDevice) {
-		val exception = assertThrows(IOException.class, () -> Pci.bindDriver(pciDevice), MSG_BIND_METHOD);
-		assertEquals(exception.getMessage(), "No such device", MSG_BIND_EXCEPTION);
+	void bindDriverException(@NotNull final String device) {
+		val exception = assertThrows(IOException.class, () -> Pci.bindDriver(device), MSG_BIND_METHOD);
+		assertEquals("No such device", exception.getMessage(), MSG_BIND_EXCEPTION);
 	}
 
 	/**
 	 * Checks that the driver can be unbound.
 	 *
-	 * @param pciDevice A PCI device.
+	 * @param device A PCI device.
 	 * @see Pci#unbindDriver(String)
 	 */
 	@ParameterizedTest(name = "PCI device {0} driver can be unbound")
 	@MethodSource("virtioSource")
 	@Order(1)
-	void unbindDriver(@NotNull final String pciDevice) {
-		assertDoesNotThrow(() -> Pci.unbindDriver(pciDevice), MSG_UNBIND_METHOD_NOT);
+	void unbindDriver(@NotNull final String device) {
+		assertDoesNotThrow(() -> Pci.unbindDriver(device), MSG_UNBIND_METHOD_NOT);
 	}
 
 	/**
 	 * Checks that the driver cannot be unbound again.
 	 *
-	 * @param pciDevice A PCI device.
+	 * @param device A PCI device.
 	 * @see Pci#unbindDriver(String)
 	 */
 	@ParameterizedTest(name = "PCI device {0} driver cannot be unbound twice")
 	@MethodSource("virtioSource")
 	@Order(2)
-	void unbindDriverException(@NotNull final String pciDevice) {
-		assertThrows(FileNotFoundException.class, () -> Pci.unbindDriver(pciDevice), MSG_UNBIND_METHOD);
+	void unbindDriverException(@NotNull final String device) {
+		assertThrows(FileNotFoundException.class, () -> Pci.unbindDriver(device), MSG_UNBIND_METHOD);
 	}
 
 	/**
 	 * Checks that the driver cannot be bound back.
 	 *
-	 * @param pciDevice A PCI device.
+	 * @param device A PCI device.
 	 * @see Pci#bindDriver(String)
 	 */
 	@ParameterizedTest(name = "PCI device {0} driver cannot be bound again")
 	@MethodSource("virtioSource")
 	@Order(2)
-	void bindDriverException2(@NotNull final String pciDevice) {
-		assertThrows(FileNotFoundException.class, () -> Pci.bindDriver(pciDevice), MSG_BIND_METHOD);
+	void bindDriverException2(@NotNull final String device) {
+		assertThrows(FileNotFoundException.class, () -> Pci.bindDriver(device), MSG_BIND_METHOD);
 	}
 
 	/**
 	 * Checks that the DMA can be enabled.
 	 *
-	 * @param pciDevice A PCI device.
+	 * @param device A PCI device.
 	 * @see Pci#enableDma(String)
 	 */
 	@ParameterizedTest(name = "PCI device {0} DMA can be enabled")
 	@MethodSource("virtioSource")
 	@Order(3)
-	void enableDma(@NotNull final String pciDevice) {
-		assertDoesNotThrow(() -> Pci.enableDma(pciDevice), MSG_DMA_ENABLE_METHOD_NOT);
+	void enableDma(@NotNull final String device) {
+		assertDoesNotThrow(() -> Pci.enableDma(device), MSG_DMA_ENABLE_METHOD_NOT);
 	}
 
 	/**
 	 * Checks that the DMA is enabled.
 	 *
-	 * @param pciDevice A PCI device.
+	 * @param device A PCI device.
 	 * @see Pci#isDmaEnabled(String)
 	 */
 	@ParameterizedTest(name = "PCI device {0} DMA is enabled check")
 	@MethodSource("virtioSource")
 	@Order(4)
-	void isDmaEnabled(@NotNull final String pciDevice) {
-		val status = assertDoesNotThrow(() -> Pci.isDmaEnabled(pciDevice), MSG_DMA_ENABLE_METHOD_NOT);
+	void isDmaEnabled(@NotNull final String device) {
+		val status = assertDoesNotThrow(() -> Pci.isDmaEnabled(device), MSG_DMA_ENABLE_METHOD_NOT);
 		assertTrue(status, MSG_DMA_STATUS_VALUE_1);
 	}
 
 	/**
 	 * Checks that the DMA can be disabled.
 	 *
-	 * @param pciDevice A PCI device.
+	 * @param device A PCI device.
 	 * @see Pci#disableDma(String)
 	 */
 	@ParameterizedTest(name = "PCI device {0} DMA can be disabled")
 	@MethodSource("virtioSource")
 	@Order(5)
-	void disableDma(@NotNull final String pciDevice) {
-		assertDoesNotThrow(() -> Pci.disableDma(pciDevice), MSG_DMA_DISABLE_METHOD_NOT);
+	void disableDma(@NotNull final String device) {
+		assertDoesNotThrow(() -> Pci.disableDma(device), MSG_DMA_DISABLE_METHOD_NOT);
 	}
 
 	/**
 	 * Checks that the DMA is enabled.
 	 *
-	 * @param pciDevice A PCI device.
+	 * @param device A PCI device.
 	 * @see Pci#isDmaEnabled(String)
 	 */
 	@ParameterizedTest(name = "PCI device {0} DMA is disabled check")
 	@MethodSource("virtioSource")
 	@Order(6)
-	void isDmaDisabled(@NotNull final String pciDevice) {
-		val status = assertDoesNotThrow(() -> Pci.isDmaEnabled(pciDevice), MSG_DMA_STATUS_METHOD_NOT);
+	void isDmaDisabled(@NotNull final String device) {
+		val status = assertDoesNotThrow(() -> Pci.isDmaEnabled(device), MSG_DMA_STATUS_METHOD_NOT);
 		assertFalse(status, MSG_DMA_STATUS_VALUE_0);
 	}
 
@@ -240,48 +243,48 @@ class PciVirtioTest {
 	@Order(7)
 	@DisplayName("All devices can be restored")
 	void cleanUp() {
-		PciVirtioTest.virtioSource().forEach(pciDevice -> {
-			assertDoesNotThrow(() -> new Pci(pciDevice).bindDriver(), MSG_BIND_METHOD_NOT);
+		PciVirtioTest.virtioSource().forEach(device -> {
+			assertDoesNotThrow(() -> new Pci(device, DRIVER).bindDriver(), MSG_BIND_METHOD_NOT);
 		});
 	}
 
 	/**
 	 * Checks that the resource {@code resource0} can be mapped.
 	 *
-	 * @param pciDevice A PCI device.
+	 * @param device A PCI device.
 	 * @see Pci#mapResource(String)
 	 */
 	@Disabled
 	@ParameterizedTest(name = "PCI device {0} resource0 can be mapped")
 	@MethodSource("virtioSource")
 	@Order(8)
-	void mapResource(@NotNull final String pciDevice) {
-		assertDoesNotThrow(() -> Pci.unbindDriver(pciDevice));
-		assertDoesNotThrow(() -> Pci.enableDma(pciDevice));
-		val status = assertDoesNotThrow(() -> Pci.isDmaEnabled(pciDevice));
+	void mapResource(@NotNull final String device) {
+		assertDoesNotThrow(() -> Pci.unbindDriver(device));
+		assertDoesNotThrow(() -> Pci.enableDma(device));
+		val status = assertDoesNotThrow(() -> Pci.isDmaEnabled(device));
 		assertTrue(status);
 		try {
-			assertDoesNotThrow(() -> Pci.mapResource(pciDevice), MSG_MAP_METHOD_NOT);
+			assertDoesNotThrow(() -> Pci.mapResource(device), MSG_MAP_METHOD_NOT);
 		} finally {
-			assertDoesNotThrow(() -> new Pci(pciDevice).bindDriver(), MSG_BIND_METHOD_NOT);
+			assertDoesNotThrow(() -> new Pci(device, DRIVER).bindDriver(), MSG_BIND_METHOD_NOT);
 		}
 	}
 
 	/**
 	 * Make sure the constructor will fail in certain situations.
 	 * 
-	 * @param pciDevice A PCI device.
-	 * @see Pci#Pci(String)
-	 * @see Pci#Pci(String, boolean, boolean)
+	 * @param device A PCI device.
+	 * @see Pci#Pci(String, String)
 	 */
 	@ParameterizedTest(name = "PCI device {0} instances throw with invalid parameters")
 	@MethodSource("virtioSource")
 	@Order(9)
-	void constructorException(@NotNull final String pciDevice) {
-		assertThrows(NullPointerException.class,  () -> new Pci(null),                   MSG_CONSTRUCTOR_METHOD);
-		assertThrows(FileNotFoundException.class, () -> new Pci(""),                     MSG_CONSTRUCTOR_METHOD);
-		assertThrows(FileNotFoundException.class, () -> new Pci(pciDevice, true, false), MSG_CONSTRUCTOR_METHOD);
-		assertDoesNotThrow(                       () -> new Pci(pciDevice, false, true), MSG_CONSTRUCTOR_METHOD_NOT);
+	void constructorException(@NotNull final String device) {
+		assertThrows(NullPointerException.class,  () -> new Pci(null, null),     MSG_CONSTRUCTOR_METHOD);
+		assertThrows(NullPointerException.class,  () -> new Pci("",   null),     MSG_CONSTRUCTOR_METHOD);
+		assertThrows(NullPointerException.class,  () -> new Pci(null, ""),       MSG_CONSTRUCTOR_METHOD);
+		assertThrows(FileNotFoundException.class, () -> new Pci("",   ""),       MSG_CONSTRUCTOR_METHOD);
+		assertDoesNotThrow(                       () -> new Pci(device, DRIVER), MSG_CONSTRUCTOR_METHOD_NOT);
 	}
 
 	/** Checks the non-static methods. */
@@ -353,7 +356,7 @@ class PciVirtioTest {
 		/**
 		 * Checks that the driver cannot be bound twice.
 		 *
-		 * @param pciDevice A {@link Pci} instance.
+		 * @param device A {@link Pci} instance.
 		 * @throws IOException If an I/O error occurs.
 		 * @see Pci#bindDriver()
 		 */
@@ -368,7 +371,7 @@ class PciVirtioTest {
 		/**
 		 * Checks that the driver can be unbound.
 		 *
-		 * @param pciDevice A {@link Pci} instance.
+		 * @param device A {@link Pci} instance.
 		 * @see Pci#unbindDriver()
 		 */
 		@ParameterizedTest(name = "PCI device {0} driver can be unbound")
@@ -381,7 +384,7 @@ class PciVirtioTest {
 		/**
 		 * Checks that the driver cannot be unbound twice.
 		 *
-		 * @param pciDevice A {@link Pci} instance.
+		 * @param device A {@link Pci} instance.
 		 * @see Pci#unbindDriver()
 		 */
 		@ParameterizedTest(name = "PCI device {0} driver cannot be unbound twice")
@@ -389,13 +392,13 @@ class PciVirtioTest {
 		@Order(2)
 		void unbindDriverException(@NotNull final Pci pci) {
 			val exception = assertThrows(IOException.class, () -> pci.unbindDriver(), MSG_UNBIND_METHOD);
-			assertEquals(exception.getMessage(), "No such device", "the reason should be that the device is not found");
+			assertEquals("No such device", exception.getMessage(), "the reason should be that the device is not found");
 		}
 
 		/**
 		 * Checks that the driver cannot be bound twice.
 		 *
-		 * @param pciDevice A {@link Pci} instance.
+		 * @param device A {@link Pci} instance.
 		 * @see Pci#bindDriver()
 		 */
 		@ParameterizedTest(name = "PCI device {0} driver can be bound")
@@ -412,7 +415,7 @@ class PciVirtioTest {
 		 * works even if the internal buffer's position is at the end and there is not enough room to read the required
 		 * amount of bytes.
 		 * 
-		 * @param pciDevice A {@link Pci} instance.
+		 * @param device A {@link Pci} instance.
 		 * @throws IOException If an I/O error occurs.
 		 * @see Pci#enableDma()
 		 */
@@ -432,7 +435,7 @@ class PciVirtioTest {
 		 * works even if the internal buffer's position is at the end and there is not enough room to read the required
 		 * amount of bytes.
 		 *
-		 * @param pciDevice A {@link Pci} instance.
+		 * @param device A {@link Pci} instance.
 		 * @see Pci#isDmaEnabled()
 		 */
 		@ParameterizedTest(name = "PCI device {0} DMA is enabled check")
@@ -452,7 +455,7 @@ class PciVirtioTest {
 		 * works even if the internal buffer's position is at the end and there is not enough room to read the required
 		 * amount of bytes.
 		 *
-		 * @param pciDevice A {@link Pci} instance.
+		 * @param device A {@link Pci} instance.
 		 * @see Pci#disableDma()
 		 */
 		@ParameterizedTest(name = "PCI device {0} DMA can be disabled")
@@ -471,7 +474,7 @@ class PciVirtioTest {
 		 * works even if the internal buffer's position is at the end and there is not enough room to read the required
 		 * amount of bytes.
 		 *
-		 * @param pciDevice A {@link Pci} instance.
+		 * @param device A {@link Pci} instance.
 		 * @see Pci#isDmaEnabled()
 		 */
 		@ParameterizedTest(name = "PCI device {0} DMA is disabled check")
@@ -487,7 +490,7 @@ class PciVirtioTest {
 		/**
 		 * Checks that the resource {@code resource0} can be mapped.
 		 *
-		 * @param pciDevice A {@link Pci} instance.
+		 * @param device A {@link Pci} instance.
 		 * @see Pci#mapResource()
 		 */
 		@Disabled
@@ -509,7 +512,7 @@ class PciVirtioTest {
 		/**
 		 * Checks that the resource {@code resource0} can be mapped.
 		 *
-		 * @param pciDevice A {@link Pci} instance.
+		 * @param device A {@link Pci} instance.
 		 * @see Pci#mapResource()
 		 */
 		@ParameterizedTest(name = "PCI device {0} stops working if closed")
@@ -574,14 +577,14 @@ class PciVirtioTest {
 	 * <p>
 	 * If the given PCI device does not exist or there is an error, {@code null} is returned.
 	 *
-	 * @param pciDevice The PCI device.
+	 * @param device The PCI device.
 	 * @return The {@link Pci} instance.
 	 * @see Pci#Pci(String)
 	 */
 	@Nullable
-	private static Pci newPci(@NotNull String pciDevice) {
+	private static Pci newPci(@NotNull String device) {
 		try {
-			return new Pci(pciDevice);
+			return new Pci(device, DRIVER);
 		} catch (FileNotFoundException e) {
 			log.error("Could not create PCI instance because the PCI device does not exist", e);
 		} catch (IOException e) {
