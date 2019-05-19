@@ -23,7 +23,7 @@ class PacketbufferTest {
 
 	//////////////////////////////////////////////// ASSERTION MESSAGES ////////////////////////////////////////////////
 
-	private static final String MSG_CORRECT     = "value should be the same that was written";
+	private static final String MSG_CORRECT     = "the value should be the same that was written";
 	private static final String MSG_VALID       = "the packet buffer should be valid";
 	private static final String MSG_VALID_NOT   = "the packet buffer should not be valid";
 	private static final String MSG_INVALID     = "the packet buffer should be invalid";
