@@ -6,9 +6,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import org.jetbrains.annotations.NotNull;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import org.jetbrains.annotations.NotNull;
 
 /** Checks the class {@link DmaMemory}. */
 @DisplayName("DmaMemory")
