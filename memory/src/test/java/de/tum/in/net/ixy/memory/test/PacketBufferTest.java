@@ -8,18 +8,26 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import org.jetbrains.annotations.NotNull;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+
+import org.jetbrains.annotations.NotNull;
 
 import lombok.val;
 
 /** Checks the class {@link Packetbuffer}. */
 @DisplayName("PacketBuffer")
 class PacketbufferTest {
+
+	//////////////////////////////////////////////// ASSERTION MESSAGES ////////////////////////////////////////////////
+
+	private static final String MSG_CORRECT     = "value should be the same that was written";
+	private static final String MSG_VALID       = "the packet buffer should be valid";
+	private static final String MSG_VALID_NOT   = "the packet buffer should not be valid";
+	private static final String MSG_INVALID     = "the packet buffer should be invalid";
+	private static final String MSG_INVALID_NOT = "the packet buffer should not be invalid";
 
 	/** Holds the virtual memory address. */
 	private long virtual;
@@ -43,8 +51,7 @@ class PacketbufferTest {
 	@Test
 	@DisplayName("Empty packet buffers can be created")
 	void empty() {
-		assertNotEquals(packetBuffer.getBaseAddress(), PacketBuffer.empty().getBaseAddress(),
-				"the packet buffer address should be correct");
+		assertNotEquals(packetBuffer.getBaseAddress(), PacketBuffer.empty().getBaseAddress(), "should not be empty");
 	}
 
 	/**
@@ -55,7 +62,7 @@ class PacketbufferTest {
 	@Test
 	@DisplayName("The packet buffer base address is correct")
 	void getBaseAddress() {
-		assertEquals(virtual, packetBuffer.getBaseAddress(), "the packet buffer address should be correct");
+		assertEquals(virtual, packetBuffer.getBaseAddress(), MSG_CORRECT);
 	}
 
 	/**
@@ -66,8 +73,8 @@ class PacketbufferTest {
 	@Test
 	@DisplayName("The packet buffer is valid")
 	void isValid() {
-		assertTrue(packetBuffer.isValid(), "the packet buffer should be valid");
-		assertFalse(PacketBuffer.empty().isValid(), "the empty packet buffer should be invalid");
+		assertTrue(packetBuffer.isValid(),          MSG_VALID);
+		assertFalse(PacketBuffer.empty().isValid(), MSG_VALID_NOT);
 	}
 
 	/**
@@ -78,8 +85,8 @@ class PacketbufferTest {
 	@Test
 	@DisplayName("The packet buffer is not invalid")
 	void isInvalid() {
-		assertFalse(packetBuffer.isInvalid(), "the packet buffer should not be invalid");
-		assertTrue(PacketBuffer.empty().isInvalid(), "the empty packet buffer should be invalid");
+		assertFalse(packetBuffer.isInvalid(),        MSG_INVALID_NOT);
+		assertTrue(PacketBuffer.empty().isInvalid(), MSG_INVALID);
 	}
 
 	/**
@@ -93,7 +100,7 @@ class PacketbufferTest {
 	void getsetPhysicalAddress() {
 		val number = (long) (Math.random() * Integer.MAX_VALUE);
 		packetBuffer.setPhysicalAddress(number);
-		assertEquals(number, packetBuffer.getPhysicalAddress(), "the physical address should be read");
+		assertEquals(number, packetBuffer.getPhysicalAddress(), MSG_CORRECT);
 	}
 
 	/**
@@ -107,7 +114,7 @@ class PacketbufferTest {
 	void getsetMemoryPoolAddress() {
 		val number = (long) (Math.random() * Integer.MAX_VALUE);
 		packetBuffer.setMemoryPoolAddress(number);
-		assertEquals(number, packetBuffer.getMemoryPoolAddress(), "the memory pool address should be read");
+		assertEquals(number, packetBuffer.getMemoryPoolAddress(), MSG_CORRECT);
 	}
 
 	/**
@@ -121,7 +128,7 @@ class PacketbufferTest {
 	void getsetMemoryPoolId() {
 		val number = (int) (Math.random() * Integer.MAX_VALUE);
 		packetBuffer.setMemoryPoolId(number);
-		assertEquals(number, packetBuffer.getMemoryPoolId(), "the memory pool id should be read");
+		assertEquals(number, packetBuffer.getMemoryPoolId(), MSG_CORRECT);
 	}
 
 	/**
@@ -135,7 +142,7 @@ class PacketbufferTest {
 	void getsetSize() {
 		val number = (int) (Math.random() * Integer.MAX_VALUE);
 		packetBuffer.setSize(number);
-		assertEquals(number, packetBuffer.getSize(), "the size should be read");
+		assertEquals(number, packetBuffer.getSize(), MSG_CORRECT);
 	}
 
 	/**
@@ -149,7 +156,7 @@ class PacketbufferTest {
 	void getsetByte() {
 		val number = (byte) (Math.random() * Byte.MAX_VALUE);
 		packetBuffer.putByte(0, number);
-		assertEquals(number, packetBuffer.getByte(0), "the byte should be read");
+		assertEquals(number, packetBuffer.getByte(0), MSG_CORRECT);
 	}
 
 	/**
@@ -163,7 +170,7 @@ class PacketbufferTest {
 	void getsetShort() {
 		val number = (short) (Math.random() * Short.MAX_VALUE);
 		packetBuffer.putShort(0, number);
-		assertEquals(number, packetBuffer.getShort(0), "the short should be read");
+		assertEquals(number, packetBuffer.getShort(0), MSG_CORRECT);
 	}
 
 	/**
@@ -177,7 +184,7 @@ class PacketbufferTest {
 	void getsetInt() {
 		val number = (int) (Math.random() * Integer.MAX_VALUE);
 		packetBuffer.putInt(0, number);
-		assertEquals(number, packetBuffer.getInt(0), "the int should be read");
+		assertEquals(number, packetBuffer.getInt(0), MSG_CORRECT);
 	}
 
 	/**
@@ -191,7 +198,7 @@ class PacketbufferTest {
 	void getsetLong() {
 		val number = (long) (Math.random() * Long.MAX_VALUE);
 		packetBuffer.putLong(0, number);
-		assertEquals(number, packetBuffer.getLong(0), "the long should be read");
+		assertEquals(number, packetBuffer.getLong(0), MSG_CORRECT);
 	}
 
 	/** Deallocates the memory region that was allocated during {@link #allocate()}. */
