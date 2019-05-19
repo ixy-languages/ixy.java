@@ -80,6 +80,7 @@ allprojects {
 dependencies {
 	compile project(':pci')
 	compile project(':memory')
+	compile project(':generic')
 }
 
 // Merges all test execution data into a single file
@@ -97,10 +98,12 @@ jacocoTestReport {
 // the sourceSets of the subprojects to the "jacocoTestReport" task.
 subprojects.each {
 	it.afterEvaluate {
-		if (jacocoMerge.executionData == null) {
-			jacocoMerge.executionData = files(it.test.jacoco.destinationFile)
-		} else {
-			jacocoMerge.executionData += files(it.test.jacoco.destinationFile)
+		if (file(it.test.jacoco.destinationFile).exists()) {
+			if (jacocoMerge.executionData == null) {
+				jacocoMerge.executionData = files(it.test.jacoco.destinationFile)
+			} else {
+				jacocoMerge.executionData += files(it.test.jacoco.destinationFile)
+			}
 		}
 		jacocoTestReport.sourceSets it.sourceSets.main
 	}
