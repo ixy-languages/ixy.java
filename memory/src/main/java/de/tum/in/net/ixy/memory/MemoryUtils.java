@@ -48,10 +48,8 @@ public final class MemoryUtils {
 			val singleoneInstanceField = Unsafe.class.getDeclaredField("theUnsafe");
 			singleoneInstanceField.setAccessible(true);
 			unsafe = (Unsafe) singleoneInstanceField.get(null);
-		} catch (NoSuchFieldException e) {
+		} catch (NoSuchFieldException | IllegalAccessException e) {
 			log.error("Error getting Unsafe object", e);
-		} catch (IllegalAccessException e) {
-			log.error("Error accessing the Unsafe object", e);
 		}
 
 		// Cache the values in private static fields with public getters using the configured method
@@ -465,10 +463,8 @@ public final class MemoryUtils {
 				found = true;
 				break;
 			}
-		} catch (FileNotFoundException e) {
-			log.error("The /etc/mtab cannot be found, maybe we screwed detecting the operative system", e);
 		} catch (IOException e) {
-			log.error("Error while reading or closing the file /etc/mtab", e);
+			log.error("The /etc/mtab cannot be found, read or closed", e);
 		}
 		if (!found) {
 			return -1;
@@ -501,10 +497,8 @@ public final class MemoryUtils {
 				}
 				return bytes;
 			}
-		} catch (FileNotFoundException e) {
-			log.error("The /proc/meminfo cannot be found, maybe we screwed detecting the operative system", e);
 		} catch (IOException e) {
-			log.error("Error while reading or closing the file /proc/meminfo", e);
+			log.error("The /proc/meminfo cannot be found, read or closed", e);
 		}
 		return 0;
 	}
@@ -585,12 +579,8 @@ public final class MemoryUtils {
 			// Convert the physical page number to an address
 			phys *= pagesize;
 			phys += offset;
-		} catch (FileNotFoundException e) {
-			log.error("The /proc/self/pagemap cannot be found, maybe we screwed detecting the operative system", e);
-		} catch (EOFException e) {
-			log.error("Error while computing the page number offset for /proc/self/pagemap", e);
 		} catch (IOException e) {
-			log.error("Error while reading or closing the file /proc/self/pagemap", e);
+			log.error("The /proc/self/pagemap cannot be found, read, closed or we read past its size", e);
 		}
 
 		// Return the computed physical address
