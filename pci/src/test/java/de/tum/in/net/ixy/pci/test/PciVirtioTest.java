@@ -12,7 +12,7 @@ import java.util.stream.Stream;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Nested;
@@ -251,6 +251,7 @@ class PciVirtioTest {
 	 * @param pciDevice A PCI device.
 	 * @see Pci#mapResource(String)
 	 */
+	@Disabled
 	@ParameterizedTest(name = "PCI device {0} resource0 can be mapped")
 	@MethodSource("virtioSource")
 	@Order(8)
@@ -260,7 +261,7 @@ class PciVirtioTest {
 		val status = assertDoesNotThrow(() -> Pci.isDmaEnabled(pciDevice));
 		assertTrue(status);
 		try {
-			assertDoesNotThrow(() -> Pci.mapResource(pciDevice),      MSG_MAP_METHOD_NOT);
+			assertDoesNotThrow(() -> Pci.mapResource(pciDevice), MSG_MAP_METHOD_NOT);
 		} finally {
 			assertDoesNotThrow(() -> new Pci(pciDevice).bindDriver(), MSG_BIND_METHOD_NOT);
 		}
@@ -489,6 +490,7 @@ class PciVirtioTest {
 		 * @param pciDevice A {@link Pci} instance.
 		 * @see Pci#mapResource()
 		 */
+		@Disabled
 		@ParameterizedTest(name = "PCI device {0} resource0 can be mapped")
 		@MethodSource("de.tum.in.net.ixy.pci.test.PciVirtioTest#virtioPciSource")
 		@Order(8)
