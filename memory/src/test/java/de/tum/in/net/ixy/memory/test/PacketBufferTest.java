@@ -36,7 +36,11 @@ class PacketBufferTest {
 	@NotNull
 	private PacketBuffer packetBuffer;
 
-	/** Allocates a region of memory, assigns it to {@link #virtual} and creates an instance of {@link PacketBuffer}. */
+	/**
+	 * Allocates a region of memory, assigns it to {@link #virtual} and creates an instance of {@link PacketBuffer}.
+	 * 
+	 * @see MemoryUtils#allocate(long, boolean)
+	 */
 	@BeforeEach
 	void allocate() {
 		virtual = MemoryUtils.allocate(512, false);
@@ -201,7 +205,11 @@ class PacketBufferTest {
 		assertEquals(number, packetBuffer.getLong(0), MSG_CORRECT);
 	}
 
-	/** Deallocates the memory region that was allocated during {@link #allocate()}. */
+	/**
+	 * Deallocates the memory region that was allocated during {@link #allocate()}.
+	 * 
+	 * @see MemoryUtils#deallocate(long, long)
+	 */
 	@AfterEach
 	void deallocate() {
 		MemoryUtils.deallocate(virtual, 512);

@@ -61,14 +61,20 @@ class MemoryUtilsTest {
 			val constructor = MemoryUtils.class.getDeclaredConstructor();
 			constructor.setAccessible(true);
 			val exception = assertThrows(InvocationTargetException.class, constructor::newInstance);
-			assertEquals(UnsupportedOperationException.class, exception.getTargetException().getClass(),
-					"the exception is correct");
+			assertEquals(UnsupportedOperationException.class, exception.getTargetException().getClass());
 		} catch (NoSuchMethodException | SecurityException e) {
 			log.error("Could not test constructor exception", e);
 		}
 	}
 
-	/** Checks that the page size of the system can be correctly computed. */
+	/**
+	 * Checks that the page size of the system can be correctly computed.
+	 * 
+	 * @see MemoryUtils#getPagesize()
+	 * @see MemoryUtils#c_pagesize()
+	 * @see MemoryUtils#u_pagesize()
+	 * @see MemoryUtils#pagesize()
+	 */
 	@Test
 	@Order(-1)
 	@DisplayName("Pagesize can be computed")
@@ -77,14 +83,21 @@ class MemoryUtilsTest {
 		val jni = MemoryUtils.c_pagesize();
 		val unsafe = MemoryUtils.u_pagesize();
 		val smart = MemoryUtils.pagesize();
-		assertNotEquals(0,             cached, MSG_NOT_NULL);
+		assertNotEquals(0, cached, MSG_NOT_NULL);
 		assertEquals(cached & -cached, cached, MSG_POWER_OF_TWO);
-		assertEquals(cached,           jni,    MSG_SAME_JNI);
-		assertEquals(cached,           unsafe, MSG_SAME_UNSAFE);
-		assertEquals(cached,           smart,  MSG_SAME_SMART);
+		assertEquals(cached, jni, MSG_SAME_JNI);
+		assertEquals(cached, unsafe, MSG_SAME_UNSAFE);
+		assertEquals(cached, smart, MSG_SAME_SMART);
 	}
 
-	/** Checks that the address size of the system can be correctly computed. */
+	/**
+	 * Checks that the address size of the system can be correctly computed.
+	 * 
+	 * @see MemoryUtils#getAddrsize()
+	 * @see MemoryUtils#c_addrsize()
+	 * @see MemoryUtils#u_addrsize()
+	 * @see MemoryUtils#addrsize()
+	 */
 	@Test
 	@Order(-1)
 	@DisplayName("Virtual address size can be computed")
@@ -93,14 +106,21 @@ class MemoryUtilsTest {
 		val jni = MemoryUtils.c_addrsize();
 		val unsafe = MemoryUtils.u_addrsize();
 		val smart = MemoryUtils.addrsize();
-		assertNotEquals(0,             cached, MSG_NOT_NULL);
+		assertNotEquals(0, cached, MSG_NOT_NULL);
 		assertEquals(cached & -cached, cached, MSG_POWER_OF_TWO);
-		assertEquals(cached,           jni,    MSG_SAME_JNI);
-		assertEquals(cached,           unsafe, MSG_SAME_UNSAFE);
-		assertEquals(cached,           smart,  MSG_SAME_SMART);
+		assertEquals(cached, jni, MSG_SAME_JNI);
+		assertEquals(cached, unsafe, MSG_SAME_UNSAFE);
+		assertEquals(cached, smart, MSG_SAME_SMART);
 	}
 
-	/** Checks that the address size of the system can be correctly computed. */
+	/**
+	 * Checks that the address size of the system can be correctly computed.
+	 * 
+	 * @see MemoryUtils#getHugepagesize()
+	 * @see MemoryUtils#c_hugepage()
+	 * @see MemoryUtils#u_hugepage()
+	 * @see MemoryUtils#hugepage()
+	 */
 	@Test
 	@Order(-1)
 	@DisplayName("Hugepage size can be computed")
@@ -115,13 +135,16 @@ class MemoryUtilsTest {
 		assertEquals(cached,                              smart,                   MSG_SAME_SMART);
 	}
 
-	/**
-	 * Contains all the allcated pages during the test execution of
-	 * {@link #allocate(Long, Boolean)}.
-	 */
+	/** Contains all the allcated pages during the test execution of {@link #allocate(Long, Boolean)}. */
 	private static Deque<Long> pages = new ArrayDeque<Long>();
 
-	/** Checks that the address size of the system can be correctly computed. */
+	/**
+	 * Checks that the address size of the system can be correctly computed.
+	 * 
+	 * @see MemoryUtils#c_allocate(long, boolean)
+	 * @see MemoryUtils#u_allocate(long, boolean)
+	 * @see MemoryUtils#allocate(long, boolean)
+	 */
 	@ParameterizedTest(name = "Memory can be allocated using bigger memory pages (size={0}; contiguous={1})")
 	@MethodSource("allocateSource")
 	@Order(0)
@@ -202,7 +225,13 @@ class MemoryUtilsTest {
 		}
 	}
 
-	/** Checks that the address size of the system can be correctly computed. */
+	/**
+	 * Checks that the address size of the system can be correctly computed.
+	 * 
+	 * @see MemoryUtils#c_deallocate(long, long)
+	 * @see MemoryUtils#u_deallocate(long, long)
+	 * @see MemoryUtils#deallocate(long, long)
+	 */
 	@ParameterizedTest(name = "Memory can be deallocated using bigger memory pages (size={0}; contiguous={1})")
 	@MethodSource("allocateSource")
 	@Order(1)
@@ -221,17 +250,19 @@ class MemoryUtilsTest {
 		assertThrows(UnsupportedOperationException.class, () -> MemoryUtils.u_deallocate(addr, size), MSG_UNSAFE_THROW);
 
 		// Wrong address should succeed as long as the base address can be deduced
-		assertTrue(MemoryUtils.c_deallocate(caddr + 1, size), "wrong offset should succeed");
-		assertTrue(MemoryUtils.deallocate(addr + 1, size), "wrong offset should succeed");
+		assertTrue(MemoryUtils.c_deallocate(caddr + 1, size));
+		assertTrue(MemoryUtils.deallocate(addr + 1, size));
 
 		// The base address should also succeed
-		assertTrue(MemoryUtils.c_deallocate(MemoryUtils.c_allocate(size, contiguous), size),
-				"correct deallocation should succeed");
-		assertTrue(MemoryUtils.deallocate(MemoryUtils.allocate(size, contiguous), size),
-				"correct deallocation should succeed");
+		assertTrue(MemoryUtils.c_deallocate(MemoryUtils.c_allocate(size, contiguous), size));
+		assertTrue(MemoryUtils.deallocate(MemoryUtils.allocate(size, contiguous), size));
 	}
 
-	/** Checks that the virtual addresses can be translated to physical addresses. */
+	/**
+	 * Checks that the virtual addresses can be translated to physical addresses.
+	 * 
+	 * @see MemoryUtils#virt2phys(long)
+	 */
 	@Test
 	@Order(2)
 	@DisplayName("Virtual addresses can be translated to physical addresses")
@@ -239,14 +270,18 @@ class MemoryUtilsTest {
 	void virt2phys() {
 		val virt = MemoryUtils.allocate(1, true);
 		val phys = MemoryUtils.virt2phys(virt);
-		assertNotEquals(0, virt,                             MSG_NOT_NULL);
-		assertNotEquals(0, phys,                             MSG_NOT_NULL);
-		assertEquals(0,    virt & MemoryUtils.getPagesize(), MSG_ALIGNED);
-		assertEquals(0,    phys & MemoryUtils.getPagesize(), MSG_ALIGNED);
+		assertNotEquals(0, virt, MSG_NOT_NULL);
+		assertNotEquals(0, phys, MSG_NOT_NULL);
+		assertEquals(0, virt & MemoryUtils.getPagesize(), MSG_ALIGNED);
+		assertEquals(0, phys & MemoryUtils.getPagesize(), MSG_ALIGNED);
 		MemoryUtils.deallocate(virt, 1);
 	}
 
-	/** Checks that memory can be allocated using {@link DmaMemory}. */
+	/**
+	 * Checks that memory can be allocated using {@link DmaMemory}.
+	 * 
+	 * @see MemoryUtils#allocateDma(long, boolean)
+	 */
 	@Test
 	@Order(2)
 	@DisplayName("DmaMemory can be allocated")
@@ -255,92 +290,128 @@ class MemoryUtilsTest {
 		assertNotNull(dma, MSG_NOT_NULL);
 		val virt = dma.getVirtual();
 		val phys = dma.getPhysical();
-		assertNotEquals(0, virt,                             MSG_NOT_NULL);
-		assertEquals(0,    virt & MemoryUtils.getPagesize(), MSG_ALIGNED);
+		assertNotEquals(0, virt, MSG_NOT_NULL);
+		assertEquals(0, virt & MemoryUtils.getPagesize(), MSG_ALIGNED);
 		if (System.getProperty("os.name").toLowerCase().contains("lin")) {
 			assertNotEquals(0, phys, MSG_NOT_NULL);
 		}
 		assertEquals(0, phys & MemoryUtils.getPagesize(), MSG_ALIGNED);
-		assertNull(MemoryUtils.allocateDma(0, false),     MSG_NULL);
+		assertNull(MemoryUtils.allocateDma(0, false), MSG_NULL);
 		MemoryUtils.deallocate(virt, 1);
 	}
 
-	/** Checks that memory can be written and read arbitrarily using bytes. */
+	/**
+	 * Checks that memory can be written and read arbitrarily using bytes.
+	 * 
+	 * @see MemoryUtils#c_getByte(long)
+	 * @see MemoryUtils#c_putByte(long)
+	 * @see MemoryUtils#u_getByte(long)
+	 * @see MemoryUtils#u_putByte(long)
+	 * @see MemoryUtils#getByte(long)
+	 * @see MemoryUtils#putByte(long)
+	 */
 	@Test
 	@Order(3)
 	@DisplayName("Arbitrary bytes can be written and read")
 	void getputByte() {
 		val virt = MemoryUtils.allocate(1, true);
-		assertNotEquals(0, virt,                             MSG_NULL);
-		assertEquals(0,    virt & MemoryUtils.getPagesize(), MSG_ALIGNED);
+		assertNotEquals(0, virt, MSG_NULL);
+		assertEquals(0, virt & MemoryUtils.getPagesize(), MSG_ALIGNED);
 		for (var i = 0; i < 3; i += 1) {
 			val number = (byte) (Math.random() * Byte.MAX_VALUE);
-			if      (i == 0) MemoryUtils.c_putByte(virt, number); 
+			if (i == 0) MemoryUtils.c_putByte(virt, number); 
 			else if (i == 1) MemoryUtils.u_putByte(virt, number); 
-			else if (i == 2) MemoryUtils.putByte(virt,   number);
+			else if (i == 2) MemoryUtils.putByte(virt, number);
 			assertEquals(number, MemoryUtils.c_getByte(virt), MSG_CORRECT);
 			assertEquals(number, MemoryUtils.u_getByte(virt), MSG_CORRECT);
-			assertEquals(number, MemoryUtils.getByte(virt),   MSG_CORRECT);
+			assertEquals(number, MemoryUtils.getByte(virt), MSG_CORRECT);
 		}
 		MemoryUtils.deallocate(virt, 1);
 	}
 
-	/** Checks that memory can be written and read arbitrarily using short. */
+	/**
+	 * Checks that memory can be written and read arbitrarily using shorts.
+	 * 
+	 * @see MemoryUtils#c_getShort(long)
+	 * @see MemoryUtils#c_putShort(long)
+	 * @see MemoryUtils#u_getShort(long)
+	 * @see MemoryUtils#u_putShort(long)
+	 * @see MemoryUtils#getShort(long)
+	 * @see MemoryUtils#putShort(long)
+	 */
 	@Test
 	@Order(3)
 	@DisplayName("Arbitrary shorts can be written and read")
 	void getputShort() {
 		val virt = MemoryUtils.allocate(2, true);
-		assertNotEquals(0, virt,                             MSG_NOT_NULL);
-		assertEquals(0,    virt & MemoryUtils.getPagesize(), MSG_ALIGNED);
+		assertNotEquals(0, virt, MSG_NOT_NULL);
+		assertEquals(0, virt & MemoryUtils.getPagesize(), MSG_ALIGNED);
 		for (var i = 0; i < 3; i += 1) {
 			val number = (short) (Math.random() * Short.MAX_VALUE);
-			if      (i == 0) MemoryUtils.c_putShort(virt, number); 
+			if (i == 0) MemoryUtils.c_putShort(virt, number); 
 			else if (i == 1) MemoryUtils.u_putShort(virt, number); 
-			else if (i == 2) MemoryUtils.putShort(virt,   number);
+			else if (i == 2) MemoryUtils.putShort(virt, number);
 			assertEquals(number, MemoryUtils.c_getShort(virt), MSG_CORRECT);
 			assertEquals(number, MemoryUtils.u_getShort(virt), MSG_CORRECT);
-			assertEquals(number, MemoryUtils.getShort(virt),   MSG_CORRECT);
+			assertEquals(number, MemoryUtils.getShort(virt), MSG_CORRECT);
 		}
 		MemoryUtils.deallocate(virt, 2);
 	}
 
-	/** Checks that memory can be written and read arbitrarily using int. */
+	/**
+	 * Checks that memory can be written and read arbitrarily using int.
+	 * 
+	 * @see MemoryUtils#c_getInt(long)
+	 * @see MemoryUtils#c_putInt(long)
+	 * @see MemoryUtils#u_getInt(long)
+	 * @see MemoryUtils#u_putInt(long)
+	 * @see MemoryUtils#getInt(long)
+	 * @see MemoryUtils#putInt(long)
+	 */
 	@Test
 	@Order(3)
 	@DisplayName("Arbitrary ints can be written and read")
 	void getputInt() {
 		val virt = MemoryUtils.allocate(4, true);
-		assertNotEquals(0, virt,                             MSG_NOT_NULL);
-		assertEquals(0,    virt & MemoryUtils.getPagesize(), MSG_ALIGNED);
+		assertNotEquals(0, virt, MSG_NOT_NULL);
+		assertEquals(0, virt & MemoryUtils.getPagesize(), MSG_ALIGNED);
 		for (var i = 0; i < 3; i += 1) {
 			val number = (int) (Math.random() * Integer.MAX_VALUE);
-			if      (i == 0) MemoryUtils.c_putInt(virt, number); 
+			if (i == 0) MemoryUtils.c_putInt(virt, number); 
 			else if (i == 1) MemoryUtils.u_putInt(virt, number); 
-			else if (i == 2) MemoryUtils.putInt(virt,   number);
+			else if (i == 2) MemoryUtils.putInt(virt, number);
 			assertEquals(number, MemoryUtils.c_getInt(virt), MSG_CORRECT);
 			assertEquals(number, MemoryUtils.u_getInt(virt), MSG_CORRECT);
-			assertEquals(number, MemoryUtils.getInt(virt),   MSG_CORRECT);
+			assertEquals(number, MemoryUtils.getInt(virt), MSG_CORRECT);
 		}
 		MemoryUtils.deallocate(virt, 4);
 	}
 
-	/** Checks that memory can be written and read arbitrarily using long. */
+	/**
+	 * Checks that memory can be written and read arbitrarily using long.
+	 * 
+	 * @see MemoryUtils#c_getLong(long)
+	 * @see MemoryUtils#c_putLong(long)
+	 * @see MemoryUtils#u_getLong(long)
+	 * @see MemoryUtils#u_putLong(long)
+	 * @see MemoryUtils#getLong(long)
+	 * @see MemoryUtils#putLong(long)
+	 */
 	@Test
 	@Order(4)
 	@DisplayName("Arbitrary longs can be written and read")
 	void getputLong() {
 		val virt = MemoryUtils.allocate(8, true);
-		assertNotEquals(0, virt,                             MSG_NOT_NULL);
-		assertEquals(0,    virt & MemoryUtils.getPagesize(), MSG_ALIGNED);
+		assertNotEquals(0, virt, MSG_NOT_NULL);
+		assertEquals(0, virt & MemoryUtils.getPagesize(), MSG_ALIGNED);
 		for (var i = 0; i < 3; i += 1) {
 			val number = (long) (Math.random() * Long.MAX_VALUE);
-			if      (i == 0) MemoryUtils.c_putLong(virt, number); 
+			if (i == 0) MemoryUtils.c_putLong(virt, number); 
 			else if (i == 1) MemoryUtils.u_putLong(virt, number); 
-			else if (i == 2) MemoryUtils.putLong(virt,   number);
+			else if (i == 2) MemoryUtils.putLong(virt, number);
 			assertEquals(number, MemoryUtils.c_getLong(virt), MSG_CORRECT);
 			assertEquals(number, MemoryUtils.u_getLong(virt), MSG_CORRECT);
-			assertEquals(number, MemoryUtils.getLong(virt),   MSG_CORRECT);
+			assertEquals(number, MemoryUtils.getLong(virt), MSG_CORRECT);
 		}
 		MemoryUtils.deallocate(virt, 8);
 	}
@@ -353,7 +424,7 @@ class MemoryUtilsTest {
 	 * @param value   The value to read/write.
 	 */
 	private static void testWriteByte(final Unsafe unsafe, final long address, final byte value) {
-		assertDoesNotThrow(() -> unsafe.putByte(address, value),  String.format(MSG_ADDRESS_FMTR, address, "byte"));
+		assertDoesNotThrow(() -> unsafe.putByte(address, value), String.format(MSG_ADDRESS_FMTR, address, "byte"));
 		val v = assertDoesNotThrow(() -> unsafe.getByte(address), String.format(MSG_ADDRESS_FMTW, address, "byte"));
 		assertEquals(value, v, MSG_CORRECT);
 	}
@@ -366,7 +437,7 @@ class MemoryUtilsTest {
 	 * @param value   The value to read/write.
 	 */
 	private static void testWriteShort(final Unsafe unsafe, final long address, final short value) {
-		assertDoesNotThrow(() -> unsafe.putShort(address, value),  String.format(MSG_ADDRESS_FMTR, address, "short"));
+		assertDoesNotThrow(() -> unsafe.putShort(address, value), String.format(MSG_ADDRESS_FMTR, address, "short"));
 		val v = assertDoesNotThrow(() -> unsafe.getShort(address), String.format(MSG_ADDRESS_FMTW, address, "short"));
 		assertEquals(value, v, MSG_CORRECT);
 	}
@@ -379,7 +450,7 @@ class MemoryUtilsTest {
 	 * @param value   The value to read/write.
 	 */
 	private static void testWriteInt(final Unsafe unsafe, final long address, final int value) {
-		assertDoesNotThrow(() -> unsafe.putInt(address, value),  String.format(MSG_ADDRESS_FMTR, address, "int"));
+		assertDoesNotThrow(() -> unsafe.putInt(address, value), String.format(MSG_ADDRESS_FMTR, address, "int"));
 		val v = assertDoesNotThrow(() -> unsafe.getInt(address), String.format(MSG_ADDRESS_FMTW, address, "int"));
 		assertEquals(value, v, MSG_CORRECT);
 	}
@@ -392,7 +463,7 @@ class MemoryUtilsTest {
 	 * @param value   The value to read/write.
 	 */
 	private static void testWriteLong(final Unsafe unsafe, final long address, final long value) {
-		assertDoesNotThrow(() -> unsafe.putLong(address, value),  String.format(MSG_ADDRESS_FMTR, address, "long"));
+		assertDoesNotThrow(() -> unsafe.putLong(address, value), String.format(MSG_ADDRESS_FMTR, address, "long"));
 		val v = assertDoesNotThrow(() -> unsafe.getLong(address), String.format(MSG_ADDRESS_FMTW, address, "long"));
 		assertEquals(value, v, MSG_CORRECT);
 	}
