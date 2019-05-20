@@ -28,10 +28,10 @@ import lombok.extern.slf4j.Slf4j;
  * The main goal of this class is to enable easy management of {@link PacketBuffer} instances.
  */
 @Slf4j
-public final class MemoryPool implements Comparable<MemoryPool>, Collection<PacketBuffer> {
+public final class Mempool implements Comparable<Mempool>, Collection<PacketBuffer> {
 
 	/** Stores all the memory pools ever created. */
-	public static final TreeMap<Integer, MemoryPool> pools = new TreeMap<>();
+	public static final TreeMap<Integer, Mempool> pools = new TreeMap<>();
 
 	/**
 	 * Given an {@code id}, computes one that is not already being used by another memory pool.
@@ -54,9 +54,9 @@ public final class MemoryPool implements Comparable<MemoryPool>, Collection<Pack
 	 * is updated.
 	 * 
 	 * @param mempool The memory pool to add.
-	 * @see MemoryPool#getValidId(int)
+	 * @see Mempool#getValidId(int)
 	 */
-	public static boolean addMempool(final MemoryPool mempool) {
+	public static boolean addMempool(final Mempool mempool) {
 		if (BuildConstants.DEBUG) log.trace("Adding a memory pool");
 		if (mempool == null) {
 			return false;
@@ -98,7 +98,7 @@ public final class MemoryPool implements Comparable<MemoryPool>, Collection<Pack
 	 * @param entries The number of entries to allocate.
 	 * @see #allocate()
 	 */
-	public MemoryPool(final long address, final int size, final int entries) {
+	public Mempool(final long address, final int size, final int entries) {
 		if (BuildConstants.DEBUG) {
 			val xaddress = Long.toHexString(address);
 			log.trace("Creating memory pool with {} entries, a total size of {} bytes @ 0x{}", entries, size, xaddress);
@@ -150,8 +150,8 @@ public final class MemoryPool implements Comparable<MemoryPool>, Collection<Pack
 
 	/** {@inheritDoc} */
 	@Override
-	public int compareTo(@NonNull final MemoryPool mempool) {
-		if (BuildConstants.DEBUG) log.trace("Comparing with another MemoryPool");
+	public int compareTo(@NonNull final Mempool mempool) {
+		if (BuildConstants.DEBUG) log.trace("Comparing with another Mempool");
 		return id - mempool.id;
 	}
 
@@ -163,7 +163,7 @@ public final class MemoryPool implements Comparable<MemoryPool>, Collection<Pack
 	/** {@inheritDoc} */
 	@Override
 	public boolean isEmpty() {
-		if (BuildConstants.DEBUG) log.trace("Checking if MemoryPool is empty");
+		if (BuildConstants.DEBUG) log.trace("Checking if Mempool is empty");
 		return buffers.isEmpty();
 	}
 

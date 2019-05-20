@@ -1,6 +1,6 @@
 package de.tum.in.net.ixy.memory.test;
 
-import de.tum.in.net.ixy.memory.MemoryPool;
+import de.tum.in.net.ixy.memory.Mempool;
 import de.tum.in.net.ixy.memory.MemoryUtils;
 import de.tum.in.net.ixy.memory.PacketBuffer;
 
@@ -31,10 +31,10 @@ import org.jetbrains.annotations.NotNull;
 
 import lombok.val;
 
-/** Checks the class {@link MemoryPool}. */
-@DisplayName("MemoryPool")
+/** Checks the class {@link Mempool}. */
+@DisplayName("Mempool")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class MemoryPoolTest {
+class MempoolTest {
 
 	/** Holds the virtual memory address. */
 	private static long virtual;
@@ -45,15 +45,15 @@ class MemoryPoolTest {
 	/** Holds the number of entries of the memory pool. */
 	private static int numEntries;
 
-	/** Holds an instance of {@link MemoryPool} that will be used to test. */
+	/** Holds an instance of {@link Mempool} that will be used to test. */
 	@NotNull
-	private static MemoryPool mempool;
+	private static Mempool mempool;
 
 	/**
 	 * Allocates a region of memory, assigns it to {@link #virtual} and creates an instance of {@link PacketBuffer}.
 	 * 
-	 * @see MemoryPool#MemoryPool(long, int, int)
-	 * @see MemoryPool#allocate()
+	 * @see Mempool#Mempool(long, int, int)
+	 * @see Mempool#allocate()
 	 */
 	@BeforeAll
 	static void allocate() {
@@ -66,27 +66,27 @@ class MemoryPoolTest {
 		virtual = MemoryUtils.allocate(size, false);
 		numEntries = perfectSizes[(int) (Math.random() * perfectSizes.length)];
 		size /= numEntries;
-		mempool = new MemoryPool(virtual, size, numEntries);
+		mempool = new Mempool(virtual, size, numEntries);
 		mempool.allocate();
 	}
 
 	/**
 	 * Checks that not all the methods from the {@link Collection} interface are implemented.
 	 * 
-	 * @see MemoryPool#iterator()
-	 * @see MemoryPool#forEach(java.util.function.Consumer)
-	 * @see MemoryPool#spliterator()
-	 * @see MemoryPool#contains(Object)
-	 * @see MemoryPool#containsAll(java.util.Collection)
-	 * @see MemoryPool#toArray()
-	 * @see MemoryPool#toArray(Object[])
-	 * @see MemoryPool#toArray(IntFunction)
-	 * @see MemoryPool#remove(Object)
-	 * @see MemoryPool#removeIf(java.util.function.Predicate)
-	 * @see MemoryPool#removeAll(java.util.Collection)
-	 * @see MemoryPool#clear()
-	 * @see MemoryPool#stream()
-	 * @see MemoryPool#parallelStream()
+	 * @see Mempool#iterator()
+	 * @see Mempool#forEach(java.util.function.Consumer)
+	 * @see Mempool#spliterator()
+	 * @see Mempool#contains(Object)
+	 * @see Mempool#containsAll(java.util.Collection)
+	 * @see Mempool#toArray()
+	 * @see Mempool#toArray(Object[])
+	 * @see Mempool#toArray(IntFunction)
+	 * @see Mempool#remove(Object)
+	 * @see Mempool#removeIf(java.util.function.Predicate)
+	 * @see Mempool#removeAll(java.util.Collection)
+	 * @see Mempool#clear()
+	 * @see Mempool#stream()
+	 * @see Mempool#parallelStream()
 	 */
 	@Test
 	@Order(0)
@@ -115,7 +115,7 @@ class MemoryPoolTest {
 	/**
 	 * Checks that the {@link PacketBuffer}s can be obtained from the memory pool.
 	 * 
-	 * @see MemoryPool#pop()
+	 * @see Mempool#pop()
 	 */
 	@Test
 	@Order(0)
@@ -160,7 +160,7 @@ class MemoryPoolTest {
 	/**
 	 * Checks that the memory pool cannot provide more {@link PacketBuffer}s than the pre-allocated amount.
 	 * 
-	 * @see MemoryPool#pop()
+	 * @see Mempool#pop()
 	 */
 	@Test
 	@Order(1)
@@ -174,7 +174,7 @@ class MemoryPoolTest {
 	/**
 	 * Checks that the {@link PacketBuffer}s can be freed.
 	 * 
-	 * @see MemoryPool#add(PacketBuffer)
+	 * @see Mempool#add(PacketBuffer)
 	 */
 	@Test
 	@Order(2)
@@ -195,21 +195,21 @@ class MemoryPoolTest {
 	/**
 	 * Checks that different memory pools have different ids.
 	 * 
-	 * @see MemoryPool#getId()
-	 * @see MemoryPool#compareTo(MemoryPool)
-	 * @see MemoryPool#addMempool(MemoryPool)
+	 * @see Mempool#getId()
+	 * @see Mempool#compareTo(Mempool)
+	 * @see Mempool#addMempool(Mempool)
 	 */
 	@Test
 	@Order(2)
 	@DisplayName("Different pools have different ids")
 	void mempoolId() {
-		val pool = new MemoryPool(0, 0, 0);
+		val pool = new Mempool(0, 0, 0);
 		val id = pool.getId();
 		assertNotEquals(mempool.getId(), id);
 		assertTrue(mempool.compareTo(pool) < 0);
 		assertTrue(pool.compareTo(mempool) > 0);
-		assertTrue(MemoryPool.addMempool(pool));
-		assertFalse(MemoryPool.addMempool(null));
+		assertTrue(Mempool.addMempool(pool));
+		assertFalse(Mempool.addMempool(null));
 		assertNotEquals(pool.getId(), id);
 		assertThrows(NullPointerException.class, () -> mempool.compareTo(null));
 	}
@@ -217,7 +217,7 @@ class MemoryPoolTest {
 	/**
 	 * Checks that the {@link PacketBuffer}s can be freed using a {@link Collection}.
 	 * 
-	 * @see MemoryPool#addAll(java.util.Collection)
+	 * @see Mempool#addAll(java.util.Collection)
 	 */
 	@Test
 	@Order(3)
