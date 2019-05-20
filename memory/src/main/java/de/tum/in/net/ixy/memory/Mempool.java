@@ -26,6 +26,8 @@ import lombok.extern.slf4j.Slf4j;
  * that is to say, the methods that allow to add back again the free {@link PacketBuffers}.
  * <p>
  * The main goal of this class is to enable easy management of {@link PacketBuffer} instances.
+ * 
+ * @author Esaú García Sánchez-Torija
  */
 @Slf4j
 public final class Mempool implements Comparable<Mempool>, Collection<PacketBuffer> {

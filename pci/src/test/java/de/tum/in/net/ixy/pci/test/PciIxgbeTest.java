@@ -39,6 +39,8 @@ import lombok.extern.slf4j.Slf4j;
  * <p>
  * All the tests of this test suite can be executed randomly or concurrently, except for the {@code dma} tests. Where a
  * {@code get} has to be tested after each {@code set}.
+ * 
+ * @author Esaú García Sánchez-Torija
  */
 @Slf4j
 @DisplayName("Pci")

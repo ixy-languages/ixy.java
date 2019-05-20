@@ -31,7 +31,11 @@ import org.jetbrains.annotations.NotNull;
 
 import lombok.val;
 
-/** Checks the class {@link Mempool}. */
+/**
+ * Checks the class {@link Mempool}.
+ * 
+ * @author Esaú García Sánchez-Torija
+ */
 @DisplayName("Mempool")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class MempoolTest {

@@ -16,6 +16,8 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>Headroom (variable).</li>
  * </ul>
  * The headroom has a size that makes the total size of the structure 64 bytes long.
+ * 
+ * @author Esaú García Sánchez-Torija
  */
 @Slf4j
 public final class PacketBuffer {

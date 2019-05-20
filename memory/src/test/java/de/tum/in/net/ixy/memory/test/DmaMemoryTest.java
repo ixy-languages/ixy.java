@@ -10,7 +10,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.jetbrains.annotations.NotNull;
 
-/** Checks the class {@link DmaMemory}. */
+/**
+ * Checks the class {@link DmaMemory}.
+ * 
+ * @author Esaú García Sánchez-Torija
+ */
 @DisplayName("DmaMemory")
 class DmaMemoryTest {
 

@@ -2,7 +2,11 @@ package de.tum.in.net.ixy.generic;
 
 import lombok.extern.slf4j.Slf4j;
 
-/** Abstract class used as starting point for Rx and Tx queues. */
+/**
+ * Abstract class used as starting point for {@code Rx} and {@code Tx} queues.
+ * 
+ * @author Esaú García Sánchez-Torija
+ */
 @Slf4j
 public abstract class IxyQueue {
 

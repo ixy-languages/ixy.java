@@ -17,7 +17,11 @@ import org.jetbrains.annotations.NotNull;
 
 import lombok.val;
 
-/** Checks the class {@link Packetbuffer}. */
+/**
+ * Checks the class {@link Packetbuffer}.
+ * 
+ * @author Esaú García Sánchez-Torija
+ */
 @DisplayName("PacketBuffer")
 class PacketBufferTest {
 

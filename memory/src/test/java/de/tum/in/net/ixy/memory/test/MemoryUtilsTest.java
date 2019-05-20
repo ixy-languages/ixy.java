@@ -32,7 +32,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
 
-/** Checks the class {@link MemoryUtils}. */
+/**
+ * Checks the class {@link MemoryUtils}.
+ * 
+ * @author Esaú García Sánchez-Torija
+ */
 @Slf4j
 @DisplayName("MemoryUtils")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)

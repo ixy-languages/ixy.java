@@ -1,6 +1,10 @@
 package de.tum.in.net.ixy.pci.test;
 
-/** This class contains all the messages used by the assertions of {@link PciIxgbeTest} and {@link PciVirtioTest}. */
+/**
+ * This class contains all the messages used by the assertions of {@link PciIxgbeTest} and {@link PciVirtioTest}.
+ * 
+ * @author Esaú García Sánchez-Torija
+ */
 final class Messages {
 
 	static final String MSG_VENDOR_METHOD          = "vendor id retrieval should fail";

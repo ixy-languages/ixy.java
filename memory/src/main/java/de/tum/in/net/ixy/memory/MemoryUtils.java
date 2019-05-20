@@ -16,7 +16,11 @@ import lombok.extern.slf4j.Slf4j;
 
 import sun.misc.Unsafe;
 
-/** Collection of static methods used to directly manipulate memory. */
+/**
+ * Collection of static methods used to directly manipulate memory.
+ * 
+ * @author Esaú García Sánchez-Torija
+ */
 @Slf4j
 public final class MemoryUtils {
 
