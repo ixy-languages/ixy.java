@@ -1,7 +1,5 @@
 package de.tum.in.net.ixy.pci;
 
-import de.tum.in.net.ixy.pci.BuildConstants;
-
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -100,6 +98,7 @@ public class Pci {
 	 * @throws FileNotFoundException If the specified PCI device does not exist or any of its required resources.
 	 * @throws IOException           If reading the {@code config} resource fails while trying to guess the driver.
 	 */
+	@SuppressWarnings("resource")
 	public Pci(@NonNull String device, @NonNull final String driver) throws FileNotFoundException, IOException {
 		if (BuildConstants.DEBUG) log.trace("Creating a PCI instance to manipulate the device {}", device);
 		name = device;
@@ -491,8 +490,9 @@ public class Pci {
 			IOException {
 		if (BuildConstants.DEBUG) log.trace("Mapping resource0 of PCI device {}", device); 
 		val path = String.format(PCI_RES_PATH_FMT, device, "resource0");
-		val fileChannel = new RandomAccessFile(path, "rwd").getChannel();
-		return getMmap(fileChannel);
+		try (val file = new RandomAccessFile(path, "rwd")) {
+			return getMmap(file.getChannel());
+		}
 	}
 
 	///////////////////////////////////////////////// INTERNAL METHODS /////////////////////////////////////////////////

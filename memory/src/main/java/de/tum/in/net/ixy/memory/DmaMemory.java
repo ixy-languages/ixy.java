@@ -7,6 +7,8 @@ import lombok.Getter;
  * <p>
  * This class does not offer any manipulation methods and is an immutable data class. It is meant to be used to simply
  * keep track of virtual address and their corresponding physical counterpart.
+ * 
+ * @author Esaú García Sánchez-Torija
  */
 public final class DmaMemory {
 
