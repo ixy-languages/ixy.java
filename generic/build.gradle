@@ -1,0 +1,58 @@
+// Include some useful Gradle plugins
+plugins {
+	id 'java-library' // Java library support
+}
+
+// Set the source and target compatibility of this subproject to Java 11
+sourceCompatibility = 1.11
+targetCompatibility = 1.11
+
+// Define the dependencies and their types (compile, runtime, test, etc.)
+dependencies {
+	compile            project(':pci')
+	implementation     group: 'org.jetbrains',     name: 'annotations',          version: '16.0.2'
+	testImplementation group: 'org.jetbrains',     name: 'annotations',          version: '16.0.2'
+	compileOnly        group: 'org.slf4j',         name: 'slf4j-api',            version: '1.8.0-beta4'
+	testRuntimeOnly    group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.5.0-M1'
+	testCompile        group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: '5.5.0-M1'
+
+	// Add Logback based on if the DEBUG flag is enabled
+	if (project.DEBUG) {
+		testCompile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
+	} else {
+		testCompile group: 'org.slf4j', name: 'slf4j-nop', version: '1.8.0-beta4'
+	}
+}
+
+// Configure the test task
+test {
+
+	// Configure Logback
+	systemProperty 'logback.configurationFile', 'logback-test.xml'
+
+	// Enable and configure JUnit 5
+	useJUnitPlatform {
+		failFast = true
+	}
+
+	// Configure the Gradle test logging, even if it's overwritten by the Gradle Test Logger plugin
+	testLogging {
+		events = ['passed', 'failed', 'skipped']
+		showStandardStreams = true
+	}
+
+	// Configure the Gradle Test Logger Plugin
+	testlogger {
+		theme 'mocha'
+		showExceptions true
+		slowThreshold 2000
+		showSummary true
+		showPassed true
+		showSkipped true
+		showFailed true
+		showStandardStreams true
+		showPassedStandardStreams true
+		showSkippedStandardStreams true
+		showFailedStandardStreams true
+	}
+}
