@@ -179,13 +179,13 @@ public class Pci {
 	 * This method uses the previously allocated direct {@link ByteBuffer} {@link #buffer} and writes the PCI device
 	 * name to the resource {@code unbind} of the PCI device driver.
 	 *
-	 * @throws IOException If an I/O error occurs when calling {@link #unbindDriver(ByteBuffer, SeekableByteChannel)}.
-	 * @see #unbindDriver(ByteBuffer, SeekableByteChannel)
+	 * @throws IOException If an I/O error occurs when calling {@link #unbind(ByteBuffer, SeekableByteChannel)}.
+	 * @see #unbind(ByteBuffer, SeekableByteChannel)
 	 */
-	public void unbindDriver() throws IOException {
+	public void unbind() throws IOException {
 		if (BuildConstants.DEBUG) log.trace("Unbinding the driver of PCI device {}", name);
 		buffer.clear().put(name.getBytes()).flip();
-		unbindDriver(buffer, unbind);
+		unbind(buffer, unbind);
 	}
 
 	/**
@@ -194,13 +194,13 @@ public class Pci {
 	 * This method uses the previously allocated direct {@link ByteBuffer} {@link #buffer} and writes the PCI device
 	 * name to the resource {@code bind} of the PCI device driver.
 	 *
-	 * @throws IOException If an I/O error occurs when calling {@link #bindDriver(ByteBuffer, SeekableByteChannel)}.
-	 * @see #bindDriver(ByteBuffer, SeekableByteChannel)
+	 * @throws IOException If an I/O error occurs when calling {@link #bind(ByteBuffer, SeekableByteChannel)}.
+	 * @see #bind(ByteBuffer, SeekableByteChannel)
 	 */
-	public void bindDriver() throws IOException {
+	public void bind() throws IOException {
 		if (BuildConstants.DEBUG) log.trace("Binding driver of PCI device {}", name);
 		buffer.clear().put(name.getBytes()).flip();
-		bindDriver(buffer, bind);
+		bind(buffer, bind);
 	}
 
 	/**
@@ -381,16 +381,16 @@ public class Pci {
 	 *
 	 * @param device The name of the PCI device.
 	 * @throws FileNotFoundException If the driver is already unbound or is bound to another driver.
-	 * @throws IOException           If an I/O error occurs when calling {@link #unbindDriver(ByteBuffer,
+	 * @throws IOException           If an I/O error occurs when calling {@link #unbind(ByteBuffer,
 	 *                               SeekableByteChannel)}.
-	 * @see #unbindDriver(ByteBuffer, SeekableByteChannel)
+	 * @see #unbind(ByteBuffer, SeekableByteChannel)
 	 */
-	public static void unbindDriver(@NonNull final String device) throws FileNotFoundException, IOException {
+	public static void unbind(@NonNull final String device) throws FileNotFoundException, IOException {
 		if (BuildConstants.DEBUG) log.trace("Unbinding driver of PCI device {}", device);
 		val buffer = ByteBuffer.wrap(device.getBytes());
 		val resource = String.format(PCI_RES_PATH_FMT, device, "driver/unbind");
 		try (val stream = new FileOutputStream(resource, false)) {
-			unbindDriver(buffer, stream.getChannel());
+			unbind(buffer, stream.getChannel());
 		}
 	}
 
@@ -402,16 +402,16 @@ public class Pci {
 	 *
 	 * @param device The name of the PCI device.
 	 * @throws FileNotFoundException If the driver is already unbound or is bound to another driver.
-	 * @throws IOException           If an I/O error occurs when calling {@link #bindDriver(ByteBuffer,
+	 * @throws IOException           If an I/O error occurs when calling {@link #bind(ByteBuffer,
 	 *                               SeekableByteChannel)}.
-	 * @see #bindDriver(ByteBuffer, SeekableByteChannel)
+	 * @see #bind(ByteBuffer, SeekableByteChannel)
 	 */
-	public static void bindDriver(@NonNull final String device) throws FileNotFoundException, IOException {
+	public static void bind(@NonNull final String device) throws FileNotFoundException, IOException {
 		if (BuildConstants.DEBUG) log.trace("Binding driver of PCI device {}", device);
 		val buffer = ByteBuffer.wrap(device.getBytes());
 		val resource = String.format(PCI_RES_PATH_FMT, device, "driver/bind");
 		try (val stream = new FileOutputStream(resource, false)) {
-			bindDriver(buffer, stream.getChannel());
+			bind(buffer, stream.getChannel());
 		}
 	}
 
@@ -584,7 +584,7 @@ public class Pci {
 	 * @throws IOException If an I/O error occurs when reading the bytes from the {@code buffer} and writing them to
 	 *                     the {@code channel}.
 	 */
-	private static void unbindDriver(final ByteBuffer buffer, final SeekableByteChannel channel) throws IOException {
+	private static void unbind(final ByteBuffer buffer, final SeekableByteChannel channel) throws IOException {
 		val bytes = channel.write(buffer);
 		if (BuildConstants.DEBUG && bytes < 12) {
 			log.warn("Couldn't write the exact amount of bytes needed to unbind the driver");
@@ -605,7 +605,7 @@ public class Pci {
 	 * @throws IOException If an I/O error occurs when reading the bytes from the {@code buffer} and writing them to
 	 *                     the {@code channel}.
 	 */
-	private static void bindDriver(final ByteBuffer buffer, final SeekableByteChannel channel) throws IOException {
+	private static void bind(final ByteBuffer buffer, final SeekableByteChannel channel) throws IOException {
 		val bytes = channel.write(buffer);
 		if (BuildConstants.DEBUG && bytes < 12) {
 			log.warn("Couldn't write the exact amount of bytes needed to bind the driver");
