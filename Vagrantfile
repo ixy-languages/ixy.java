@@ -22,11 +22,11 @@ Use "lspci" to find the bus addresses of the VirtIO NICs, it will probably be 00
 Ixy is installed in ~/ixy, run with sudo, e.g. sudo ~/ixy/ixy-pktgen 0000:00:08.0
 '
 
-	# Configure Linux Huge Pages
-	config.vm.provision "shell", privileged: true, run: "always", path: "hugetlbfs.sh"
-
 	# Install OpenJDK 12
 	config.vm.provision "shell", privileged: true, run: "always", path: "bootstrap.sh"
+
+	# Configure Linux Huge Pages
+	config.vm.provision "shell", privileged: true, run: "always", path: "hugetlbfs.sh"
 
 	# Copy the script that maps PCI devices to NICs
 	config.vm.provision "file", source: "pci2nic.sh", destination: "$HOME/bin/pci2nic"
@@ -34,15 +34,19 @@ Ixy is installed in ~/ixy, run with sudo, e.g. sudo ~/ixy/ixy-pktgen 0000:00:08.
 	# Configure the environment variables that map the VirtIO PCI devices to the NICs
 	config.vm.provision "shell", privileged: false, run: "always", inline: <<-SHELL
 		chmod +x "$HOME/bin/pci2nic"
-		echo '' >> ~/.profile
+		echo ''                                                                                        >> ~/.profile
 		echo '# Evaluating the output of this script allows us to map the NICs to the PCI bus devices' >> ~/.profile
-		echo 'eval "$($HOME/bin/pci2nic)"' >> ~/.profile
+		echo 'eval "$(sh $HOME/bin/pci2nic)"'                                                          >> ~/.profile
 	SHELL
+
+  # Enable port forwarding to debug
+	config.vm.network "forwarded_port", guest: 5005, host: 5005, auto_correct: true
+	config.vm.usable_port_range = 5005..5006
 
 	# Allocate some resources
 	config.vm.provider "virtualbox" do |vb|
-		vb.memory = "2048"
-		vb.cpus   = "4"
+		vb.memory = "4096"
+		vb.cpus   = "8"
 		vb.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
 		vb.customize ["modifyvm", :id, "--nicpromisc3", "allow-all"]
 	end

@@ -36,7 +36,7 @@ extern "C" {
 #endif
 
 JNIEXPORT jint JNICALL
-Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1pagesize(JNIEnv *env, jclass class) {
+Java_de_tum_in_net_ixy_memory_Memory_c_1page_1size(JNIEnv *env, jclass klass) {
 #ifdef __linux__
     return sysconf(_SC_PAGESIZE);
 #elif _WIN32
@@ -49,7 +49,7 @@ Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1pagesize(JNIEnv *env, jclass class)
 }
 
 JNIEXPORT jint JNICALL
-Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1addrsize(JNIEnv *env, jclass class) {
+Java_de_tum_in_net_ixy_memory_Memory_c_1address_1size(JNIEnv *env, jclass klass) {
 #ifdef _WIN32
     return sizeof(PVOID);
 #else
@@ -61,7 +61,7 @@ Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1addrsize(JNIEnv *env, jclass class)
 static jlong hugepagesize = HUGE_PAGE_SIZE;
 
 JNIEXPORT jlong JNICALL
-Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1hugepage(JNIEnv *env, jclass class) {
+Java_de_tum_in_net_ixy_memory_Memory_c_1hugepage_1size(JNIEnv *env, jclass klass) {
 #ifdef __linux__
 // Phase 1: Find if the hugetlbfs is actually mounted
 {
@@ -145,7 +145,7 @@ Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1hugepage(JNIEnv *env, jclass class)
 static unsigned int hugepageid = 0;
 
 JNIEXPORT jlong JNICALL
-Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1allocate(JNIEnv *env, jclass class, jlong size, jboolean contiguous) {
+Java_de_tum_in_net_ixy_memory_Memory_c_1allocate(JNIEnv *env, jclass klass, jlong size, jboolean contiguous) {
 
     // Skip if the pagesize is not a valid value
     if (hugepagesize <= 0) {
@@ -274,7 +274,7 @@ Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1allocate(JNIEnv *env, jclass class,
 }
 
 JNIEXPORT jboolean JNICALL
-Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1deallocate(JNIEnv *env, jclass class, jlong address, jlong size) {
+Java_de_tum_in_net_ixy_memory_Memory_c_1deallocate(JNIEnv *env, jclass klass, jlong address, jlong size) {
 
     // Skip if the pagesize is not a valid value
     if (hugepagesize <= 0) {
@@ -317,42 +317,42 @@ Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1deallocate(JNIEnv *env, jclass clas
 /////////////////////////////////////////////// UNSAFE REIMPLEMENTATIONS ///////////////////////////////////////////////
 
 JNIEXPORT jbyte JNICALL
-Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1getByte(JNIEnv *env, jclass class, jlong address) {
+Java_de_tum_in_net_ixy_memory_Memory_c_1getByte(JNIEnv *env, jclass klass, jlong address) {
     return *((jbyte *) address);
 }
 
 JNIEXPORT jshort JNICALL
-Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1getShort(JNIEnv *env, jclass class, jlong address) {
+Java_de_tum_in_net_ixy_memory_Memory_c_1getShort(JNIEnv *env, jclass klass, jlong address) {
     return *((jshort *) address);
 }
 
 JNIEXPORT jint JNICALL
-Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1getInt(JNIEnv *env, jclass class, jlong address) {
+Java_de_tum_in_net_ixy_memory_Memory_c_1getInt(JNIEnv *env, jclass klass, jlong address) {
     return *((jint *) address);
 }
 
 JNIEXPORT jlong JNICALL
-Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1getLong(JNIEnv *env, jclass class, jlong address) {
+Java_de_tum_in_net_ixy_memory_Memory_c_1getLong(JNIEnv *env, jclass klass, jlong address) {
     return *((jlong *) address);
 }
 
 JNIEXPORT void JNICALL
-Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1putByte(JNIEnv *env, jclass class, jlong address, jbyte value) {
+Java_de_tum_in_net_ixy_memory_Memory_c_1putByte(JNIEnv *env, jclass klass, jlong address, jbyte value) {
     *((jbyte *) address) = value;
 }
 
 JNIEXPORT void JNICALL
-Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1putShort(JNIEnv *env, jclass class, jlong address, jshort value) {
+Java_de_tum_in_net_ixy_memory_Memory_c_1putShort(JNIEnv *env, jclass klass, jlong address, jshort value) {
     *((jshort *) address) = value;
 }
 
 JNIEXPORT void JNICALL
-Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1putInt(JNIEnv *env, jclass class, jlong address, jint value) {
+Java_de_tum_in_net_ixy_memory_Memory_c_1putInt(JNIEnv *env, jclass klass, jlong address, jint value) {
     *((jint *) address) = value;
 }
 
 JNIEXPORT void JNICALL
-Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1putLong(JNIEnv *env, jclass class, jlong address, jlong value) {
+Java_de_tum_in_net_ixy_memory_Memory_c_1putLong(JNIEnv *env, jclass klass, jlong address, jlong value) {
     *((jlong *) address) = value;
 }
 

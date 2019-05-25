@@ -1,7 +1,7 @@
-// Set the root project name
-rootProject.name  = 'ixy.java'
+// Set the project name
+rootProject.name = 'ixy.java'
 
-// Include all the subprojects
-include 'pci'
-include 'memory'
-include 'generic'
+// Include the rest of the projects and override their names
+include 'pci', 'memory'
+findProject(':pci')?.name    = 'ixy.pci'
+findProject(':memory')?.name = 'ixy.memory'

@@ -7,45 +7,45 @@ extern "C" {
 #endif
 
 JNIEXPORT jint JNICALL
-Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1pagesize(JNIEnv *, jclass);
+Java_de_tum_in_net_ixy_memory_Memory_c_1page_1size(JNIEnv *, jclass);
 
 JNIEXPORT jint JNICALL
-Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1addrsize(JNIEnv *, jclass);
+Java_de_tum_in_net_ixy_memory_Memory_c_1address_1size(JNIEnv *, jclass);
 
 JNIEXPORT jlong JNICALL
-Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1hugepage(JNIEnv *, jclass);
+Java_de_tum_in_net_ixy_memory_Memory_c_1hugepage_1size(JNIEnv *, jclass);
 
 JNIEXPORT jlong JNICALL
-Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1allocate(JNIEnv *, jclass, jlong, jboolean);
+Java_de_tum_in_net_ixy_memory_Memory_c_1allocate(JNIEnv *, jclass, jlong, jboolean);
 
 JNIEXPORT jboolean JNICALL
-Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1deallocate(JNIEnv *, jclass, jlong, jlong);
+Java_de_tum_in_net_ixy_memory_Memory_c_1deallocate(JNIEnv *, jclass, jlong, jlong);
 
 /////////////////////////////////////////////// UNSAFE REIMPLEMENTATIONS ///////////////////////////////////////////////
 
 JNIEXPORT jbyte JNICALL
-Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1getByte(JNIEnv *, jclass, jlong);
+Java_de_tum_in_net_ixy_memory_Memory_c_1getByte(JNIEnv *, jclass, jlong);
 
 JNIEXPORT jshort JNICALL
-Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1getShort(JNIEnv *, jclass, jlong);
+Java_de_tum_in_net_ixy_memory_Memory_c_1getShort(JNIEnv *, jclass, jlong);
 
 JNIEXPORT jint JNICALL
-Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1getInt(JNIEnv *, jclass, jlong);
+Java_de_tum_in_net_ixy_memory_Memory_c_1getInt(JNIEnv *, jclass, jlong);
 
 JNIEXPORT jlong JNICALL
-Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1getLong(JNIEnv *, jclass, jlong);
+Java_de_tum_in_net_ixy_memory_Memory_c_1getLong(JNIEnv *, jclass, jlong);
 
 JNIEXPORT void JNICALL
-Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1putByte(JNIEnv *, jclass, jlong, jbyte);
+Java_de_tum_in_net_ixy_memory_Memory_c_1putByte(JNIEnv *, jclass, jlong, jbyte);
 
 JNIEXPORT void JNICALL
-Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1putShort(JNIEnv *, jclass, jlong, jshort);
+Java_de_tum_in_net_ixy_memory_Memory_c_1putShort(JNIEnv *, jclass, jlong, jshort);
 
 JNIEXPORT void JNICALL
-Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1putInt(JNIEnv *, jclass, jlong, jint);
+Java_de_tum_in_net_ixy_memory_Memory_c_1putInt(JNIEnv *, jclass, jlong, jint);
 
 JNIEXPORT void JNICALL
-Java_de_tum_in_net_ixy_memory_MemoryUtils_c_1putLong(JNIEnv *, jclass, jlong, jlong);
+Java_de_tum_in_net_ixy_memory_Memory_c_1putLong(JNIEnv *, jclass, jlong, jlong);
 
 #ifdef __cplusplus
 }

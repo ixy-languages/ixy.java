@@ -16,6 +16,7 @@ gradle
 .gradle
 build
 !gradle-wrapper.jar
+!gradle-wrapper.properties
 
 # From the Windows template
 Thumbs.db

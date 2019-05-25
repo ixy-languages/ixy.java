@@ -1,12 +1,56 @@
-// Include some useful Gradle plugins
+import com.github.spotbugs.SpotBugsTask
+
+// Include all the plugins this module depends on
 plugins {
-	id 'java-library' // Java library support
-	id 'c'            // C/C++ support
+	id 'c'                                               // C plugin
+	id 'java-library'                                    // Java library plugin
+	id 'jacoco'                                          // Java Code Coverage
+	id 'pmd'                                             // Static code analyzer
+	id 'com.github.gmazzo.buildconfig' version '1.5.0'   // BuildConfig (like in Android)
+	id 'io.freefair.lombok'            version '3.6.4'   // Lombok
+	id 'com.github.spotbugs'           version '2.0.0'   // Bug finder
+	id 'com.simonharrer.modernizer'    version '1.6.0-1' // Modernizer plugin
+	id 'com.adarshr.test-logger'       version '1.6.0'   // Gradle Test Logger (more beautiful than the default)
+//	id 'com.github.ben-manes.versions' version '0.21.0'  // Outdated dependencies detection support
 }
 
-// Set the source and target compatibility of this subproject to Java 11
-sourceCompatibility = 1.11
-targetCompatibility = 1.11
+// Configure the group and version of the project, which should match the root project's
+group 'de.tum.in.net.ixy'
+version '1.0'
+
+// Set the Java compatibility of the source code and the generated artifact
+sourceCompatibility = 1.12
+targetCompatibility = 1.12
+
+// Use BinTray's jCenter repository, which is faster and bigger than Maven's
+repositories {
+	jcenter()
+}
+
+// Use the latest JaCoCo version if possible => https://www.eclemma.org/jacoco/
+jacoco {
+	toolVersion = '0.8.4'
+}
+
+// Use the latest SpotBugs version if possible => https://github.com/spotbugs/spotbugs/releases
+spotbugs {
+	toolVersion    = '3.1.12'
+	ignoreFailures = true
+}
+
+// Use the latest PMD version if possible => https://pmd.github.io/#downloads
+pmd {
+	toolVersion    = '6.14.0'
+	ignoreFailures = true
+}
+
+// Define a set of custom properties which may or may not be useful, but should be inherited from the root project
+ext {
+	DEBUG     = rootProject.ext.has("DEBUG")     ? project.DEBUG     : false
+	UNSAFE    = rootProject.ext.has("UNSAFE")    ? project.UNSAFE    : true
+	OPTIMIZED = rootProject.ext.has("OPTIMIZED") ? project.OPTIMIZED : false
+	HUGE_MNT  = rootProject.ext.has("HUGE_MNT")  ? project.HUGE_MNT  : "/mnt/huge"
+}
 
 // Configure the C library
 model {
@@ -18,8 +62,8 @@ model {
 	}
 	// Define our components, which will be basically our C library, targeting our custom platform
 	// and add to the compiler flags the include paths of the JNI framework
-    components {
-        ixy(NativeLibrarySpec) {
+	components {
+		ixy(NativeLibrarySpec) {
 			targetPlatform 'amd64'
 			binaries.all {
 				if (targetPlatform.operatingSystem.macOsX) {
@@ -41,36 +85,88 @@ model {
 				}
 			}
 		}
-    }
+	}
 }
 
-// Define the dependencies and their types (compile, runtime, test, etc.)
+// Compute the package name without sequential repetition of the different package levels
+def FQPN = { ->
+	def mPackages = "${project.group}.ixy.${project.name}".split("\\.")
+	def previous = mPackages[0]
+	for (int i = 1; i < mPackages.length; i += 1)
+		if (mPackages[i] == previous)
+			mPackages[i] = null
+		else
+			previous = mPackages[i]
+	Arrays.stream(mPackages).filter(Objects.&nonNull).toArray().join('.')
+}.call()
+
+// Configure the BuildConstants class, which will allow the Java compiler to optimize the code at compile time
+buildConfig {
+	packageName      FQPN
+	language         'java'
+	buildConfigField 'boolean', 'DEBUG',     "${project.DEBUG}"
+	buildConfigField 'boolean', 'UNSAFE',    "${project.UNSAFE}"
+	buildConfigField 'boolean', 'OPTIMIZED', "${project.OPTIMIZED}"
+	buildConfigField 'String',  'HUGE_MNT',  "\"${project.HUGE_MNT}\""
+}
+
+// Define the dependencies and the minimum scope needed for them to work
 dependencies {
+	compile            group: 'org.slf4j',         name: 'slf4j-api',            version: '1.8.0-beta4'
 	implementation     group: 'org.jetbrains',     name: 'annotations',          version: '16.0.2'
-	testImplementation group: 'org.jetbrains',     name: 'annotations',          version: '16.0.2'
-	compileOnly        group: 'org.slf4j',         name: 'slf4j-api',            version: '1.8.0-beta4'
-	testRuntimeOnly    group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.5.0-M1'
 	testCompile        group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: '5.5.0-M1'
+	testRuntimeOnly    group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.5.0-M1'
+	testImplementation group: 'org.jetbrains',     name: 'annotations',          version: '17.0.0'
 
 	// Add Logback based on if the DEBUG flag is enabled
-	if (project.DEBUG) {
+	if (project.DEBUG)
 		testCompile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
-	} else {
-		testCompile group: 'org.slf4j', name: 'slf4j-nop', version: '1.8.0-beta4'
+	else
+		testCompile group: 'org.slf4j',      name: 'slf4j-nop',       version: '1.8.0-beta4'
+}
+
+// Disable the "@Generated" annotation used by the BuildConfig generated class
+tasks.withType(com.github.gmazzo.gradle.plugins.tasks.BuildConfigTask) {
+	addGeneratedAnnotation = false
+}
+
+// Disable the warning about the Unsafe proprietary API during compilation
+tasks.withType(JavaCompile) {
+	options.compilerArgs << '-XDignore.symbol.file'
+}
+
+// Add the links to the official documentation
+tasks.withType(Javadoc) {
+	options.links << 'https://docs.oracle.com/en/java/javase/12/docs/api/'
+	options.addBooleanOption('html5', true)
+//	options.jFlags += '-XDignore.symbol.file'
+}
+
+// Export the SpotBugs reports in HTML format only
+tasks.withType(SpotBugsTask) {
+	reports {
+		html.enabled  = true
+		xml.enabled   = false
+		text.enabled  = false
+		emacs.enabled = false
 	}
 }
 
 // Exclude the tests that will fail always if no NICs are available
 test {
-
 	// Add the native library path
-	systemProperty 'java.library.path', file("${buildDir}/libs/ixy/shared").absolutePath
-
-	// If debug mode is enabled, configure Logback
-	if (project.DEBUG) systemProperty 'logback.configurationFile', 'logback-test.xml'
+	systemProperty "java.library.path", file("${buildDir}/libs/ixy/shared").absolutePath
 
 	// Enable JUnit 5 and execute all tests always
 	useJUnitPlatform { failFast = false }
+
+	// Use all processor cores to test
+	maxParallelForks = Runtime.runtime.availableProcessors()
+
+	// Configure JUnit to execute things in parallel
+	systemProperty 'junit.jupiter.execution.parallel.enabled',         true
+	systemProperty 'junit.jupiter.execution.parallel.mode.default',    'concurrent'
+	systemProperty 'junit.jupiter.execution.parallel.config.strategy', 'dynamic'
 
 	// Configure Gradle's default test logger
 	testLogging {
@@ -80,19 +176,30 @@ test {
 
 	// Configure the Gradle Test Logger plugin
 	testlogger {
-		theme 'mocha-parallel'
-		showExceptions true
-		slowThreshold 2000
-		showSummary true
-		showPassed true
-		showSkipped true
-		showFailed true
-		showStandardStreams true
-		showPassedStandardStreams true
+		theme                      'mocha-parallel'
+		showExceptions             true
+		slowThreshold              2000
+		showSummary                true
+		showPassed                 true
+		showSkipped                true
+		showFailed                 true
+		showStandardStreams        true
+		showPassedStandardStreams  true
 		showSkippedStandardStreams true
-		showFailedStandardStreams true
+		showFailedStandardStreams  true
 	}
-
-	// Make the test depend on the shared library
-	dependsOn 'ixySharedLibrary'
 }
+
+// Make sure the shared library is built before testing
+test.dependsOn 'ixySharedLibrary'
+
+// Export the JaCoCo report in HTML format only
+jacocoTestReport {
+	reports {
+		html.enabled = true
+		xml.enabled  = false
+		csv.enabled  = false
+	}
+}
+
+
