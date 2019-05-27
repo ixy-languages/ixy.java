@@ -157,16 +157,15 @@ public final class Memory {
 	/**
 	 * Allocates {@code size} bytes.
 	 * <p>
-	 * The memory allocated by this method MUST be deallocated with {@link #c_deallocate(long, long)}, {@link
-	 * #u_deallocate(long, long)} or {@link #smartDeallocate(long, long)}, as it won't be garbage collected by the Java
-	 * Virtual Machine.
+	 * The memory allocated by this method MUST be freed with {@link #c_free(long, long)}, {@link #u_free(long, long)}
+	 * or {@link #smartFree(long, long)}, as it won't be garbage collected by the Java Virtual Machine.
 	 * <p>
 	 * The allocated memory region can be contiguous if requested, but since the implementation uses {@code hugepages}
-	 * to do so, if the requested size is bigger than the bytes a smartHugepageSize can smartAllocate, the allocation will return
-	 * the invalid address {@code 0}.
+	 * to do so, if the requested size is bigger than the bytes a hugepage can store, the allocation will return the
+	 * invalid address {@code 0}.
 	 * <p>
 	 * The implementation assumes that a {@code hugetlbfs} is mounted at {@link BuildConfig#HUGE_MNT} on Linux.
-	 * On Windows it uses {@code VirtualAlloc} to smartAllocate a big memory page.
+	 * On Windows it uses {@code VirtualAlloc} to allocate a huge memory page.
 	 *
 	 * @param size       The number of bytes to smartAllocate.
 	 * @param contiguous If the allocated bytes should be contiguous.
@@ -175,16 +174,16 @@ public final class Memory {
 	public static native long c_allocate(final long size, final boolean contiguous);
 
 	/**
-	 * Deallocates a previously allocated memory region.
+	 * Frees a previously allocated memory region.
 	 * <p>
-	 * If the given address is not a multiple of the smartPageSize it won't fail because it will be converted to the base
-	 * address of a huge memory page.
+	 * If the given address is not a multiple of the size of a memory page it won't fail because it will be converted to
+	 * the base address of a huge memory page.
 	 *
 	 * @param address The address of the previously allocated region.
 	 * @param size    The size of the allocated region.
 	 * @return If the operation succeeded.
 	 */
-	public static native boolean c_deallocate(final long address, final long size);
+	public static native boolean c_free(final long address, final long size);
 
 	/**
 	 * Reads a {@code byte} from an arbitrary memory address.
@@ -286,7 +285,7 @@ public final class Memory {
 	}
 
 	/**
-	 * The {@link Unsafe} object does not have any method to smartAllocate memory using huge memory pages.
+	 * The {@link Unsafe} object does not have any method to allocate memory using huge memory pages.
 	 *
 	 * @param size       The number of bytes to smartAllocate.
 	 * @param contiguous If the allocated bytes should be contiguous.
@@ -299,14 +298,14 @@ public final class Memory {
 	}
 
 	/**
-	 * The {@link Unsafe} object does not have any method to smartDeallocate using huge memory pages.
+	 * The {@link Unsafe} object does not have any method to free huge memory pages.
 	 *
 	 * @param address The address of the previously allocated region.
 	 * @param size    The size of the allocated region.
 	 * @return If the operation succeeded.
 	 * @throws UnsupportedOperationException Always.
 	 */
-	public static boolean u_deallocate(final long address, final long size) throws UnsupportedOperationException {
+	public static boolean u_free(final long address, final long size) throws UnsupportedOperationException {
 		if (BuildConfig.DEBUG) {
 			log.trace("Deallocating {} bytes @ 0x{} using the Unsafe object", size, Long.toHexString(address));
 		}
@@ -555,21 +554,21 @@ public final class Memory {
 	}
 
 	/**
-	 * Deallocates a previously allocated memory region.
+	 * Frees a previously allocated memory region.
 	 * <p>
-	 * This method delegates to {@link #c_deallocate(long, long)} since there is no other way to deallocate memory using
-	 * big memory pages in Java.
+	 * This method delegates to {@link #c_free(long, long)} since there is no other way to free memory using big
+	 * memory pages in Java.
 	 *
 	 * @param address The address of the previously allocated region.
 	 * @param size    The size of the allocated region.
 	 * @return If the operation succeeded.
 	 */
-	public static boolean smartDeallocate(final long address, final long size) {
+	public static boolean smartFree(final long address, final long size) {
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
 			log.trace("Smart memory deallocation of {} bytes @ 0x{}", size, xaddress);
 		}
-		return c_deallocate(address, size);
+		return c_free(address, size);
 	}
 
 	/**
@@ -747,7 +746,7 @@ public final class Memory {
 	 * This method will return {@code null} if the allocation could not be completed successfully, but nothing
 	 * guarantees that the physical address is correct.
 	 *
-	 * @param size       The amount of bytes to smartAllocate.
+	 * @param size       The amount of bytes to allocate.
 	 * @param contiguous If the allocated memory should be contiguous.
 	 * @return The pair of virtual-physical addresses representing the allocated memory.
 	 */

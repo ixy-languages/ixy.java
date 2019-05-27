@@ -202,7 +202,7 @@ class MempoolTest {
 	}
 
 	@AfterEach
-	void deallocate() {
+	void free() {
 		unsafe.freeMemory(virtual);
 	}
 

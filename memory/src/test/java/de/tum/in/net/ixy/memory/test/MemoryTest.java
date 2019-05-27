@@ -194,14 +194,14 @@ class MemoryTest {
 		}
 
 		// Deallocate memory with the JNI call and with the smart method
-		assertTrue(Memory.c_deallocate(caddr, size));
-		assertTrue(Memory.smartDeallocate(addr, size));
+		assertTrue(Memory.c_free(caddr, size));
+		assertTrue(Memory.smartFree(addr, size));
 	}
 
-	@ParameterizedTest(name = "Memory can be deallocated using huge memory pages (size={0}; contiguous={1})")
+	@ParameterizedTest(name = "Memory can be freed using huge memory pages (size={0}; contiguous={1})")
 	@MethodSource("allocateSource")
 	@EnabledIfRoot
-	void deallocate(final Long size, final Boolean contiguous) {
+	void free(final Long size, final Boolean contiguous) {
 		// Allocate with the JNI and the smart implementations
 		val caddr = Memory.c_allocate(size, contiguous);
 		val addr = Memory.smartAllocate(size, contiguous);
@@ -210,16 +210,16 @@ class MemoryTest {
 		if (caddr == 0 || addr == 0) return;
 
 		// The Unsafe-based implementation should not work
-		assertThrows(UnsupportedOperationException.class, () -> Memory.u_deallocate(caddr, size), MSG_UNSAFE_THROW);
-		assertThrows(UnsupportedOperationException.class, () -> Memory.u_deallocate(addr, size), MSG_UNSAFE_THROW);
+		assertThrows(UnsupportedOperationException.class, () -> Memory.u_free(caddr, size), MSG_UNSAFE_THROW);
+		assertThrows(UnsupportedOperationException.class, () -> Memory.u_free(addr, size), MSG_UNSAFE_THROW);
 
 		// The base address should also succeed
-		assertTrue(Memory.c_deallocate(caddr, size));
-		assertTrue(Memory.smartDeallocate(addr, size));
+		assertTrue(Memory.c_free(caddr, size));
+		assertTrue(Memory.smartFree(addr, size));
 
 		// Wrong address should succeed as long as the base address can be deduced
-		assertTrue(Memory.c_deallocate(Memory.c_allocate(size, contiguous) + 1, size));
-		assertTrue(Memory.smartDeallocate(Memory.smartAllocate(size, contiguous) + 1, size));
+		assertTrue(Memory.c_free(Memory.c_allocate(size, contiguous) + 1, size));
+		assertTrue(Memory.smartFree(Memory.smartAllocate(size, contiguous) + 1, size));
 	}
 
 	@Test
@@ -248,7 +248,7 @@ class MemoryTest {
 		}
 		assertEquals(0, phys & Memory.getPageSize(), MSG_ALIGNED);
 		assertNull(Memory.allocateDma(0, false), MSG_NULL);
-		Memory.smartDeallocate(virt, 1);
+		Memory.smartFree(virt, 1);
 	}
 
 	@Test

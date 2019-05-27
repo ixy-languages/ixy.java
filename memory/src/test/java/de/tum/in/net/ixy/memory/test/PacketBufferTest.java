@@ -162,7 +162,7 @@ class PacketBufferTest {
 	}
 
 	@AfterEach
-	void deallocate() {
+	void free() {
 		unsafe.freeMemory(virtual);
 	}
 
