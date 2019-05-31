@@ -120,7 +120,7 @@ class MempoolTest {
 		while (!mempool.isEmpty()) {
 			val packetBuffer = mempool.pop();
 			assumeTrue(Objects.nonNull(packetBuffer));
-			val vaddress = packetBuffer.getBaseAddress();
+			val vaddress = packetBuffer.getVirtualAddress();
 			val paddress = Memory.virt2phys(vaddress);
 			assertNotEquals(0, vaddress, MSG_NOT_NULL);
 			assertNotEquals(0, paddress, MSG_NOT_NULL);
@@ -141,7 +141,7 @@ class MempoolTest {
 		while (!mempool.isEmpty()) {
 			val packetBuffer = mempool.pop();
 			assumeTrue(Objects.nonNull(packetBuffer));
-			val vaddress = packetBuffer.getBaseAddress();
+			val vaddress = packetBuffer.getVirtualAddress();
 			val paddress = Memory.virt2phys(vaddress);
 			assertNotEquals(0, vaddress, MSG_NOT_NULL);
 			assertEquals(0, packetBuffer.getSize(), MSG_SIZE_NOT_0);
@@ -161,7 +161,7 @@ class MempoolTest {
 		assertEquals(0, mempool.size(), MSG_SIZE_0);
 		val packet = mempool.pop();
 		assumeTrue(Objects.nonNull(packet));
-		assertEquals(0, packet.getBaseAddress(), MSG_NULL);
+		assertEquals(0, packet.getVirtualAddress(), MSG_NULL);
 	}
 
 	@Test

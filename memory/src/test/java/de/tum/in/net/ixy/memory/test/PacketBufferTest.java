@@ -63,14 +63,14 @@ class PacketBufferTest {
 	@Test
 	@DisplayName("Empty packet buffers can be created")
 	void empty() {
-		assertEquals(0, PacketBuffer.empty().getBaseAddress(), "should not be empty");
+		assertEquals(0, PacketBuffer.empty().getVirtualAddress(), "should not be empty");
 	}
 
 	@Test
 	@DisplayName("The packet buffer base address is correct")
 	void getBaseAddress() {
 		assumeTrue(Objects.nonNull(packetBuffer));
-		assertEquals(virtual, packetBuffer.getBaseAddress(), MSG_CORRECT);
+		assertEquals(virtual, packetBuffer.getVirtualAddress(), MSG_CORRECT);
 	}
 
 	@Test

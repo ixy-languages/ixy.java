@@ -1,5 +1,6 @@
 package de.tum.in.net.ixy.memory;
 
+import de.tum.in.net.ixy.generic.IxyPacketBuffer;
 import lombok.Getter;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author Esaú García Sánchez-Torija
  */
 @Slf4j
-public final class PacketBuffer {
+public final class PacketBuffer implements IxyPacketBuffer {
 
 	/** The offset of the physical address pointer. */
 	private static final int PAP_OFFSET = 0;
@@ -63,7 +64,7 @@ public final class PacketBuffer {
 	 * @return The base address of the real packet buffer.
 	 */
 	@Getter
-	private long baseAddress;
+	private long virtualAddress;
 
 	/**
 	 * Creates a new instance that wraps a real packet buffer.
@@ -72,7 +73,7 @@ public final class PacketBuffer {
 	 */
 	public PacketBuffer(final long address) {
 		if (BuildConfig.DEBUG) log.trace("Instantiating packet buffer with address 0x{}", Long.toHexString(address));
-		baseAddress = address;
+		virtualAddress = address;
 	}
 
 	/**
@@ -83,7 +84,7 @@ public final class PacketBuffer {
 	 * @return The validity of this instance.
 	 */
 	public boolean isValid() {
-		return baseAddress != 0;
+		return virtualAddress != 0;
 	}
 
 	/**
@@ -94,7 +95,7 @@ public final class PacketBuffer {
 	 * @return The invalidity of this instance.
 	 */
 	public boolean isInvalid() {
-		return baseAddress == 0;
+		return virtualAddress == 0;
 	}
 
 	///////////////////////////////////////////////////// GETTERS //////////////////////////////////////////////////////
@@ -107,8 +108,8 @@ public final class PacketBuffer {
 	public long getPhysicalAddress() {
 		if (BuildConfig.DEBUG) log.trace("Reading physical address pointer");
 		return Memory.getAddressSize() == 64
-				? Memory.getLong(baseAddress + PAP_OFFSET)
-				: Memory.getInt(baseAddress + PAP_OFFSET);
+				? Memory.getLong(virtualAddress + PAP_OFFSET)
+				: Memory.getInt(virtualAddress + PAP_OFFSET);
 	}
 
 	/**
@@ -119,8 +120,8 @@ public final class PacketBuffer {
 	public long getMemoryPoolAddress() {
 		if (BuildConfig.DEBUG) log.trace("Reading memory pool address");
 		return Memory.getAddressSize() == 64
-				? Memory.getLong(baseAddress + MPP_OFFSET)
-				: Memory.getInt(baseAddress + MPP_OFFSET);
+				? Memory.getLong(virtualAddress + MPP_OFFSET)
+				: Memory.getInt(virtualAddress + MPP_OFFSET);
 	}
 
 	/**
@@ -130,7 +131,7 @@ public final class PacketBuffer {
 	 */
 	public int getMemoryPoolId() {
 		if (BuildConfig.DEBUG) log.trace("Reading memory pool id");
-		return Memory.getInt(baseAddress + MPI_OFFSET);
+		return Memory.getInt(virtualAddress + MPI_OFFSET);
 	}
 
 	/**
@@ -140,7 +141,7 @@ public final class PacketBuffer {
 	 */
 	public int getSize() {
 		if (BuildConfig.DEBUG) log.trace("Reading packet buffer size");
-		return Memory.getInt(baseAddress + PKT_OFFSET);
+		return Memory.getInt(virtualAddress + PKT_OFFSET);
 	}
 
 	/**
@@ -151,7 +152,7 @@ public final class PacketBuffer {
 	 */
 	public byte getByte(final long offset) {
 		if (BuildConfig.DEBUG) log.trace("Reading data byte with offset {}", offset);
-		return Memory.getByte(baseAddress + DATA_OFFSET + offset);
+		return Memory.getByte(virtualAddress + DATA_OFFSET + offset);
 	}
 
 	/**
@@ -162,7 +163,7 @@ public final class PacketBuffer {
 	 */
 	public short getShort(final long offset) {
 		if (BuildConfig.DEBUG) log.trace("Reading data short with offset {}", offset);
-		return Memory.getShort(baseAddress + DATA_OFFSET + offset);
+		return Memory.getShort(virtualAddress + DATA_OFFSET + offset);
 	}
 
 	/**
@@ -173,7 +174,7 @@ public final class PacketBuffer {
 	 */
 	public int getInt(final long offset) {
 		if (BuildConfig.DEBUG) log.trace("Reading data int with offset {}", offset);
-		return Memory.getInt(baseAddress + DATA_OFFSET + offset);
+		return Memory.getInt(virtualAddress + DATA_OFFSET + offset);
 	}
 
 	/**
@@ -184,7 +185,7 @@ public final class PacketBuffer {
 	 */
 	public long getLong(final long offset) {
 		if (BuildConfig.DEBUG) log.trace("Reading data long with offset {}", offset);
-		return Memory.getLong(baseAddress + DATA_OFFSET + offset);
+		return Memory.getLong(virtualAddress + DATA_OFFSET + offset);
 	}
 
 	///////////////////////////////////////////////////// SETTERS //////////////////////////////////////////////////////
@@ -198,9 +199,9 @@ public final class PacketBuffer {
 	public PacketBuffer setPhysicalAddress(final long address) {
 		if (BuildConfig.DEBUG) log.trace("Writing physical address pointer 0x{}", Long.toHexString(address));
 		if (Memory.getAddressSize() == Long.SIZE) {
-			Memory.putLong(baseAddress + PAP_OFFSET, address);
+			Memory.putLong(virtualAddress + PAP_OFFSET, address);
 		} else {
-			Memory.putInt(baseAddress + PAP_OFFSET, (int) address);
+			Memory.putInt(virtualAddress + PAP_OFFSET, (int) address);
 		}
 		return this;
 	}
@@ -214,9 +215,9 @@ public final class PacketBuffer {
 	public PacketBuffer setMemoryPoolAddress(final long address) {
 		if (BuildConfig.DEBUG) log.trace("Writing memory pool address 0x{}", Long.toHexString(address));
 		if (Memory.getAddressSize() == Long.SIZE) {
-			Memory.putLong(baseAddress + MPP_OFFSET, address);
+			Memory.putLong(virtualAddress + MPP_OFFSET, address);
 		} else {
-			Memory.putInt(baseAddress + MPP_OFFSET, (int) address);
+			Memory.putInt(virtualAddress + MPP_OFFSET, (int) address);
 		}
 		return this;
 	}
@@ -229,7 +230,7 @@ public final class PacketBuffer {
 	 */
 	public PacketBuffer setMemoryPoolId(final int index) {
 		if (BuildConfig.DEBUG) log.trace("Writing memory pool id 0x{}", Integer.toHexString(index));
-		Memory.putInt(baseAddress + MPI_OFFSET, index);
+		Memory.putInt(virtualAddress + MPI_OFFSET, index);
 		return this;
 	}
 
@@ -239,10 +240,9 @@ public final class PacketBuffer {
 	 * @param size The size to write.
 	 * @return This packet buffer.
 	 */
-	public PacketBuffer setSize(final int size) {
+	public void setSize(final int size) {
 		if (BuildConfig.DEBUG) log.trace("Writing packet buffer size 0x{}", Integer.toHexString(size));
-		Memory.putInt(baseAddress + PKT_OFFSET, size);
-		return this;
+		Memory.putInt(virtualAddress + PKT_OFFSET, size);
 	}
 
 	/**
@@ -257,7 +257,7 @@ public final class PacketBuffer {
 			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
 			log.trace("Writing data byte 0x{} with offset {}", xvalue, offset);
 		}
-		Memory.putByte(baseAddress + DATA_OFFSET + offset, value);
+		Memory.putByte(virtualAddress + DATA_OFFSET + offset, value);
 		return this;
 	}
 
@@ -273,7 +273,7 @@ public final class PacketBuffer {
 			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
 			log.trace("Writing data short 0x{} with offset {}", xvalue, offset);
 		}
-		Memory.putShort(baseAddress + DATA_OFFSET + offset, value);
+		Memory.putShort(virtualAddress + DATA_OFFSET + offset, value);
 		return this;
 	}
 
@@ -288,7 +288,7 @@ public final class PacketBuffer {
 		if (BuildConfig.DEBUG) {
 			log.trace("Writing data short 0x{} with offset {}", Integer.toHexString(value), offset);
 		}
-		Memory.putInt(baseAddress + DATA_OFFSET + offset, value);
+		Memory.putInt(virtualAddress + DATA_OFFSET + offset, value);
 		return this;
 	}
 
@@ -303,7 +303,7 @@ public final class PacketBuffer {
 		if (BuildConfig.DEBUG) {
 			log.trace("Writing data short 0x{} with offset {}", Long.toHexString(value), offset);
 		}
-		Memory.putLong(baseAddress + DATA_OFFSET + offset, value);
+		Memory.putLong(virtualAddress + DATA_OFFSET + offset, value);
 		return this;
 	}
 
@@ -315,6 +315,14 @@ public final class PacketBuffer {
 	public static PacketBuffer empty() {
 		if (BuildConfig.DEBUG) log.trace("Creating dummy packet buffer");
 		return new PacketBuffer(0);
+	}
+
+	//////////////////////////////////////////////// OVERRIDDEN METHODS ////////////////////////////////////////////////
+
+	/** {@inheritDoc} */
+	@Override
+	public long getDataOffset() {
+		return DATA_OFFSET;
 	}
 
 }

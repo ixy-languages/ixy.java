@@ -112,6 +112,7 @@ buildConfig {
 
 // Define the dependencies and the minimum scope needed for them to work
 dependencies {
+	compile            project(':ixy.generic')
 	compile            group: 'org.slf4j',         name: 'slf4j-api',            version: '1.8.0-beta4'
 	implementation     group: 'org.jetbrains',     name: 'annotations',          version: '16.0.2'
 	testCompile        group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: '5.5.0-M1'
