@@ -30,7 +30,7 @@ public class JniMemoryManager implements IxyMemoryManager {
 	private static final JniMemoryManager instance = new JniMemoryManager();
 
 	/** Private constructor that throws an exception if the instance is already instantiated. */
-	private JniMemoryManager() {
+	protected JniMemoryManager() {
 		if (BuildConfig.DEBUG) log.debug("Creating an Unsafe-backed memory manager");
 		if (instance != null) {
 			throw new IllegalStateException("An instance cannot be created twice. Use getInstance() instead.");
