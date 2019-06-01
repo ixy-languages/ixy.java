@@ -456,8 +456,20 @@ public class UnsafeMemoryManager implements IxyMemoryManager {
 		unsafe.putLongVolatile(null, address, value);
 	}
 
-	/** {@inheritDoc} */
+	/**
+	 * Translates a virtual memory {@code address} to its equivalent physical counterpart.
+	 * <p>
+	 * The method will throw an {@link UnsupportedOperationException} because the {@link Unsafe} object does not provide
+	 * an implementation for this operation.
+	 * <p>
+	 * This method is marked as deprecated to prevent accidental usage, however it won't be removed in future versions.
+	 *
+	 * @param address The address to translate.
+	 * @return The equivalent physical address.
+	 * @deprecated
+	 */
 	@Override
+	@Deprecated
 	public long virt2phys(final long address) {
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
