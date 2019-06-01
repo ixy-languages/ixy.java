@@ -185,4 +185,12 @@ public interface IxyMemoryManager {
 	 */
 	void putLongVolatile(final long address, final long value);
 
+	/**
+	 * Translates a virtual memory {@code address} to its equivalent physical counterpart.
+	 *
+	 * @param address The address to translate.
+	 * @return The equivalent physical address.
+	 */
+	long virt2phys(final long address);
+
 }

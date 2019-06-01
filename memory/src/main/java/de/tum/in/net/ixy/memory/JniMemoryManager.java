@@ -247,6 +247,14 @@ public class JniMemoryManager implements IxyMemoryManager {
 	 */
 	private static native void c_put_long_volatile(final long address, final long value);
 
+	/**
+	 * Translates a virtual memory {@code address} to its equivalent physical counterpart.
+	 *
+	 * @param address The address to write to.
+	 * @return The physical address.
+	 */
+	private static native long c_virt2phys(final long address);
+
 	//////////////////////////////////////////////// OVERRIDDEN METHODS ////////////////////////////////////////////////
 
 	/** {@inheritDoc} */
@@ -483,6 +491,16 @@ public class JniMemoryManager implements IxyMemoryManager {
 			log.debug("Putting volatile long 0x{} @ 0x{} using C", xvalue, xaddress);
 		}
 		c_put_long_volatile(address, value);
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public long virt2phys(final long address) {
+		if (BuildConfig.DEBUG) {
+			val xaddress = Long.toHexString(address);
+			log.debug("Translating virtual address 0x{} using C", xaddress);
+		}
+		return c_virt2phys(address);
 	}
 
 }

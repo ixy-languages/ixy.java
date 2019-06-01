@@ -456,4 +456,17 @@ public class UnsafeMemoryManager implements IxyMemoryManager {
 		unsafe.putLongVolatile(null, address, value);
 	}
 
+	/** {@inheritDoc} */
+	@Override
+	public long virt2phys(final long address) {
+		if (!BuildConfig.OPTIMIZED) {
+			checkUnsafe();
+		}
+		if (BuildConfig.DEBUG) {
+			val xaddress = Long.toHexString(address);
+			log.debug("Translating virtual address 0x{} using the Unsafe object", xaddress);
+		}
+		throw new UnsupportedOperationException("Unsafe does not provide an implementation for this operation");
+	}
+
 }
