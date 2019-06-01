@@ -16,7 +16,7 @@ import lombok.val;
  * @author Esaú García Sánchez-Torija
  */
 @Slf4j
-public class JniMemoryManager implements IxyMemoryManager {
+public final class JniMemoryManager implements IxyMemoryManager {
 
 	/**
 	 * Cached instance to use as singleton.
@@ -30,7 +30,7 @@ public class JniMemoryManager implements IxyMemoryManager {
 	private static final JniMemoryManager instance = new JniMemoryManager();
 
 	/** Private constructor that throws an exception if the instance is already instantiated. */
-	protected JniMemoryManager() {
+	private JniMemoryManager() {
 		if (BuildConfig.DEBUG) log.debug("Creating an Unsafe-backed memory manager");
 		if (instance != null) {
 			throw new IllegalStateException("An instance cannot be created twice. Use getInstance() instead.");
