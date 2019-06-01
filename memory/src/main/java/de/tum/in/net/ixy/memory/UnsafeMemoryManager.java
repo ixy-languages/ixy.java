@@ -103,7 +103,7 @@ public class UnsafeMemoryManager implements IxyMemoryManager {
 	 * This method will throw an {@link UnsupportedOperationException} when allocating using huge memory pages because
 	 * the {@link Unsafe} object does not provide an implementation for this operation.
 	 *
-	 * @param size       The number of bytes to smartAllocate.
+	 * @param size       The number of bytes to allocate.
 	 * @param huge       Whether huge memory page should used.
 	 * @param contiguous Whether the memory region should be physically contiguous.
 	 * @return The base address of the allocated memory region.
