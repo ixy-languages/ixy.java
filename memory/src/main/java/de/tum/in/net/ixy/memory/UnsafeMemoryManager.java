@@ -47,7 +47,7 @@ public class UnsafeMemoryManager implements IxyMemoryManager {
 			val theUnsafeField = Unsafe.class.getDeclaredField("theUnsafe");
 			theUnsafeField.setAccessible(true);
 			unsafe = (Unsafe) theUnsafeField.get(null);
-		} catch (NoSuchFieldException | IllegalAccessException e) {
+		} catch (final NoSuchFieldException | IllegalAccessException e) {
 			log.error("Error getting Unsafe object", e);
 		}
 	}
@@ -138,7 +138,7 @@ public class UnsafeMemoryManager implements IxyMemoryManager {
 		} else {
 			try {
 				return unsafe.allocateMemory(size);
-			} catch (RuntimeException | OutOfMemoryError e) {
+			} catch (final RuntimeException | OutOfMemoryError e) {
 				if (BuildConfig.DEBUG) log.error("Could not allocate memory", e);
 				return 0;
 			}
@@ -184,7 +184,7 @@ public class UnsafeMemoryManager implements IxyMemoryManager {
 		} else {
 			try {
 				unsafe.freeMemory(address);
-			} catch (RuntimeException e) {
+			} catch (final RuntimeException e) {
 				if (BuildConfig.DEBUG) log.error("Could not free memory", e);
 				return false;
 			}
