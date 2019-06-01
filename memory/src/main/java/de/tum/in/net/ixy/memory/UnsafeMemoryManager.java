@@ -27,7 +27,7 @@ public class UnsafeMemoryManager implements IxyMemoryManager {
 	private transient Unsafe unsafe;
 
 	/**
-	 * Cached instance to use as instance.
+	 * Cached instance to use as singleton.
 	 * -------------- GETTER --------------
 	 * Returns a singleton instance.
 	 *
@@ -203,7 +203,7 @@ public class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
-			log.debug("Reading byte @ 0x{}", xaddress);
+			log.debug("Reading byte @ 0x{} using the Unsafe object", xaddress);
 		}
 		return unsafe.getByte(address);
 	}
@@ -219,7 +219,7 @@ public class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
-			log.debug("Reading volatile byte @ 0x{}", xaddress);
+			log.debug("Reading volatile byte @ 0x{} using the Unsafe object", xaddress);
 		}
 		return unsafe.getByteVolatile(null, address);
 	}
@@ -236,7 +236,7 @@ public class UnsafeMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
 			val xaddress = Long.toHexString(address);
-			log.debug("Putting byte 0x{} @ 0x{}", xvalue, xaddress);
+			log.debug("Putting byte 0x{} @ 0x{} using the Unsafe object", xvalue, xaddress);
 		}
 		unsafe.putByte(address, value);
 	}
@@ -253,7 +253,7 @@ public class UnsafeMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
 			val xaddress = Long.toHexString(address);
-			log.debug("Putting volatile byte 0x{} @ 0x{}", xvalue, xaddress);
+			log.debug("Putting volatile byte 0x{} @ 0x{} using the Unsafe object", xvalue, xaddress);
 		}
 		unsafe.putByteVolatile(null, address, value);
 	}
@@ -269,7 +269,7 @@ public class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
-			log.debug("Reading short @ 0x{}", xaddress);
+			log.debug("Reading short @ 0x{} using the Unsafe object", xaddress);
 		}
 		return unsafe.getShort(address);
 	}
@@ -285,7 +285,7 @@ public class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
-			log.debug("Reading volatile short @ 0x{}", xaddress);
+			log.debug("Reading volatile short @ 0x{} using the Unsafe object", xaddress);
 		}
 		return unsafe.getShortVolatile(null, address);
 	}
@@ -302,7 +302,7 @@ public class UnsafeMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
 			val xaddress = Long.toHexString(address);
-			log.debug("Putting short 0x{} @ 0x{}", xvalue, xaddress);
+			log.debug("Putting short 0x{} @ 0x{} using the Unsafe object", xvalue, xaddress);
 		}
 		unsafe.putShort(address, value);
 	}
@@ -319,7 +319,7 @@ public class UnsafeMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
 			val xaddress = Long.toHexString(address);
-			log.debug("Putting volatile short 0x{} @ 0x{}", xvalue, xaddress);
+			log.debug("Putting volatile short 0x{} @ 0x{} using the Unsafe object", xvalue, xaddress);
 		}
 		unsafe.putShortVolatile(null, address, value);
 	}
@@ -335,7 +335,7 @@ public class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
-			log.debug("Reading int @ 0x{}", xaddress);
+			log.debug("Reading int @ 0x{} using the Unsafe object", xaddress);
 		}
 		return unsafe.getInt(address);
 	}
@@ -351,7 +351,7 @@ public class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
-			log.debug("Reading volatile int @ 0x{}", xaddress);
+			log.debug("Reading volatile int @ 0x{} using the Unsafe object", xaddress);
 		}
 		return unsafe.getIntVolatile(null, address);
 	}
@@ -368,7 +368,7 @@ public class UnsafeMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(value);
 			val xaddress = Long.toHexString(address);
-			log.debug("Putting int 0x{} @ 0x{}", xvalue, xaddress);
+			log.debug("Putting int 0x{} @ 0x{} using the Unsafe object", xvalue, xaddress);
 		}
 		unsafe.putInt(address, value);
 	}
@@ -385,7 +385,7 @@ public class UnsafeMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(value);
 			val xaddress = Long.toHexString(address);
-			log.debug("Putting volatile int 0x{} @ 0x{}", xvalue, xaddress);
+			log.debug("Putting volatile int 0x{} @ 0x{} using the Unsafe object", xvalue, xaddress);
 		}
 		unsafe.putIntVolatile(null, address, value);
 	}
@@ -401,7 +401,7 @@ public class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
-			log.debug("Reading long @ 0x{}", xaddress);
+			log.debug("Reading long @ 0x{} using the Unsafe object", xaddress);
 		}
 		return unsafe.getLong(address);
 	}
@@ -417,7 +417,7 @@ public class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
-			log.debug("Reading volatile long @ 0x{}", xaddress);
+			log.debug("Reading volatile long @ 0x{} using the Unsafe object", xaddress);
 		}
 		return unsafe.getLongVolatile(null, address);
 	}
@@ -434,7 +434,7 @@ public class UnsafeMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Long.toHexString(value);
 			val xaddress = Long.toHexString(address);
-			log.debug("Putting long 0x{} @ 0x{}", xvalue, xaddress);
+			log.debug("Putting long 0x{} @ 0x{} using the Unsafe object", xvalue, xaddress);
 		}
 		unsafe.putLong(address, value);
 	}
@@ -451,7 +451,7 @@ public class UnsafeMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Long.toHexString(value);
 			val xaddress = Long.toHexString(address);
-			log.debug("Putting volatile long 0x{} @ 0x{}", xvalue, xaddress);
+			log.debug("Putting volatile long 0x{} @ 0x{} using the Unsafe object", xvalue, xaddress);
 		}
 		unsafe.putLongVolatile(null, address, value);
 	}
