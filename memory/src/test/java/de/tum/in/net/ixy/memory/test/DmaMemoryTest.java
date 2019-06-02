@@ -47,25 +47,25 @@ final class DmaMemoryTest {
 	/**
 	 * Tests that the virtual memory address is correct.
 	 *
-	 * @see DmaMemory#getVirtual()
+	 * @see DmaMemory#getVirtualAddress()
 	 */
 	@Test
 	@DisplayName("The virtual memory address is stored correctly")
 	void getVirtual() {
 		assumeTrue(Objects.nonNull(dmaMemory));
-		assertEquals(virtual, dmaMemory.getVirtual(), "the virtual memory address should be correct");
+		assertEquals(virtual, dmaMemory.getVirtualAddress(), "the virtual memory address should be correct");
 	}
 
 	/**
 	 * Tests that the physical memory address is correct.
 	 *
-	 * @see DmaMemory#getPhysical()
+	 * @see DmaMemory#getPhysicalAddress()
 	 */
 	@Test
 	@DisplayName("The physical memory address is stored correctly")
 	void getPhysical() {
 		assumeTrue(Objects.nonNull(dmaMemory));
-		assertEquals(physical, dmaMemory.getPhysical(), "the physical memory address should be correct");
+		assertEquals(physical, dmaMemory.getPhysicalAddress(), "the physical memory address should be correct");
 	}
 
 }
