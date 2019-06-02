@@ -24,13 +24,13 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 final class DmaMemoryTest {
 
 	/** Holds a random number that will be used as virtual memory address. */
-	private long virtual;
+	private transient long virtual;
 
 	/** Holds a random number that will be used as physical memory address. */
-	private long physical;
+	private transient long physical;
 
 	/** Holds an instance of {@link DmaMemory} that will be used to test. */
-	private DmaMemory dmaMemory;
+	private transient DmaMemory dmaMemory;
 
 	// Randomizes "virtual" and "physical" and creates an "DmaMemory" instance that uses them.
 	@BeforeEach
