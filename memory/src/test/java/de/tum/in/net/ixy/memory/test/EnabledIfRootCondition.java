@@ -1,20 +1,25 @@
 package de.tum.in.net.ixy.memory.test;
 
-import lombok.val;
-import org.junit.jupiter.api.extension.ConditionEvaluationResult;
-import org.junit.jupiter.api.extension.ExecutionCondition;
-import org.junit.jupiter.api.extension.ExtensionContext;
-
 import java.util.Objects;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
+
+import org.junit.jupiter.api.extension.ConditionEvaluationResult;
+import org.junit.jupiter.api.extension.ExecutionCondition;
+import org.junit.jupiter.api.extension.ExtensionContext;
 
 import static java.lang.String.format;
 import static org.junit.jupiter.api.extension.ConditionEvaluationResult.disabled;
 import static org.junit.jupiter.api.extension.ConditionEvaluationResult.enabled;
 import static org.junit.platform.commons.util.AnnotationUtils.findAnnotation;
 
-/** Evaluates an extension context to decide if a JUnit test should be executed, allowing only {@code root} to do so. */
+import lombok.val;
+
+/**
+ * Allows the execution of a test case if the user name is {@code root} or the user id {@code 0}.
+ *
+ * @author Esaú García Sánchez-Torija
+ */
 final class EnabledIfRootCondition implements ExecutionCondition {
 
 	/** Cached evaluation result used when the annotation {@code @EnabledIfRoot} is not present. */
@@ -45,7 +50,7 @@ final class EnabledIfRootCondition implements ExecutionCondition {
 			if (name == null || name.isBlank()) {
 				CACHED_RESULT = ENABLED_NOT_FOUND;
 			} else if (!name.equals("root")) {
-				CACHED_RESULT = disabled(format("The user id is %s", name));
+				CACHED_RESULT = disabled(format("The user name is %s", name));
 			} else {
 				CACHED_RESULT = ENABLED_ROOT;
 			}
@@ -63,17 +68,8 @@ final class EnabledIfRootCondition implements ExecutionCondition {
 	/** {@inheritDoc */
 	@Override
 	public ConditionEvaluationResult evaluateExecutionCondition(final ExtensionContext context) {
-
-		// Search our custom annotation
 		val optional = findAnnotation(context.getElement(), EnabledIfRoot.class);
-
-		// If the annotation is not present, ignore the whole evaluation process and enable it
-		if (optional.isEmpty()) {
-			return ENABLED_BY_DEFAULT;
-		}
-
-		// Return the precomputed result
-		return CACHED_RESULT;
+		return optional.isEmpty() ? ENABLED_BY_DEFAULT : CACHED_RESULT;
 	}
 
 }
