@@ -32,11 +32,7 @@ final class DmaMemoryTest {
 	/** Holds an instance of {@link DmaMemory} that will be used to test. */
 	private DmaMemory dmaMemory;
 
-	/**
-	 * Randomizes {@link #virtual} and {@link #physical} and creates an instance of {@link DmaMemory} that uses them.
-	 *
-	 * @see DmaMemory#DmaMemory(long, long)
-	 */
+	// Randomizes "virtual" and "physical" and creates an "DmaMemory" instance that uses them.
 	@BeforeEach
 	void randomize() {
 		virtual = (long) (Math.random() * Long.MAX_VALUE);
@@ -44,11 +40,6 @@ final class DmaMemoryTest {
 		dmaMemory = new DmaMemory(virtual, physical);
 	}
 
-	/**
-	 * Tests that the virtual memory address is correct.
-	 *
-	 * @see DmaMemory#getVirtualAddress()
-	 */
 	@Test
 	@DisplayName("The virtual memory address is stored correctly")
 	void getVirtual() {
@@ -56,11 +47,6 @@ final class DmaMemoryTest {
 		assertEquals(virtual, dmaMemory.getVirtualAddress(), "the virtual memory address should be correct");
 	}
 
-	/**
-	 * Tests that the physical memory address is correct.
-	 *
-	 * @see DmaMemory#getPhysicalAddress()
-	 */
 	@Test
 	@DisplayName("The physical memory address is stored correctly")
 	void getPhysical() {
