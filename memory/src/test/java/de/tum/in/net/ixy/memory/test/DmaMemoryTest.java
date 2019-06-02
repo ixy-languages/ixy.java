@@ -2,24 +2,17 @@ package de.tum.in.net.ixy.memory.test;
 
 import de.tum.in.net.ixy.memory.DmaMemory;
 
-import java.util.Objects;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Tests the class {@link DmaMemory}.
  *
  * @author Esaú García Sánchez-Torija
- * @see DmaMemory
  */
-@Execution(ExecutionMode.CONCURRENT)
 @DisplayName("DmaMemory")
 final class DmaMemoryTest {
 
@@ -43,15 +36,15 @@ final class DmaMemoryTest {
 	@Test
 	@DisplayName("The virtual memory address is stored correctly")
 	void getVirtual() {
-		assumeTrue(Objects.nonNull(dmaMemory));
-		assertEquals(virtual, dmaMemory.getVirtualAddress(), "the virtual memory address should be correct");
+		assertThat(dmaMemory).isNotNull();
+		assertThat(dmaMemory.getVirtualAddress()).isEqualTo(virtual);
 	}
 
 	@Test
 	@DisplayName("The physical memory address is stored correctly")
 	void getPhysical() {
-		assumeTrue(Objects.nonNull(dmaMemory));
-		assertEquals(physical, dmaMemory.getPhysicalAddress(), "the physical memory address should be correct");
+		assertThat(dmaMemory).isNotNull();
+		assertThat(dmaMemory.getPhysicalAddress()).isEqualTo(physical);
 	}
 
 }
