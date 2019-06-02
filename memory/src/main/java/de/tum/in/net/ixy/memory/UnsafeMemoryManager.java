@@ -112,7 +112,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	public long allocate(final long size, final boolean huge, final boolean contiguous) {
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (size > 0) {
+			if (size < 0) {
 				throw new IllegalArgumentException("Size must be an integer greater than 0");
 			}
 		}
@@ -164,7 +164,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 			checkUnsafe();
 			if (address == 0) {
 				throw new IllegalArgumentException("Address must not be null");
-			} else if (size > 0) {
+			} else if (size < 0) {
 				throw new IllegalArgumentException("Size must be an integer greater than 0");
 			}
 		}
@@ -479,6 +479,27 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 			log.debug("Translating virtual address 0x{} using the Unsafe object", xaddress);
 		}
 		throw new UnsupportedOperationException("Unsafe does not provide an implementation for this operation");
+	}
+
+	/**
+	 * Allocates {@code size} bytes.
+	 * <p>
+	 * The method will throw an {@link UnsupportedOperationException} because the {@link Unsafe} object does not provide
+	 * an implementation for this operation.
+	 * <p>
+	 * This method is marked as deprecated to prevent accidental usage, however it won't be removed in future versions.
+	 *
+	 * @param size       The number of bytes to allocate.
+	 * @param huge       Whether huge memory page should used.
+	 * @param contiguous Whether the memory region should be physically contiguous.
+	 * @return The {@link DualMemory} instance with the virtual and physical addresses.
+	 */
+	@Override
+	public DualMemory dmaAllocate(long size, boolean huge, boolean contiguous) {
+		if (!BuildConfig.DEBUG) log.debug("Allocating DualMemory using the Unsafe object");
+		val virt = allocate(size, huge, contiguous);
+		val phys = virt2phys(virt);
+		return new DmaMemory(virt, phys);
 	}
 
 }

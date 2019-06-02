@@ -282,7 +282,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	@Override
 	public long allocate(final long size, final boolean huge, final boolean contiguous) {
 		if (!BuildConfig.OPTIMIZED) {
-			if (size > 0) {
+			if (size < 0) {
 				throw new IllegalArgumentException("Size must be an integer greater than 0");
 			}
 		}
@@ -310,7 +310,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (!BuildConfig.OPTIMIZED) {
 			if (address == 0) {
 				throw new IllegalArgumentException("Address must not be null");
-			} else if (size > 0) {
+			} else if (size < 0) {
 				throw new IllegalArgumentException("Size must be an integer greater than 0");
 			}
 		}
@@ -501,6 +501,15 @@ public final class JniMemoryManager implements IxyMemoryManager {
 			log.debug("Translating virtual address 0x{} using C", xaddress);
 		}
 		return c_virt2phys(address);
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public DualMemory dmaAllocate(long size, boolean huge, boolean contiguous) {
+		if (!BuildConfig.DEBUG) log.debug("Allocating DualMemory using C");
+		val virt = allocate(size, huge, contiguous);
+		val phys = virt2phys(virt);
+		return new DmaMemory(virt, phys);
 	}
 
 }

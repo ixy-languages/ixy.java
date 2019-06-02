@@ -218,4 +218,16 @@ public interface IxyMemoryManager {
 	 */
 	long virt2phys(final long address);
 
+	/**
+	 * Allocates {@code size} bytes.
+	 * <p>
+	 * The method can be customized to use huge memory pages or to fail if the physical contiguity cannot be guaranteed.
+	 *
+	 * @param size       The number of bytes to allocate.
+	 * @param huge       Whether huge memory page should used.
+	 * @param contiguous Whether the memory region should be physically contiguous.
+	 * @return The {@link DualMemory} instance with the virtual and physical addresses.
+	 */
+	DualMemory dmaAllocate(final long size, final boolean huge, final boolean contiguous);
+
 }
