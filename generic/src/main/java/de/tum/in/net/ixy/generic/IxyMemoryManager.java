@@ -8,6 +8,31 @@ package de.tum.in.net.ixy.generic;
 public interface IxyMemoryManager {
 
 	/**
+	 * Represents a memory address in its two states; the virtual and physical form.
+	 * <p>
+	 * Both addresses should have the same offset given a page size.
+	 *
+	 * @author Esaú García Sánchez-Torija
+	 */
+	interface DualMemory {
+
+		/**
+		 * Returns the virtual address.
+		 *
+		 * @return The virtual address.
+		 */
+		long getVirtualAddress();
+
+		/**
+		 * Returns the physical address.
+		 *
+		 * @return The physical address.
+		 */
+		long getPhysicalAddress();
+
+	}
+
+	/**
 	 * Computes the size of a memory address.
 	 * <p>
 	 * The result will always be a power of two.

@@ -1,20 +1,18 @@
 package de.tum.in.net.ixy.memory;
 
+import de.tum.in.net.ixy.generic.IxyMemoryManager;
+
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
 /**
- * Data class for memory addresses in two different formats, virtual and physical.
- * <p>
- * This class does not offer any manipulation methods and is an immutable data class. It is meant to be used to simply
- * keep track of virtual address and their corresponding physical counterpart.
+ * A simple implementation of a dual memory address (virtualAddress and physicalAddress).
  *
  * @author Esaú García Sánchez-Torija
- * @see Memory#allocateDma(long, boolean)
  */
 @Slf4j
-public final class DmaMemory {
+public final class DmaMemory implements IxyMemoryManager.DualMemory {
 
 	/**
 	 * The virtual address.
@@ -24,7 +22,7 @@ public final class DmaMemory {
 	 * @return The virtual address.
 	 */
 	@Getter
-	private long virtual;
+	private long virtualAddress;
 
 	/**
 	 * The physical address.
@@ -34,7 +32,7 @@ public final class DmaMemory {
 	 * @return The physical address.
 	 */
 	@Getter
-	private long physical;
+	private long physicalAddress;
 
 	/**
 	 * Constructs a new instance with the given {@code virtual} and {@code physical} addresses.
@@ -48,8 +46,8 @@ public final class DmaMemory {
 			val xphysical = Long.toHexString(physical);
 			log.debug("Creating DmaMemory [virt=0x{}, phys=0x{}]", xvirtual, xphysical);
 		}
-		this.virtual = virtual;
-		this.physical = physical;
+		virtualAddress = virtual;
+		physicalAddress = physical;
 	}
 
 }
