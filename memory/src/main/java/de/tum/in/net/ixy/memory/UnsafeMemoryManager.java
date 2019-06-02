@@ -456,6 +456,33 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		unsafe.putLongVolatile(null, address, value);
 	}
 
+	/** {@inheritDoc} */
+	@Override
+	public void copy(final long address, int size, final byte[] buffer) {
+		if (!BuildConfig.OPTIMIZED) {
+			checkUnsafe();
+			if (size <= 0) {
+				throw new IllegalArgumentException("Size must be greater than 0");
+			} else if (buffer == null) {
+				throw new IllegalArgumentException("Buffer must not be null");
+			} else if (buffer.length <= 0) {
+				throw new IllegalArgumentException("Buffer must have a capacity of at least 1");
+			}
+			size = Math.min(size, buffer.length);
+		}
+		if (BuildConfig.DEBUG) {
+			val xaddress = Long.toHexString(address);
+			log.debug("Copying data segment of {} bytes at offset 0x{} using the Unsafe object", size, xaddress);
+		}
+		unsafe.copyMemory(null, address, buffer, Unsafe.ARRAY_BYTE_BASE_OFFSET, size);
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public void copyVolatile(final long address, int size, final byte[] buffer) {
+		copy(address, size, buffer);
+	}
+
 	/**
 	 * Translates a virtual memory {@code address} to its equivalent physical counterpart.
 	 * <p>

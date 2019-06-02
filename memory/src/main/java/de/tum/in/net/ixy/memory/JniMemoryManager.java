@@ -248,6 +248,24 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	private static native void c_put_long_volatile(final long address, final long value);
 
 	/**
+	 * Copies a memory region into a primitive byte array.
+	 *
+	 * @param address The source address to copy from.
+	 * @param size    The number of bytes to copy.
+	 * @param buffer  The primitive array to copy to.
+	 */
+	private static native long c_copy(final long address, final int size, final byte[] buffer);
+
+	/**
+	 * Copies a memory region into a primitive byte array.
+	 *
+	 * @param address The source address to copy from.
+	 * @param size    The number of bytes to copy.
+	 * @param buffer  The primitive array to copy to.
+	 */
+	private static native long c_copy_volatile(final long address, final int size, final byte[] buffer);
+
+	/**
 	 * Translates a virtual memory {@code address} to its equivalent physical counterpart.
 	 *
 	 * @param address The address to write to.
@@ -491,6 +509,46 @@ public final class JniMemoryManager implements IxyMemoryManager {
 			log.debug("Putting volatile long 0x{} @ 0x{} using C", xvalue, xaddress);
 		}
 		c_put_long_volatile(address, value);
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public void copy(final long address, int size, final byte[] buffer) {
+		if (!BuildConfig.OPTIMIZED) {
+			if (size <= 0) {
+				throw new IllegalArgumentException("Size must be greater than 0");
+			} else if (buffer == null) {
+				throw new IllegalArgumentException("Buffer must not be null");
+			} else if (buffer.length <= 0) {
+				throw new IllegalArgumentException("Buffer must have a capacity of at least 1");
+			}
+			size = Math.min(size, buffer.length);
+		}
+		if (BuildConfig.DEBUG) {
+			val xaddress = Long.toHexString(address);
+			log.debug("Copying data segment of {} bytes at offset 0x{} using C", size, xaddress);
+		}
+		c_copy(address, size, buffer);
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public void copyVolatile(final long address, int size, final byte[] buffer) {
+		if (!BuildConfig.OPTIMIZED) {
+			if (size <= 0) {
+				throw new IllegalArgumentException("Size must be greater than 0");
+			} else if (buffer == null) {
+				throw new IllegalArgumentException("Buffer must not be null");
+			} else if (buffer.length <= 0) {
+				throw new IllegalArgumentException("Buffer must have a capacity of at least 1");
+			}
+			size = Math.min(size, buffer.length);
+		}
+		if (BuildConfig.DEBUG) {
+			val xaddress = Long.toHexString(address);
+			log.debug("Copying volatile data segment of {} bytes at offset 0x{} using C", size, xaddress);
+		}
+		c_copy_volatile(address, size, buffer);
 	}
 
 	/** {@inheritDoc} */

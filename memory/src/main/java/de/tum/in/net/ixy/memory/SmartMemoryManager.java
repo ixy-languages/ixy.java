@@ -286,15 +286,28 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 		}
 	}
 
-	/**
-	 * Translates a virtual address to a physical address.
-	 * <p>
-	 * This method is only implemented for {@code Linux}. Calling this method with any other operative system will use a
-	 * dummy implementation that will always return {@code 0}.
-	 *
-	 * @param address The virtual address to translate.
-	 * @return The physical address.
-	 */
+	/** {@inheritDoc} */
+	@Override
+	public void copy(final long address, final int size, final byte[] buffer) {
+		if (BuildConfig.UNSAFE) {
+			unsafe.copy(address, size, buffer);
+		} else {
+			jni.copy(address, size, buffer);
+		}
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public void copyVolatile(final long address, final int size, final byte[] buffer) {
+		if (BuildConfig.UNSAFE) {
+			unsafe.copyVolatile(address, size, buffer);
+		} else {
+			jni.copyVolatile(address, size, buffer);
+		}
+	}
+
+	/** {@inheritDoc} */
+	@Override
 	public long virt2phys(final long address) {
 		if (BuildConfig.DEBUG) log.trace("Smart memory translation of address 0x{}", Long.toHexString(address));
 

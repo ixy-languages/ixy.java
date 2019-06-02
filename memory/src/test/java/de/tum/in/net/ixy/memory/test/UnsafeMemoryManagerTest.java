@@ -6,6 +6,7 @@ import sun.misc.Unsafe;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Random;
+import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
@@ -284,6 +285,23 @@ final class UnsafeMemoryManagerTest {
 		mmanager.putLongVolatile(addr, number);
 		assertThat(mmanager.getLongVolatile(addr)).as("Read").isEqualTo(number);
 		assertThat(mmanager.free(addr, Long.BYTES, false)).as("Freeing").isTrue();
+	}
+
+	@Test
+	@DisplayName("Direct memory can be copied to JVM heap")
+	void copy() {
+		assertThat(mmanager).isNotNull();
+		val bytes = new byte[10];
+		random.nextBytes(bytes);
+		val addr = mmanager.allocate(bytes.length, false, false);
+		assertThat(addr).as("Address").isNotZero();
+		for (var i = 0; i < bytes.length; i += 1) {
+			mmanager.putByte(addr + i, bytes[i]);
+		}
+		val copy = new byte[bytes.length];
+		mmanager.copy(addr, bytes.length, copy);
+		assertThat(mmanager.free(addr, bytes.length, false)).as("Freeing").isTrue();
+		assertThat(copy).isEqualTo(bytes);
 	}
 
 	@Test

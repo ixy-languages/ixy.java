@@ -211,6 +211,24 @@ public interface IxyMemoryManager {
 	void putLongVolatile(final long address, final long value);
 
 	/**
+	 * Copies a memory region into a primitive byte array.
+	 *
+	 * @param address The source address to copy from.
+	 * @param size    The number of bytes to copy.
+	 * @param buffer  The primitive array to copy to.
+	 */
+	void copy(final long address, final int size, final byte[] buffer);
+
+	/**
+	 * Copies a memory region into a primitive byte array.
+	 *
+	 * @param address The source address to copy from.
+	 * @param size    The number of bytes to copy.
+	 * @param buffer  The primitive array to copy to.
+	 */
+	void copyVolatile(final long address, final int size, final byte[] buffer);
+
+	/**
 	 * Translates a virtual memory {@code address} to its equivalent physical counterpart.
 	 *
 	 * @param address The address to translate.

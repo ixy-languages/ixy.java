@@ -266,6 +266,23 @@ final class SmartMemoryManagerTest {
 	}
 
 	@Test
+	@DisplayName("Direct memory can be copied to JVM heap")
+	void copy() {
+		assertThat(mmanager).isNotNull();
+		val bytes = new byte[10];
+		random.nextBytes(bytes);
+		val addr = mmanager.allocate(bytes.length, false, false);
+		assertThat(addr).as("Address").isNotZero();
+		for (var i = 0; i < bytes.length; i += 1) {
+			mmanager.putByte(addr + i, bytes[i]);
+		}
+		val copy = new byte[bytes.length];
+		mmanager.copy(addr, bytes.length, copy);
+		assertThat(mmanager.free(addr, bytes.length, false)).as("Freeing").isTrue();
+		assertThat(copy).isEqualTo(bytes);
+	}
+
+	@Test
 	@EnabledOnOs(OS.LINUX)
 	@DisplayName("Virtual addresses can be translated to physical addresses")
 	void virt2phys() {

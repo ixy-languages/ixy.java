@@ -1,15 +1,20 @@
 #include "ixy.h"
 
+// Common dependencies
+#include <stdlib.h> // malloc, free
+#include <string.h> // memcpy
+
 // Linux dependencies
 #ifdef __linux__
-#include <unistd.h>       // getpagesize, sysconf, _SC_PAGESIZE, ftruncate, getpid, close
+#include <unistd.h>       // getpagesize, sysconf, _SC_PAGESIZE, ftruncate, getpid, close, lseek
 #include <stdio.h>        // FILE, fopen, perror, feof, fscanf, fclose, snprintf, unlink
 #include <mntent.h>       // struct mntent, getmntent
 #include <string.h>       // strcmp
 #include <linux/limits.h> // PATH_MAX
 #include <fcntl.h>        // open
-#include <sys/types.h>    // O_CREAT, O_RDWR, S_IRWXU
+#include <sys/types.h>    // O_CREAT, O_RDWR, S_IRWXU, SEEK_SET
 #include <sys/mman.h>     // mmap, mlock, PROT_READ, PROT_WRITE, PROT_EXEC, MAP_SHARED, MAP_HUGETLB, MAP_LOCKED, MAP_NORESERVE, MAP_FAILED, munmap
+#include <stdint.h>       // uint_t, uintptr_t
 
 // Windows dependencies
 #elif _WIN32
@@ -36,7 +41,7 @@ extern "C" {
 #endif
 
 JNIEXPORT jint JNICALL
-Java_de_tum_in_net_ixy_memory_Memory_c_1page_1size(JNIEnv *env, jclass klass) {
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1page_1size(JNIEnv *env, jclass klass) {
 #ifdef __linux__
     return sysconf(_SC_PAGESIZE);
 #elif _WIN32
@@ -49,7 +54,7 @@ Java_de_tum_in_net_ixy_memory_Memory_c_1page_1size(JNIEnv *env, jclass klass) {
 }
 
 JNIEXPORT jint JNICALL
-Java_de_tum_in_net_ixy_memory_Memory_c_1address_1size(JNIEnv *env, jclass klass) {
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1address_1size(JNIEnv *env, jclass klass) {
 #ifdef _WIN32
     return sizeof(PVOID);
 #else
@@ -57,11 +62,11 @@ Java_de_tum_in_net_ixy_memory_Memory_c_1address_1size(JNIEnv *env, jclass klass)
 #endif
 }
 
-// Cached variable that will be usefull when allocating memory
+// Cached variable that will be useful when allocating memory
 static jlong hugepagesize = HUGE_PAGE_SIZE;
 
 JNIEXPORT jlong JNICALL
-Java_de_tum_in_net_ixy_memory_Memory_c_1hugepage_1size(JNIEnv *env, jclass klass) {
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1hugepage_1size(JNIEnv *env, jclass klass) {
 #ifdef __linux__
 // Phase 1: Find if the hugetlbfs is actually mounted
 {
@@ -73,7 +78,7 @@ Java_de_tum_in_net_ixy_memory_Memory_c_1hugepage_1size(JNIEnv *env, jclass klass
     }
     char found = 0;
     while (!feof(fp)) {
-        struct mntent *mnt = getmntent(fp);
+        const struct mntent *mnt = getmntent(fp);
         if (mnt == NULL) {
             perror("Error reading mount entry");
             hugepagesize = -1;
@@ -84,10 +89,8 @@ Java_de_tum_in_net_ixy_memory_Memory_c_1hugepage_1size(JNIEnv *env, jclass klass
             break;
         }
     }
-    int exit = fclose(fp);
-    if (exit != 0) {
-        perror("Error closing /etc/mtab");
-    }
+    const int exit = fclose(fp);
+    if (exit != 0) perror("Error closing /etc/mtab");
     if (!found) {
         hugepagesize = -1;
         return hugepagesize;
@@ -103,9 +106,9 @@ Java_de_tum_in_net_ixy_memory_Memory_c_1hugepage_1size(JNIEnv *env, jclass klass
     }
     char found = 0;
     while (!feof(fp)) {
-        char key[30] = {0};
-        char multiplier[3] = {0};
-        int items = fscanf(fp, "%s %d %3s\n", key, &hugepagesize, multiplier);
+        const char key[30] = {0};
+        const char multiplier[3] = {0};
+        const int items = fscanf(fp, "%s %d %3s\n", key, &hugepagesize, multiplier);
         if (items != 3 || strcmp(key, "Hugepagesize:") != 0) {
             fscanf(fp, "%*[^\n]");
         } else {
@@ -123,13 +126,9 @@ Java_de_tum_in_net_ixy_memory_Memory_c_1hugepage_1size(JNIEnv *env, jclass klass
             break;
         }
     }
-    int exit = fclose(fp);
-    if (exit != 0) {
-        perror("Error closing /etc/mtab");
-    }
-    if (!found) {
-        hugepagesize = 0;
-    }
+    const int exit = fclose(fp);
+    if (exit != 0) perror("Error closing /etc/mtab");
+    if (!found) hugepagesize = 0;
     return hugepagesize;
 }
 #elif _WIN32
@@ -141,34 +140,30 @@ Java_de_tum_in_net_ixy_memory_Memory_c_1hugepage_1size(JNIEnv *env, jclass klass
 #endif
 }
 
-// Hugepage id counter
+// Huge memory page id counter
 static unsigned int hugepageid = 0;
 
 JNIEXPORT jlong JNICALL
-Java_de_tum_in_net_ixy_memory_Memory_c_1allocate(JNIEnv *env, jclass klass, jlong size, jboolean contiguous) {
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1allocate(JNIEnv *env, jclass klass, jlong size, jboolean huge, jboolean contiguous) {
+	// If no huge memory pages should be employed, then use the simple C memory allocation function
+	if (!huge) return (jlong) malloc(size);
 
-    // Skip if the pagesize is not a valid value
-    if (hugepagesize <= 0) {
-        return 0;
-    }
+    // Skip if the page size is not valid
+    if (hugepagesize <= 0) return 0;
 
-	// Round the size to a multiple of the pagesize
-    jlong mask = (hugepagesize - 1);
-	if ((size & mask) != 0) {
-		size = (size + hugepagesize) & ~mask;
-	}
+	// Round the size to a multiple of the page size
+    const jlong mask = (hugepagesize - 1);
+	if ((size & mask) != 0) size = (size + hugepagesize) & ~mask;
 
 	// Skip if we cannot guarantee contiguity
-    if (contiguous && size > hugepagesize) {
-        return 0;
-    }
+    if (contiguous && size > hugepagesize) return 0;
 
 #ifdef __linux__
-	// Build the path of random hugepagea
+	// Build the path of random huge page
     char path[PATH_MAX];
-    unsigned int id = __atomic_fetch_add(&hugepageid, 1, __ATOMIC_SEQ_CST);
+    const unsigned int id = __atomic_fetch_add(&hugepageid, 1, __ATOMIC_SEQ_CST);
     snprintf(path, PATH_MAX, "/mnt/huge/ixy-%d-%d", getpid(), id);
-    int fd = open(path, O_CREAT | O_RDWR, S_IRWXU);
+    const int fd = open(path, O_CREAT | O_RDWR, S_IRWXU);
     if(!fd) {
         perror("Could not create hugepage file");
         return 0;
@@ -183,7 +178,7 @@ Java_de_tum_in_net_ixy_memory_Memory_c_1allocate(JNIEnv *env, jclass klass, jlon
 
 	// Map the hugepage file to memory
     // void *virt_addr = mmap(NULL, size, PROT_EXEC, MAP_PRIVATE | MAP_HUGETLB | MAP_LOCKED | MAP_NORESERVE, fd, 0);
-    void *virt_addr = mmap(NULL, size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED | MAP_HUGETLB | MAP_LOCKED | MAP_NORESERVE, fd, 0);
+    const void *virt_addr = mmap(NULL, size, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_SHARED | MAP_HUGETLB | MAP_LOCKED | MAP_NORESERVE, fd, 0);
     if (virt_addr == MAP_FAILED) {
         perror("Error mmap-ing the hugepage file");
         return 0;
@@ -191,32 +186,27 @@ Java_de_tum_in_net_ixy_memory_Memory_c_1allocate(JNIEnv *env, jclass klass, jlon
 
     // Prevent the allocated memory to be swapped
     code = mlock(virt_addr, size);
-    if (code != 0) {
-        perror("Error locking the allocated memory");
-    }
+    if (code != 0) perror("Error locking the allocated memory");
 
     // Close the hugepage file
     code = close(fd);
-    if (code != 0) {
-        perror("Error closing the hugepage file");
-    }
+    if (code != 0) perror("Error closing the hugepage file");
 
+	// Remove the file to avoid any other process from mapping it
     code = unlink(path);
-    if (code != 0) {
-        perror("Error removing the hugepage file");
-    }
+    if (code != 0) perror("Error removing the hugepage file");
 
 	// Return the virtual address of the mapped hugepage
 	return (jlong) virt_addr;
 #elif _WIN32
     // Open process token
-    HANDLE token;
+    const HANDLE token;
     if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token)) {
         printf("OpenProcessToken error (%d)\n", GetLastError());
     }
 
     // Get the luid
-    TOKEN_PRIVILEGES tp;
+    const TOKEN_PRIVILEGES tp;
     if (!LookupPrivilegeValue(NULL, "SeLockMemoryPrivilege", &tp.Privileges[0].Luid)) {
         printf("LookupPrivilegeValue error (%d)\n", GetLastError());
     }
@@ -231,21 +221,17 @@ Java_de_tum_in_net_ixy_memory_Memory_c_1allocate(JNIEnv *env, jclass klass, jlon
     // It is possible for AdjustTokenPrivileges to return TRUE and still not succeed.
     // So always check for the last error value.
     DWORD error = GetLastError();
-    if (!status || (error != ERROR_SUCCESS)) {
-        printf("AdjustTokenPrivileges error (%d)\n", GetLastError());
-    }
+    if (!status || (error != ERROR_SUCCESS)) printf("AdjustTokenPrivileges error (%d)\n", GetLastError());
 
     // Allocate the memory
-    PVOID virt_addr = VirtualAlloc(NULL, size, MEM_LARGE_PAGES | MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+    const PVOID virt_addr = VirtualAlloc(NULL, size, MEM_LARGE_PAGES | MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
     if (virt_addr == NULL) {
         printf("VirtualAlloc error (%d)\n", GetLastError());
         return 0;
     }
 
     // Lock the memory so that it cannot be swapped
-    if (VirtualLock(virt_addr, size)) {
-        printf("VirtualLock error (%d)\n", GetLastError());
-    }
+    if (VirtualLock(virt_addr, size)) printf("VirtualLock error (%d)\n", GetLastError());
 
     // Disable the privilege for the process
     tp.PrivilegeCount -= 1;
@@ -257,14 +243,10 @@ Java_de_tum_in_net_ixy_memory_Memory_c_1allocate(JNIEnv *env, jclass klass, jlon
     // It is possible for AdjustTokenPrivileges to return TRUE and still not succeed.
     // So always check for the last error value.
     error = GetLastError();
-    if (!status || (error != ERROR_SUCCESS)) {
-        printf("AdjustTokenPrivileges error (%d)\n", GetLastError());
-    }
+    if (!status || (error != ERROR_SUCCESS)) printf("AdjustTokenPrivileges error (%d)\n", GetLastError());
 
     // Close the handle
-    if (!CloseHandle(token)) {
-        printf("CloseHandle error (%d)\n", GetLastError());
-    }
+    if (!CloseHandle(token)) printf("CloseHandle error (%d)\n", GetLastError());
 
     // Return the address as a Java long
     return (jlong) virt_addr;
@@ -274,25 +256,24 @@ Java_de_tum_in_net_ixy_memory_Memory_c_1allocate(JNIEnv *env, jclass klass, jlon
 }
 
 JNIEXPORT jboolean JNICALL
-Java_de_tum_in_net_ixy_memory_Memory_c_1deallocate(JNIEnv *env, jclass klass, jlong address, jlong size) {
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1free(JNIEnv *env, jclass klass, jlong address, jlong size, jboolean huge) {
+	// If no huge memory pages should be employed, then use the simple C memory allocation function
+	if (!huge) {
+		free((void *) address);
+		return JNI_TRUE;
+	}
 
-    // Skip if the pagesize is not a valid value
-    if (hugepagesize <= 0) {
-        return JNI_FALSE;
-    }
+    // Skip if the page size is not valid
+	if (hugepagesize <= 0) return 0;
 
 	// Compute the mask to get the base address
-    jlong mask = (hugepagesize - 1);
-    if ((address & mask) != 0) {
-		address &= ~mask;
-	}
+    const jlong mask = (hugepagesize - 1);
+    if ((address & mask) != 0) address &= ~mask;
 
 #ifdef __linux__
 
     // Round up the size as we did with the allocation
-    if ((size & mask) != 0) {
-		size = (size + hugepagesize) & ~mask;
-	}
+    if ((size & mask) != 0) size = (size + hugepagesize) & ~mask;
 
     // Deallocate the memory region
     int status = munmap((void *) address, size);
@@ -314,46 +295,141 @@ Java_de_tum_in_net_ixy_memory_Memory_c_1deallocate(JNIEnv *env, jclass klass, jl
 #endif
 }
 
-/////////////////////////////////////////////// UNSAFE REIMPLEMENTATIONS ///////////////////////////////////////////////
+JNIEXPORT jlong JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1virt2phys(JNIEnv *env, jclass klass, jlong address) {
+#ifdef __linux__
+	// Open the pagemap file
+	const int fd = open("/proc/self/pagemap", O_RDONLY);
+	if(!fd) {
+		perror("Could not open /proc/self/pagemap file");
+		return 0;
+	}
+
+	// Get the page size to compute the page number and offset
+	const jlong pagesize = sysconf(_SC_PAGESIZE);
+	const jlong page = address / pagesize;
+
+	// Move to the correct position
+	const off_t pos = lseek(fd, ((uintptr_t) page) * sizeof(void *), SEEK_SET);
+	if (pos == -1) {
+		printf("Could not move the cursor to the correct position");
+		return 0;
+	}
+
+	// Read the physical address
+	jlong phy = 0;
+	size_t code = read(fd, &phy, sizeof(void *));
+	if (code == -1) {
+		printf("Could not read the physical address");
+		return 0;
+	}
+
+	// Close the pagemap file
+	code = close(fd);
+	if (code != 0) perror("Error closing the /proc/self/pagemap file");
+
+	// Return the physical address with the fixed offset
+	const uintptr_t offset = ((uintptr_t) address) & (pagesize - 1);
+	return (jlong) ((phy & 0x7fffffffffffffULL)*pagesize + offset);
+#else
+	return 0;
+#endif
+}
+
+////////////////////////////////////////////// UNSAFE RE-IMPLEMENTATIONS ///////////////////////////////////////////////
 
 JNIEXPORT jbyte JNICALL
-Java_de_tum_in_net_ixy_memory_Memory_c_1getByte(JNIEnv *env, jclass klass, jlong address) {
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1byte(JNIEnv *env, jclass klass, jlong address) {
     return *((jbyte *) address);
 }
 
-JNIEXPORT jshort JNICALL
-Java_de_tum_in_net_ixy_memory_Memory_c_1getShort(JNIEnv *env, jclass klass, jlong address) {
-    return *((jshort *) address);
-}
-
-JNIEXPORT jint JNICALL
-Java_de_tum_in_net_ixy_memory_Memory_c_1getInt(JNIEnv *env, jclass klass, jlong address) {
-    return *((jint *) address);
-}
-
-JNIEXPORT jlong JNICALL
-Java_de_tum_in_net_ixy_memory_Memory_c_1getLong(JNIEnv *env, jclass klass, jlong address) {
-    return *((jlong *) address);
+JNIEXPORT jbyte JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1byte_1volatile(JNIEnv *env, jclass klass, jlong address) {
+    return *((volatile jbyte *) address);
 }
 
 JNIEXPORT void JNICALL
-Java_de_tum_in_net_ixy_memory_Memory_c_1putByte(JNIEnv *env, jclass klass, jlong address, jbyte value) {
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1put_1byte(JNIEnv *env, jclass klass, jlong address, jbyte value) {
     *((jbyte *) address) = value;
 }
 
 JNIEXPORT void JNICALL
-Java_de_tum_in_net_ixy_memory_Memory_c_1putShort(JNIEnv *env, jclass klass, jlong address, jshort value) {
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1put_1byte_1volatile(JNIEnv *env, jclass klass, jlong address, jbyte value) {
+    *((volatile jbyte *) address) = value;
+}
+
+JNIEXPORT jshort JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1short(JNIEnv *env, jclass klass, jlong address) {
+    return *((jshort *) address);
+}
+
+JNIEXPORT jshort JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1short_1volatile(JNIEnv *env, jclass klass, jlong address) {
+    return *((volatile jshort *) address);
+}
+
+JNIEXPORT void JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1put_1short(JNIEnv *env, jclass klass, jlong address, jshort value) {
     *((jshort *) address) = value;
 }
 
 JNIEXPORT void JNICALL
-Java_de_tum_in_net_ixy_memory_Memory_c_1putInt(JNIEnv *env, jclass klass, jlong address, jint value) {
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1put_1short_1volatile(JNIEnv *env, jclass klass, jlong address, jshort value) {
+    *((volatile jshort *) address) = value;
+}
+
+JNIEXPORT jint JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1int(JNIEnv *env, jclass klass, jlong address) {
+    return *((jint *) address);
+}
+
+JNIEXPORT jint JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1int_1volatile(JNIEnv *env, jclass klass, jlong address) {
+    return *((volatile jint *) address);
+}
+
+JNIEXPORT void JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1put_1int(JNIEnv *env, jclass klass, jlong address, jint value) {
     *((jint *) address) = value;
 }
 
 JNIEXPORT void JNICALL
-Java_de_tum_in_net_ixy_memory_Memory_c_1putLong(JNIEnv *env, jclass klass, jlong address, jlong value) {
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1put_1int_1volatile(JNIEnv *env, jclass klass, jlong address, jint value) {
+    *((volatile jint *) address) = value;
+}
+
+JNIEXPORT jlong JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1long(JNIEnv *env, jclass klass, jlong address) {
+    return *((jlong *) address);
+}
+
+JNIEXPORT jlong JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1long_1volatile(JNIEnv *env, jclass klass, jlong address) {
+    return *((volatile jlong *) address);
+}
+
+JNIEXPORT void JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1put_1long(JNIEnv *env, jclass klass, jlong address, jlong value) {
     *((jlong *) address) = value;
+}
+
+JNIEXPORT void JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1put_1long_1volatile(JNIEnv *env, jclass klass, jlong address, jlong value) {
+    *((volatile jlong *) address) = value;
+}
+
+JNIEXPORT void JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1copy(JNIEnv *env, jclass klass, jlong address, jint size, jbyteArray buffer) {
+	jbyte* bufferptr = (*env)->GetByteArrayElements(env, buffer, NULL);
+	memcpy((void *) bufferptr, (void *) address, size);
+    (*env)->ReleaseByteArrayElements(env, buffer, bufferptr, 0);
+}
+
+JNIEXPORT void JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1copy_1volatile(JNIEnv *env, jclass klass, jlong address, jint size, jbyteArray buffer) {
+	jbyte* bufferptr = (*env)->GetByteArrayElements(env, buffer, NULL);
+	memcpy((volatile void *) bufferptr, (volatile void *) address, size);
+    (*env)->ReleaseByteArrayElements(env, buffer, bufferptr, 0);
 }
 
 #ifdef __cplusplus
