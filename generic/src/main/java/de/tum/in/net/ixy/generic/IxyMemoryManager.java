@@ -262,14 +262,13 @@ public interface IxyMemoryManager {
 	/**
 	 * Allocates {@code size} bytes.
 	 * <p>
-	 * The method can be customized to use huge memory pages or to fail if the physical contiguity cannot be
-	 * guaranteed.
+	 * The method can be customized the same way the method {@link #allocate(long, boolean, boolean)} can be customised.
 	 *
 	 * @param size       The number of bytes to allocate.
-	 * @param huge       Whether huge memory page should used.
+	 * @param huge       Whether huge memory pages should used.
 	 * @param contiguous Whether the memory region should be physically contiguous.
-	 * @return The {@link DmaMemory} instance with the virtual and physical addresses.
+	 * @return The {@link IxyDmaMemory} instance with the virtual and physical addresses.
 	 */
-	DmaMemory dmaAllocate(final long size, final boolean huge, final boolean contiguous);
+	IxyDmaMemory dmaAllocate(final long size, final boolean huge, final boolean contiguous);
 
 }

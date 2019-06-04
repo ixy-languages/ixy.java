@@ -9,7 +9,7 @@ package de.tum.in.net.ixy.generic;
  *
  * @author Esaú García Sánchez-Torija
  */
-public interface DmaMemory {
+public interface IxyDmaMemory {
 
 	/**
 	 * Returns the virtual address.
