@@ -313,8 +313,9 @@ final class SmartMemoryManagerTest {
 		mmanager.putLongVolatile(address, number);
 
 		// Verify it's correct and release the memory
-		assertThat(mmanager.getLongVolatile(address)).as("Read").isEqualTo(number);
+		val value = mmanager.getLongVolatile(address);
 		mmanager.free(address, Long.BYTES, false);
+		assertThat(value).as("Read").isEqualTo(number);
 	}
 
 	@Test
@@ -340,7 +341,7 @@ final class SmartMemoryManagerTest {
 
 		// Release the memory and verify the contents
 		mmanager.free(address, size, false);
-		assertThat(copy).isEqualTo(bytes);
+		assertThat(copy).as("Read/Written data").isEqualTo(bytes);
 	}
 
 	@Test
@@ -366,7 +367,7 @@ final class SmartMemoryManagerTest {
 
 		// Release the memory and verify the contents
 		mmanager.free(address, size, false);
-		assertThat(copy).isEqualTo(bytes);
+		assertThat(copy).as("Read/Written data").isEqualTo(bytes);
 	}
 
 	@Test
@@ -390,13 +391,13 @@ final class SmartMemoryManagerTest {
 
 		// Copy the data to another memory region and recover it from memory
 		val copy = new byte[size];
-		mmanager.copy(src, bytes.length, dest);
-		mmanager.get(dest, bytes.length, copy, 0);
+		mmanager.copy(src, size, dest);
+		mmanager.get(dest, size, copy, 0);
 
 		// Release the memory and verify the contents
-		mmanager.free(src, bytes.length, false);
-		mmanager.free(dest, bytes.length, false);
-		assertThat(copy).isEqualTo(bytes);
+		mmanager.free(src, size, false);
+		mmanager.free(dest, size, false);
+		assertThat(copy).as("Copied data").isEqualTo(bytes);
 	}
 
 	@Test
@@ -420,13 +421,13 @@ final class SmartMemoryManagerTest {
 
 		// Copy the data to another memory region and recover it from memory
 		val copy = new byte[size];
-		mmanager.copyVolatile(src, bytes.length, dest);
-		mmanager.get(dest, bytes.length, copy, 0);
+		mmanager.copyVolatile(src, size, dest);
+		mmanager.get(dest, size, copy, 0);
 
 		// Release the memory and verify the contents
-		mmanager.free(src, bytes.length, false);
-		mmanager.free(dest, bytes.length, false);
-		assertThat(copy).isEqualTo(bytes);
+		mmanager.free(src, size, false);
+		mmanager.free(dest, size, false);
+		assertThat(copy).as("Copied data").isEqualTo(bytes);
 	}
 
 	@Test
@@ -447,11 +448,11 @@ final class SmartMemoryManagerTest {
 		// Free up the memory and verify the memory addresses
 		mmanager.free(virt, 1, false);
 		val softly = new SoftAssertions();
-		assertThat(phys).as("Physical address").isNotZero();
+		softly.assertThat(phys).as("Physical address").isNotZero();
 		softly.assertThat(pagesize)
 				.as("Page size").isGreaterThan(0)
 				.withFailMessage("should be a power of two").isEqualTo(pagesize & -pagesize);
-		softly.assertThat(virt & mask).isEqualTo(phys & mask);
+		softly.assertThat(phys & mask).as("Offset").isEqualTo(virt & mask);
 		softly.assertAll();
 	}
 
@@ -459,15 +460,25 @@ final class SmartMemoryManagerTest {
 	@EnabledIfRoot
 	@DisplayName("DmaMemory can be allocated")
 	void dmaAllocate() {
-		assertThat(mmanager).isNotNull();
+		assumeThat(mmanager).isNotNull();
+
+		// Allocate some memory
 		val dma = mmanager.dmaAllocate(1, false, false);
-		assertThat(dma).isNotNull();
+		assumeThat(dma).isNotNull();
+
+		// Get the page size and compute the mask
 		val pagesize = mmanager.pageSize();
-		assertThat(pagesize)
+		val mask = pagesize - 1;
+
+		// Free up the memory and verify the memory addresses
+		mmanager.free(dma.getVirtualAddress(), 1, false);
+		val softly = new SoftAssertions();
+		softly.assertThat(dma.getPhysicalAddress()).as("Physical address").isNotZero();
+		softly.assertThat(pagesize)
 				.as("Page size").isGreaterThan(0)
 				.withFailMessage("should be a power of two").isEqualTo(pagesize & -pagesize);
-		val mask = pagesize - 1;
-		assertThat(dma.getVirtualAddress() & mask).isEqualTo(dma.getPhysicalAddress() & mask);
+		softly.assertThat(dma.getPhysicalAddress() & mask).as("Offset").isEqualTo(dma.getVirtualAddress() & mask);
+		softly.assertAll();
 	}
 
 	/**
