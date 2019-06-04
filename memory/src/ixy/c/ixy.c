@@ -396,38 +396,38 @@ Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1put_1long_1volatile(const JNIE
 
 JNIEXPORT void JNICALL
 Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get(JNIEnv *env, const jclass klass, const jlong src, const jint size, const jbyteArray dst, const jint offset) {
-	jbyte* dstptr = (*env)->GetByteArrayElements(env, dst, NULL);
+	jbyte *dstptr = (*env)->GetByteArrayElements(env, dst, NULL);
 	memcpy((void *) (dstptr + offset), (void *) src, size);
 	(*env)->ReleaseByteArrayElements(env, dst, dstptr, 0);
 }
 
 JNIEXPORT void JNICALL
 Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1volatile(JNIEnv *env, const jclass klass, const jlong src, jint size, const jbyteArray dst, const jint offset) {
-	jbyte* dstptr = (*env)->GetByteArrayElements(env, dst, NULL);
+	jbyte *dstptr = (*env)->GetByteArrayElements(env, dst, NULL);
 	volatile const char *s = src;
 	volatile char *d = dstptr + offset;
 	while (size--) {
-		*d++ = *s++;
+		*(d++) = *(s++);
 	}
 	(*env)->ReleaseByteArrayElements(env, dst, dstptr, 0);
 }
 
 JNIEXPORT void JNICALL
 Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1put(JNIEnv *env, const jclass klass, const jlong dst, const jint size, const jbyteArray src, const jint offset) {
-	jbyte* srcptr = (*env)->GetByteArrayElements(env, src, NULL);
+	jbyte *srcptr = (*env)->GetByteArrayElements(env, src, NULL);
 	memcpy((void *) dst, (void *) (srcptr + offset), size);
-	(*env)->ReleaseByteArrayElements(env, src, srcptr, 0);
+	(*env)->ReleaseByteArrayElements(env, src, srcptr, JNI_ABORT);
 }
 
 JNIEXPORT void JNICALL
 Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1put_1volatile(JNIEnv *env, const jclass klass, const jlong dst, jint size, const jbyteArray src, const jint offset) {
-	jbyte* srcptr = (*env)->GetByteArrayElements(env, src, NULL);
-	volatile char *d = (void *) src;
+	jbyte *srcptr = (*env)->GetByteArrayElements(env, src, NULL);
 	volatile const char *s = (void *) (srcptr + offset);
+	volatile char *d = (void *) dst;
 	while (size--) {
-		*d++ = *s++;
+		*(d++) = *(s++);
 	}
-	(*env)->ReleaseByteArrayElements(env, src, srcptr, 0);
+	(*env)->ReleaseByteArrayElements(env, src, srcptr, JNI_ABORT);
 }
 
 JNIEXPORT void JNICALL
@@ -440,7 +440,7 @@ Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1copy_1volatile(const JNIEnv *e
 	volatile const char *s = (void *) src;
 	volatile char *d = (void *) dst;
 	while (size--) {
-		*d++ = *s++;
+		*(d++) = *(s++);
 	}
 }
 

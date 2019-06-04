@@ -298,11 +298,7 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 	/** {@inheritDoc} */
 	@Override
 	public void getVolatile(final long src, final int size, final byte[] dest, final int offset) {
-		if (BuildConfig.UNSAFE) {
-			unsafe.getVolatile(src, size, dest, offset);
-		} else {
-			jni.getVolatile(src, size, dest, offset);
-		}
+		jni.getVolatile(src, size, dest, offset);
 	}
 
 	/** {@inheritDoc} */
@@ -318,31 +314,23 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 	/** {@inheritDoc} */
 	@Override
 	public void putVolatile(final long dest, final int size, final byte[] src, final int offset) {
-		if (BuildConfig.UNSAFE) {
-			unsafe.putVolatile(dest, size, src, offset);
-		} else {
-			jni.putVolatile(dest, size, src, offset);
-		}
+		jni.putVolatile(dest, size, src, offset);
 	}
 
 	/** {@inheritDoc} */
 	@Override
 	public void copy(final long src, final int size, final long dest) {
 		if (BuildConfig.UNSAFE) {
-			unsafe.copy(dest, size, src);
+			unsafe.copy(src, size, dest);
 		} else {
-			jni.copy(dest, size, src);
+			jni.copy(src, size, dest);
 		}
 	}
 
 	/** {@inheritDoc} */
 	@Override
 	public void copyVolatile(final long src, final int size, final long dest) {
-		if (BuildConfig.UNSAFE) {
-			unsafe.copyVolatile(dest, size, src);
-		} else {
-			jni.copyVolatile(dest, size, src);
-		}
+		jni.copyVolatile(src, size, dest);
 	}
 
 	/** {@inheritDoc} */

@@ -3,6 +3,7 @@ package de.tum.in.net.ixy.memory.test;
 import de.tum.in.net.ixy.memory.JniMemoryManager;
 import de.tum.in.net.ixy.memory.SmartMemoryManager;
 
+import org.junit.jupiter.api.Disabled;
 import sun.misc.Unsafe;
 
 import java.lang.reflect.InvocationTargetException;
@@ -266,19 +267,70 @@ final class SmartMemoryManagerTest {
 	}
 
 	@Test
-	@DisplayName("Direct memory can be copied to JVM heap")
-	void copy() {
+	@DisplayName("Direct memory can be copied from/to the JVM heap")
+	void getput() {
 		assertThat(mmanager).isNotNull();
 		val bytes = new byte[10];
 		random.nextBytes(bytes);
 		val addr = mmanager.allocate(bytes.length, false, false);
 		assertThat(addr).as("Address").isNotZero();
-		for (var i = 0; i < bytes.length; i += 1) {
-			mmanager.putByte(addr + i, bytes[i]);
-		}
+		mmanager.put(addr, bytes.length, bytes, 0);
 		val copy = new byte[bytes.length];
-		mmanager.copy(addr, bytes.length, copy);
+		mmanager.get(addr, bytes.length, copy, 0);
 		assertThat(mmanager.free(addr, bytes.length, false)).as("Freeing").isTrue();
+		assertThat(copy).isEqualTo(bytes);
+	}
+
+	@Test
+	@DisplayName("Direct memory can be copied from/to the JVM heap (volatile)")
+	void getputVolatile() {
+		assertThat(mmanager).isNotNull();
+		val bytes = new byte[10];
+		random.nextBytes(bytes);
+		val addr = mmanager.allocate(bytes.length, false, false);
+		assertThat(addr).as("Address").isNotZero();
+		mmanager.putVolatile(addr, bytes.length, bytes, 0);
+		val copy = new byte[bytes.length];
+		mmanager.getVolatile(addr, bytes.length, copy, 0);
+		assertThat(mmanager.free(addr, bytes.length, false)).as("Freeing").isTrue();
+		assertThat(copy).isEqualTo(bytes);
+	}
+
+	@Test
+	@DisplayName("Direct memory can be copied to another region")
+	void copy() {
+		assertThat(mmanager).isNotNull();
+		val bytes = new byte[10];
+		random.nextBytes(bytes);
+		val src = mmanager.allocate(bytes.length, false, false);
+		assertThat(src).as("Address").isNotZero();
+		val dest = mmanager.allocate(bytes.length, false, false);
+		assertThat(dest).as("Address").isNotZero();
+		mmanager.put(src, bytes.length, bytes, 0);
+		mmanager.copy(src, bytes.length, dest);
+		val copy = new byte[bytes.length];
+		mmanager.get(dest, bytes.length, copy, 0);
+		assertThat(mmanager.free(src, bytes.length, false)).as("Freeing").isTrue();
+		assertThat(mmanager.free(dest, bytes.length, false)).as("Freeing").isTrue();
+		assertThat(copy).isEqualTo(bytes);
+	}
+
+	@Test
+	@DisplayName("Direct memory can be copied to another region (volatile)")
+	void copyVolatile() {
+		assertThat(mmanager).isNotNull();
+		val bytes = new byte[10];
+		random.nextBytes(bytes);
+		val src = mmanager.allocate(bytes.length, false, false);
+		assertThat(src).as("Address").isNotZero();
+		val dest = mmanager.allocate(bytes.length, false, false);
+		assertThat(dest).as("Address").isNotZero();
+		mmanager.put(src, bytes.length, bytes, 0);
+		mmanager.copyVolatile(src, bytes.length, dest);
+		val copy = new byte[bytes.length];
+		mmanager.get(dest, bytes.length, copy, 0);
+		assertThat(mmanager.free(src, bytes.length, false)).as("Freeing").isTrue();
+		assertThat(mmanager.free(dest, bytes.length, false)).as("Freeing").isTrue();
 		assertThat(copy).isEqualTo(bytes);
 	}
 
@@ -305,7 +357,7 @@ final class SmartMemoryManagerTest {
 	@Test
 	@EnabledIfRoot
 	@DisplayName("DmaMemory can be allocated")
-	void allocateDma() {
+	void dmaAllocate() {
 		assertThat(mmanager).isNotNull();
 		val dma = mmanager.dmaAllocate(1, false, false);
 		assertThat(dma).isNotNull();
