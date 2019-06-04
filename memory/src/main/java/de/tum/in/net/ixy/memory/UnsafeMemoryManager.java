@@ -24,6 +24,15 @@ import lombok.val;
 @Slf4j
 public final class UnsafeMemoryManager implements IxyMemoryManager {
 
+	/** Cached exception thrown by the methods that cannot be implemented using the {@link Unsafe} object. */
+	private static final UnsupportedOperationException UNSUPPORTED = new UnsupportedOperationException("Unsafe does not provide an implementation for this operation");
+
+	/** Cached exception thrown by the methods that need a virtual memory address and it is not correctly formatted. */
+	private static final IllegalArgumentException ADDRESS = new IllegalArgumentException("Address must not be null");
+
+	/** Cached exception thrown by the methods that need a size and it is not correctly formatted. */
+	private static final IllegalArgumentException SIZE = new IllegalArgumentException("Size must be an integer greater than 0");
+
 	/** The unsafe object that will do all the operations. */
 	private transient Unsafe unsafe;
 
@@ -100,7 +109,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	public long hugepageSize() {
 		if (BuildConfig.DEBUG) log.debug("Computing huge page size using the Unsafe object");
 		if (!BuildConfig.OPTIMIZED) checkUnsafe();
-		throw new UnsupportedOperationException("Unsafe does not provide an implementation for this operation");
+		throw UNSUPPORTED;
 	}
 
 	/**
@@ -124,11 +133,11 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 				if (contiguous) log.debug("Allocating {} contiguous huge-page-backed bytes using the Unsafe object", size);
 				else log.debug("Allocating {} non-contiguous huge-page-backed bytes using the Unsafe object", size);
 			}
-			throw new UnsupportedOperationException("Unsafe does not provide an implementation for this operation");
+			throw UNSUPPORTED;
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (size < 0) throw new IllegalArgumentException("Size must be an integer greater than 0");
+			if (size < 0) throw SIZE;
 		}
 		if (BuildConfig.DEBUG) {
 			if (contiguous) log.debug("Allocating {} contiguous bytes using the Unsafe object", size);
@@ -166,7 +175,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 				val xsrc = Long.toHexString(src);
 				log.debug("Freeing {} huge-page-backed bytes @ 0x{} using the Unsafe object", size, xsrc);
 			}
-			throw new UnsupportedOperationException("Unsafe does not provide an implementation for this operation");
+			throw UNSUPPORTED;
 		}
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(src);
@@ -174,8 +183,8 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (src == 0) throw new IllegalArgumentException("Address must not be null");
-			else if (size < 0) throw new IllegalArgumentException("Size must be an integer greater than 0");
+			if (src == 0) throw ADDRESS;
+			else if (size < 0) throw SIZE;
 		}
 		if (BuildConfig.OPTIMIZED) {
 			unsafe.freeMemory(src);
@@ -199,7 +208,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (src == 0) throw new IllegalArgumentException("Address must not be null");
+			if (src == 0) throw ADDRESS;
 		}
 		return unsafe.getByte(src);
 	}
@@ -213,7 +222,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (src == 0) throw new IllegalArgumentException("Address must not be null");
+			if (src == 0) throw ADDRESS;
 		}
 		return unsafe.getByteVolatile(null, src);
 	}
@@ -228,7 +237,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (dest == 0) throw new IllegalArgumentException("Address must not be null");
+			if (dest == 0) throw ADDRESS;
 		}
 		unsafe.putByte(dest, value);
 	}
@@ -243,7 +252,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (dest == 0) throw new IllegalArgumentException("Address must not be null");
+			if (dest == 0) throw ADDRESS;
 		}
 		unsafe.putByteVolatile(null, dest, value);
 	}
@@ -257,7 +266,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (src == 0) throw new IllegalArgumentException("Address must not be null");
+			if (src == 0) throw ADDRESS;
 		}
 		return unsafe.getShort(src);
 	}
@@ -271,7 +280,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (src == 0) throw new IllegalArgumentException("Address must not be null");
+			if (src == 0) throw ADDRESS;
 		}
 		return unsafe.getShortVolatile(null, src);
 	}
@@ -286,7 +295,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (dest == 0) throw new IllegalArgumentException("Address must not be null");
+			if (dest == 0) throw ADDRESS;
 		}
 		unsafe.putShort(dest, value);
 	}
@@ -301,7 +310,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (dest == 0) throw new IllegalArgumentException("Address must not be null");
+			if (dest == 0) throw ADDRESS;
 		}
 		unsafe.putShortVolatile(null, dest, value);
 	}
@@ -315,7 +324,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (src == 0) throw new IllegalArgumentException("Address must not be null");
+			if (src == 0) throw ADDRESS;
 		}
 		return unsafe.getInt(src);
 	}
@@ -329,7 +338,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (src == 0) throw new IllegalArgumentException("Address must not be null");
+			if (src == 0) throw ADDRESS;
 		}
 		return unsafe.getIntVolatile(null, src);
 	}
@@ -344,7 +353,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (dest == 0) throw new IllegalArgumentException("Address must not be null");
+			if (dest == 0) throw ADDRESS;
 		}
 		unsafe.putInt(dest, value);
 	}
@@ -359,7 +368,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (dest == 0) throw new IllegalArgumentException("Address must not be null");
+			if (dest == 0) throw ADDRESS;
 		}
 		unsafe.putIntVolatile(null, dest, value);
 	}
@@ -373,7 +382,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (src == 0) throw new IllegalArgumentException("Address must not be null");
+			if (src == 0) throw ADDRESS;
 		}
 		return unsafe.getLong(src);
 	}
@@ -387,7 +396,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (src == 0) throw new IllegalArgumentException("Address must not be null");
+			if (src == 0) throw ADDRESS;
 		}
 		return unsafe.getLongVolatile(null, src);
 	}
@@ -402,7 +411,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (dest == 0) throw new IllegalArgumentException("Address must not be null");
+			if (dest == 0) throw ADDRESS;
 		}
 		unsafe.putLong(dest, value);
 	}
@@ -417,7 +426,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (dest == 0) throw new IllegalArgumentException("Address must not be null");
+			if (dest == 0) throw ADDRESS;
 		}
 		unsafe.putLongVolatile(null, dest, value);
 	}
@@ -427,12 +436,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	public void get(final long src, int size, final byte[] dest, final int offset) {
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (src == 0) throw new IllegalArgumentException("Address must not be null");
-			else if (size <= 0) throw new IllegalArgumentException("Size must be greater than 0");
-			else if (dest == null) throw new IllegalArgumentException("Buffer must not be null");
-			else if (dest.length <= 0) throw new IllegalArgumentException("Buffer must have a capacity of at least 1");
-			else if (offset < 0) throw new IllegalArgumentException("Offset must be greater than or equal to 0");
-			else if (offset >= dest.length) throw new IllegalArgumentException("Offset cannot be greater than or equal to the buffer length");
+			getCheck(src, size, dest, offset);
 			size = Math.min(size, dest.length - offset);
 		}
 		if (BuildConfig.DEBUG) {
@@ -462,12 +466,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	public void getVolatile(final long src, int size, final byte[] dest, final int offset) {
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (src == 0) throw new IllegalArgumentException("Address must not be null");
-			else if (size <= 0) throw new IllegalArgumentException("Size must be greater than 0");
-			else if (dest == null) throw new IllegalArgumentException("Buffer must not be null");
-			else if (dest.length <= 0) throw new IllegalArgumentException("Buffer must have a capacity of at least 1");
-			else if (offset < 0) throw new IllegalArgumentException("Offset must be greater than or equal to 0");
-			else if (offset >= dest.length) throw new IllegalArgumentException("Offset cannot be greater than or equal to the buffer length");
+			getCheck(src, size, dest, offset);
 			size = Math.min(size, dest.length - offset);
 		}
 		if (BuildConfig.DEBUG) {
@@ -475,7 +474,27 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 			val xsrc = Long.toHexString(src);
 			log.debug("Reading volatile memory region ({} B) @ 0x{} with offset {} using the Unsafe object", size, xsrc, xoffset);
 		}
-		throw new UnsupportedOperationException("Unsafe does not provide an implementation for this operation");
+		throw UNSUPPORTED;
+	}
+
+	/**
+	 * Common checks performed by {@link #get(long, int, byte[], int)} and {@link #getVolatile(long, int, byte[], int)}.
+	 * <p>
+	 * If one the parameters is not formatted correctly, an {@link IllegalArgumentException} will be thrown.
+	 *
+	 * @param src    The source memory address to copy from.
+	 * @param size   The number of bytes to copy.
+	 * @param dest   The destination primitive array to copy to.
+	 * @param offset The offset from which to start copying to.
+	 */
+	@SuppressWarnings("Duplicates")
+	private void getCheck(final long src, int size, final byte[] dest, final int offset) {
+		if (src == 0) throw ADDRESS;
+		else if (size <= 0) throw SIZE;
+		else if (dest == null) throw new IllegalArgumentException("Buffer must not be null");
+		else if (dest.length <= 0) throw new IllegalArgumentException("Buffer must have a capacity of at least 1");
+		else if (offset < 0) throw new IllegalArgumentException("Offset must be greater than or equal to 0");
+		else if (offset >= dest.length) throw new IllegalArgumentException("Offset cannot be greater than or equal to the buffer length");
 	}
 
 	/** {@inheritDoc} */
@@ -483,12 +502,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	public void put(final long dest, int size, final byte[] src, int offset) {
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (dest == 0) throw new IllegalArgumentException("Address must not be null");
-			else if (size <= 0) throw new IllegalArgumentException("Size must be greater than 0");
-			else if (src == null) throw new IllegalArgumentException("Buffer must not be null");
-			else if (src.length <= 0) throw new IllegalArgumentException("Buffer must have a capacity of at least 1");
-			else if (offset < 0) throw new IllegalArgumentException("Offset must be greater than or equal to 0");
-			else if (offset >= src.length) throw new IllegalArgumentException("Offset cannot be greater than or equal to the buffer length");
+			putCheck(dest, size, src, offset);
 			size = Math.min(size, src.length);
 		}
 		if (BuildConfig.DEBUG) {
@@ -518,12 +532,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	public void putVolatile(final long dest, int size, final byte[] src, final int offset) {
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (dest == 0) throw new IllegalArgumentException("Address must not be null");
-			else if (size <= 0) throw new IllegalArgumentException("Size must be greater than 0");
-			else if (src == null) throw new IllegalArgumentException("Buffer must not be null");
-			else if (src.length <= 0) throw new IllegalArgumentException("Buffer must have a capacity of at least 1");
-			else if (offset < 0) throw new IllegalArgumentException("Offset must be greater than or equal to 0");
-			else if (offset >= src.length) throw new IllegalArgumentException("Offset cannot be greater than or equal to the buffer length");
+			putCheck(dest, size, src, offset);
 			size = Math.min(size, src.length);
 		}
 		if (BuildConfig.DEBUG) {
@@ -531,7 +540,27 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 			val xdest = Long.toHexString(dest);
 			log.debug("Writing volatile buffer ({} B) @ 0x{} with offset {} using the Unsafe object", size, xdest, xoffset);
 		}
-		throw new UnsupportedOperationException("Unsafe does not provide an implementation for this operation");
+		throw UNSUPPORTED;
+	}
+
+	/**
+	 * Common checks performed by {@link #put(long, int, byte[], int)} and {@link #putVolatile(long, int, byte[], int)}.
+	 * <p>
+	 * If one the parameters is not formatted correctly, an {@link IllegalArgumentException} will be thrown.
+	 *
+	 * @param dest   The destination primitive array to copy to.
+	 * @param size   The number of bytes to copy.
+	 * @param src    The source memory address to copy from.
+	 * @param offset The offset from which to start copying to.
+	 */
+	@SuppressWarnings("Duplicates")
+	private void putCheck(final long dest, int size, final byte[] src, final int offset) {
+		if (dest == 0) throw ADDRESS;
+		else if (size <= 0) throw SIZE;
+		else if (src == null) throw new IllegalArgumentException("Buffer must not be null");
+		else if (src.length <= 0) throw new IllegalArgumentException("Buffer must have a capacity of at least 1");
+		else if (offset < 0) throw new IllegalArgumentException("Offset must be greater than or equal to 0");
+		else if (offset >= src.length) throw new IllegalArgumentException("Offset cannot be greater than or equal to the buffer length");
 	}
 
 	/** {@inheritDoc} */
@@ -544,9 +573,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (src == 0) throw new IllegalArgumentException("Source address must not be null");
-			else if (size <= 0) throw new IllegalArgumentException("Size must be greater than 0");
-			else if (dest == 0) throw new IllegalArgumentException("Destination address must not be null");
+			copyCheck(src, size, dest);
 		}
 		unsafe.copyMemory(src, dest, size);
 	}
@@ -562,9 +589,11 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	 * @param src  The source memory address to copy from.
 	 * @param size The number of bytes to copy.
 	 * @param dest The destination memory address to copy to.
+	 * @deprecated
 	 */
 	@Override
-	public void copyVolatile(long src, int size, long dest, int offset) {
+	@Deprecated
+	public void copyVolatile(final long src, final int size, final long dest) {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(src);
 			val xdest = Long.toHexString(dest);
@@ -572,11 +601,24 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (src == 0) throw new IllegalArgumentException("Source address must not be null");
-			else if (size <= 0) throw new IllegalArgumentException("Size must be greater than 0");
-			else if (dest == 0) throw new IllegalArgumentException("Destination address must not be null");
+			copyCheck(src, size, dest);
 		}
-		throw new UnsupportedOperationException("Unsafe does not provide an implementation for this operation");
+		throw UNSUPPORTED;
+	}
+
+	/**
+	 * Common checks performed by {@link #copy(long, int, long)} and {@link #copyVolatile(long, int, long)}.
+	 * <p>
+	 * If one the parameters is not formatted correctly, an {@link IllegalArgumentException} will be thrown.
+	 *
+	 * @param src  The source memory address to copy from.
+	 * @param size The number of bytes to copy.
+	 * @param dest The destination memory address to copy to.
+	 */
+	private void copyCheck(final long src, final int size, final long dest) {
+		if (src == 0) throw ADDRESS;
+		else if (size <= 0) throw SIZE;
+		else if (dest == 0) throw ADDRESS;
 	}
 
 	/**
@@ -601,7 +643,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
 		}
-		throw new UnsupportedOperationException("Unsafe does not provide an implementation for this operation");
+		throw UNSUPPORTED;
 	}
 
 	/**
