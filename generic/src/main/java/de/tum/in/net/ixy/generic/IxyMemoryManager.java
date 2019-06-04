@@ -37,9 +37,9 @@ public interface IxyMemoryManager {
 	/**
 	 * Allocates {@code size} bytes.
 	 * <p>
-	 * The method can be customized to use huge memory pages by setting the parameter {@code huge} to {@code true}. In
-	 * addition, if the parameter {@code contiguous} is set to {@code true}, the method allocation will not succeed if
-	 * the operative system cannot guarantee that the physical memory will be contiguous.
+	 * The method can be customized to use huge memory pages by setting the parameter {@code huge} to {@code true}.
+	 * In addition, if the parameter {@code contiguous} is set to {@code true}, the method allocation will not succeed
+	 * if the operative system cannot guarantee that the physical memory will be contiguous.
 	 *
 	 * @param size       The number of bytes to allocate.
 	 * @param huge       Whether huge memory pages should used.
@@ -251,8 +251,9 @@ public interface IxyMemoryManager {
 	 * Translates a virtual memory {@code address} to its equivalent physical counterpart.
 	 * <p>
 	 * There is no guarantees that the physical memory address will be valid even just after this method returns the
-	 * value. The guarantee has to be made by the allocation method, by locking the memory pages that contain the
-	 * allocated memory region and guaranteeing they will be contiguously ordered on the underlying hardware.
+	 * value.
+	 * The guarantee has to be made by the allocation method, by locking the memory pages that contain the allocated
+	 * memory region and guaranteeing they will be contiguously ordered on the underlying hardware.
 	 *
 	 * @param address The memory address to translate.
 	 * @return The physical memory address.
