@@ -1,5 +1,6 @@
 package de.tum.in.net.ixy.memory;
 
+import de.tum.in.net.ixy.generic.IxyDmaMemory;
 import de.tum.in.net.ixy.generic.IxyMemoryManager;
 
 import java.io.BufferedReader;
@@ -51,9 +52,7 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 	/** Private constructor that throws an exception if the instance is already instantiated. */
 	private SmartMemoryManager() {
 		if (BuildConfig.DEBUG) log.debug("Creating a smart memory manager");
-		if (instance != null) {
-			throw new IllegalStateException("An instance cannot be created twice. Use getInstance() instead.");
-		}
+		if (instance != null) throw new IllegalStateException("An instance cannot be created twice. Use getInstance() instead.");
 	}
 
 	/** {@inheritDoc} */
@@ -111,7 +110,7 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 				var word = line.substring(_space, space);
 				if (word.equals("Hugepagesize")) {
 					line = line.substring(space + 1).trim();
-					space = line.indexOf(' ', 0);
+					space = line.indexOf(' ');
 					var bytes = Long.parseLong(line.substring(0, space));
 					val units = line.substring(space + 1).trim();
 					switch (units) {
@@ -150,159 +149,199 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 
 	/** {@inheritDoc} */
 	@Override
-	public boolean free(final long address, final long size, final boolean huge) {
+	public boolean free(final long src, final long size, final boolean huge) {
 		if (huge) {
-			return jni.free(address, size, huge);
+			return jni.free(src, size, huge);
 		} else {
-			return BuildConfig.UNSAFE ? unsafe.free(address, size, huge) : jni.free(address, size, huge);
+			return BuildConfig.UNSAFE ? unsafe.free(src, size, huge) : jni.free(src, size, huge);
 		}
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public byte getByte(final long address) {
-		return BuildConfig.UNSAFE ? unsafe.getByte(address) : jni.getByte(address);
+	public byte getByte(final long src) {
+		return BuildConfig.UNSAFE ? unsafe.getByte(src) : jni.getByte(src);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public byte getByteVolatile(final long address) {
-		return BuildConfig.UNSAFE ? unsafe.getByteVolatile(address) : jni.getByteVolatile(address);
+	public byte getByteVolatile(final long src) {
+		return BuildConfig.UNSAFE ? unsafe.getByteVolatile(src) : jni.getByteVolatile(src);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public void putByte(final long address, final byte value) {
+	public void putByte(final long dest, final byte value) {
 		if (BuildConfig.UNSAFE) {
-			unsafe.putByte(address, value);
+			unsafe.putByte(dest, value);
 		} else {
-			jni.putByte(address, value);
+			jni.putByte(dest, value);
 		}
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public void putByteVolatile(final long address, final byte value) {
+	public void putByteVolatile(final long dest, final byte value) {
 		if (BuildConfig.UNSAFE) {
-			unsafe.putByteVolatile(address, value);
+			unsafe.putByteVolatile(dest, value);
 		} else {
-			jni.putByteVolatile(address, value);
+			jni.putByteVolatile(dest, value);
 		}
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public short getShort(final long address) {
-		return BuildConfig.UNSAFE ? unsafe.getShort(address) : jni.getShort(address);
+	public short getShort(final long src) {
+		return BuildConfig.UNSAFE ? unsafe.getShort(src) : jni.getShort(src);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public short getShortVolatile(final long address) {
-		return BuildConfig.UNSAFE ? unsafe.getShortVolatile(address) : jni.getShortVolatile(address);
+	public short getShortVolatile(final long src) {
+		return BuildConfig.UNSAFE ? unsafe.getShortVolatile(src) : jni.getShortVolatile(src);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public void putShort(final long address, final short value) {
+	public void putShort(final long dest, final short value) {
 		if (BuildConfig.UNSAFE) {
-			unsafe.putShort(address, value);
+			unsafe.putShort(dest, value);
 		} else {
-			jni.putShort(address, value);
+			jni.putShort(dest, value);
 		}
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public void putShortVolatile(final long address, final short value) {
+	public void putShortVolatile(final long dest, final short value) {
 		if (BuildConfig.UNSAFE) {
-			unsafe.putShortVolatile(address, value);
+			unsafe.putShortVolatile(dest, value);
 		} else {
-			jni.putShortVolatile(address, value);
+			jni.putShortVolatile(dest, value);
 		}
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public int getInt(final long address) {
-		return BuildConfig.UNSAFE ? unsafe.getInt(address) : jni.getInt(address);
+	public int getInt(final long src) {
+		return BuildConfig.UNSAFE ? unsafe.getInt(src) : jni.getInt(src);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public int getIntVolatile(final long address) {
-		return BuildConfig.UNSAFE ? unsafe.getIntVolatile(address) : jni.getIntVolatile(address);
+	public int getIntVolatile(final long src) {
+		return BuildConfig.UNSAFE ? unsafe.getIntVolatile(src) : jni.getIntVolatile(src);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public void putInt(final long address, final int value) {
+	public void putInt(final long dest, final int value) {
 		if (BuildConfig.UNSAFE) {
-			unsafe.putInt(address, value);
+			unsafe.putInt(dest, value);
 		} else {
-			jni.putInt(address, value);
+			jni.putInt(dest, value);
 		}
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public void putIntVolatile(final long address, final int value) {
+	public void putIntVolatile(final long dest, final int value) {
 		if (BuildConfig.UNSAFE) {
-			unsafe.putIntVolatile(address, value);
+			unsafe.putIntVolatile(dest, value);
 		} else {
-			jni.putIntVolatile(address, value);
+			jni.putIntVolatile(dest, value);
 		}
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public long getLong(final long address) {
-		return BuildConfig.UNSAFE ? unsafe.getLong(address) : jni.getLong(address);
+	public long getLong(final long src) {
+		return BuildConfig.UNSAFE ? unsafe.getLong(src) : jni.getLong(src);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public long getLongVolatile(final long address) {
-		return BuildConfig.UNSAFE ? unsafe.getLongVolatile(address) : jni.getLongVolatile(address);
+	public long getLongVolatile(final long src) {
+		return BuildConfig.UNSAFE ? unsafe.getLongVolatile(src) : jni.getLongVolatile(src);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public void putLong(final long address, final long value) {
+	public void putLong(final long dest, final long value) {
 		if (BuildConfig.UNSAFE) {
-			unsafe.putLong(address, value);
+			unsafe.putLong(dest, value);
 		} else {
-			jni.putLong(address, value);
+			jni.putLong(dest, value);
 		}
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public void putLongVolatile(final long address, final long value) {
+	public void putLongVolatile(final long dest, final long value) {
 		if (BuildConfig.UNSAFE) {
-			unsafe.putLongVolatile(address, value);
+			unsafe.putLongVolatile(dest, value);
 		} else {
-			jni.putLongVolatile(address, value);
+			jni.putLongVolatile(dest, value);
 		}
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public void copy(final long address, final int size, final byte[] buffer) {
+	public void get(final long src, final int size, final byte[] dest, final int offset) {
 		if (BuildConfig.UNSAFE) {
-			unsafe.copy(address, size, buffer);
+			unsafe.get(src, size, dest, offset);
 		} else {
-			jni.copy(address, size, buffer);
+			jni.get(src, size, dest, offset);
 		}
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public void copyVolatile(final long address, final int size, final byte[] buffer) {
+	public void getVolatile(final long src, final int size, final byte[] dest, final int offset) {
 		if (BuildConfig.UNSAFE) {
-			unsafe.copyVolatile(address, size, buffer);
+			unsafe.getVolatile(src, size, dest, offset);
 		} else {
-			jni.copyVolatile(address, size, buffer);
+			jni.getVolatile(src, size, dest, offset);
+		}
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public void put(final long dest, final int size, final byte[] src, final int offset) {
+		if (BuildConfig.UNSAFE) {
+			unsafe.put(dest, size, src, offset);
+		} else {
+			jni.put(dest, size, src, offset);
+		}
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public void putVolatile(final long dest, final int size, final byte[] src, final int offset) {
+		if (BuildConfig.UNSAFE) {
+			unsafe.putVolatile(dest, size, src, offset);
+		} else {
+			jni.putVolatile(dest, size, src, offset);
+		}
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public void copy(final long src, final int size, final long dest) {
+		if (BuildConfig.UNSAFE) {
+			unsafe.copy(dest, size, src);
+		} else {
+			jni.copy(dest, size, src);
+		}
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public void copyVolatile(final long src, final int size, final long dest) {
+		if (BuildConfig.UNSAFE) {
+			unsafe.copyVolatile(dest, size, src);
+		} else {
+			jni.copyVolatile(dest, size, src);
 		}
 	}
 
@@ -312,9 +351,7 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) log.trace("Smart memory translation of address 0x{}", Long.toHexString(address));
 
 		// If we are on a non-Linux OS this won't work
-		if (!System.getProperty("os.name").toLowerCase(Locale.getDefault()).contains("lin")) {
-			return 0;
-		}
+		if (!System.getProperty("os.name").toLowerCase(Locale.getDefault()).contains("lin")) return 0;
 
 		// Cache other values
 		val pgsz = pageSize();
@@ -358,7 +395,7 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 
 	/** {@inheritDoc} */
 	@Override
-	public DualMemory dmaAllocate(long size, boolean huge, boolean contiguous) {
+	public IxyDmaMemory dmaAllocate(long size, boolean huge, boolean contiguous) {
 		return jni.dmaAllocate(size, huge, contiguous);
 	}
 
