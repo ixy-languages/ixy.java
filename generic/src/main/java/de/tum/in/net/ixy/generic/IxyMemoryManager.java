@@ -37,9 +37,9 @@ public interface IxyMemoryManager {
 	/**
 	 * Allocates {@code size} bytes.
 	 * <p>
-	 * The method can be customized to use huge memory pages by setting the parameter {@code huge} to {@code true}.
-	 * In addition, if the parameter {@code contiguous} is set to {@code true}, the method allocation will not succeed
-	 * if the operative system cannot guarantee that the physical memory will be contiguous.
+	 * The method can be customized to use huge memory pages by setting the parameter {@code huge} to {@code true}. In
+	 * addition, if the parameter {@code contiguous} is set to {@code true}, the method allocation will not succeed if
+	 * the operative system cannot guarantee that the physical memory will be contiguous.
 	 *
 	 * @param size       The number of bytes to allocate.
 	 * @param huge       Whether huge memory pages should used.
@@ -54,140 +54,140 @@ public interface IxyMemoryManager {
 	 * If the parameters do not match the ones used to allocate the region, the memory might not be freed and the
 	 * behaviour will be undefined.
 	 *
-	 * @param address The memory address of the previously allocated region.
+	 * @param src The memory address of the previously allocated region.
 	 * @param size    The size of the allocated region.
 	 * @param huge    Whether huge memory pages should be used.
 	 * @return Whether the operation succeeded.
 	 */
-	boolean free(final long address, final long size, final boolean huge);
+	boolean free(final long src, final long size, final boolean huge);
 
 	/**
 	 * Reads a {@code byte} from an arbitrary memory address.
 	 *
-	 * @param address The memory address to read from.
+	 * @param src The memory address to read from.
 	 * @return The read {@code byte}.
 	 */
-	byte getByte(final long address);
+	byte getByte(final long src);
 
 	/**
 	 * Reads a {@code byte} from an arbitrary volatile memory address.
 	 *
-	 * @param address The volatile memory address to read from.
+	 * @param src The volatile memory address to read from.
 	 * @return The read {@code byte}.
 	 */
-	byte getByteVolatile(final long address);
+	byte getByteVolatile(final long src);
 
 	/**
 	 * Writes a {@code byte} to an arbitrary memory address.
 	 *
-	 * @param address The memory address to write to.
-	 * @param value   The {@code byte} to write.
+	 * @param dest  The memory address to write to.
+	 * @param value The {@code byte} to write.
 	 */
-	void putByte(final long address, final byte value);
+	void putByte(final long dest, final byte value);
 
 	/**
 	 * Writes a {@code byte} to an arbitrary volatile memory address.
 	 *
-	 * @param address The volatile memory address to write to.
-	 * @param value   The {@code byte} to write.
+	 * @param dest  The volatile memory address to write to.
+	 * @param value The {@code byte} to write.
 	 */
-	void putByteVolatile(final long address, final byte value);
+	void putByteVolatile(final long dest, final byte value);
 
 	/**
 	 * Reads a {@code short} from an arbitrary memory address.
 	 *
-	 * @param address The memory address to read from.
+	 * @param src The memory address to read from.
 	 * @return The read {@code short}.
 	 */
-	short getShort(final long address);
+	short getShort(final long src);
 
 	/**
 	 * Reads a {@code short} from an arbitrary volatile memory address.
 	 *
-	 * @param address The volatile memory address to read from.
+	 * @param src The volatile memory address to read from.
 	 * @return The read {@code short}.
 	 */
-	short getShortVolatile(final long address);
+	short getShortVolatile(final long src);
 
 	/**
 	 * Writes a {@code short} to an arbitrary memory address.
 	 *
-	 * @param address The memory address to write to.
-	 * @param value   The {@code short} to write.
+	 * @param dest  The memory address to write to.
+	 * @param value The {@code short} to write.
 	 */
-	void putShort(final long address, final short value);
+	void putShort(final long dest, final short value);
 
 	/**
 	 * Writes a {@code short} to an arbitrary volatile memory address.
 	 *
-	 * @param address The volatile memory address to write to.
-	 * @param value   The {@code short} to write.
+	 * @param dest  The volatile memory address to write to.
+	 * @param value The {@code short} to write.
 	 */
-	void putShortVolatile(final long address, final short value);
+	void putShortVolatile(final long dest, final short value);
 
 	/**
 	 * Reads an {@code int} from an arbitrary memory address.
 	 *
-	 * @param address The memory address to read from.
+	 * @param src The memory address to read from.
 	 * @return The read {@code int}.
 	 */
-	int getInt(final long address);
+	int getInt(final long src);
 
 	/**
 	 * Reads an {@code int} from an arbitrary volatile memory address.
 	 *
-	 * @param address The volatile memory address to read from.
+	 * @param src The volatile memory address to read from.
 	 * @return The read {@code int}.
 	 */
-	int getIntVolatile(final long address);
+	int getIntVolatile(final long src);
 
 	/**
 	 * Writes an {@code int} to an arbitrary memory address.
 	 *
-	 * @param address The memory address to write to.
-	 * @param value   The {@code int} to write.
+	 * @param dest  The memory address to write to.
+	 * @param value The {@code int} to write.
 	 */
-	void putInt(final long address, final int value);
+	void putInt(final long dest, final int value);
 
 	/**
 	 * Writes an {@code int} to an arbitrary volatile memory address.
 	 *
-	 * @param address The volatile memory address to write to.
-	 * @param value   The {@code int} to write.
+	 * @param dest  The volatile memory address to write to.
+	 * @param value The {@code int} to write.
 	 */
-	void putIntVolatile(final long address, final int value);
+	void putIntVolatile(final long dest, final int value);
 
 	/**
 	 * Reads a {@code long} from an arbitrary memory address.
 	 *
-	 * @param address The memory address to read from.
+	 * @param src The memory address to read from.
 	 * @return The read {@code long}.
 	 */
-	long getLong(final long address);
+	long getLong(final long src);
 
 	/**
 	 * Reads a {@code long} from an arbitrary volatile memory address.
 	 *
-	 * @param address The volatile memory address to read from.
+	 * @param src The volatile memory address to read from.
 	 * @return The read {@code long}.
 	 */
-	long getLongVolatile(final long address);
+	long getLongVolatile(final long src);
 
 	/**
 	 * Writes a {@code long} to an arbitrary memory address.
 	 *
-	 * @param address The memory address to write to.
-	 * @param value   The {@code long} to write.
+	 * @param dest  The memory address to write to.
+	 * @param value The {@code long} to write.
 	 */
-	void putLong(final long address, final long value);
+	void putLong(final long dest, final long value);
 
 	/**
 	 * Writes a {@code long} to an arbitrary volatile memory address.
 	 *
-	 * @param address The volatile memory address to write to.
-	 * @param value   The {@code long} to write.
+	 * @param dest  The volatile memory address to write to.
+	 * @param value The {@code long} to write.
 	 */
-	void putLongVolatile(final long address, final long value);
+	void putLongVolatile(final long dest, final long value);
 
 	/**
 	 * Copies a memory region into a primitive byte array.
