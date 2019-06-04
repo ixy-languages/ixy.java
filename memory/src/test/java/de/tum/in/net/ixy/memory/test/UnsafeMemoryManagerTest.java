@@ -6,7 +6,6 @@ import sun.misc.Unsafe;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Random;
-import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
@@ -25,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.Assumptions.assumeThat;
 
 /**
  * Tests the class {@link UnsafeMemoryManager}.
@@ -76,53 +76,138 @@ final class UnsafeMemoryManagerTest {
 	}
 
 	@Test
+	@DisplayName("Wrong arguments produce exceptions")
+	@DisabledIfOptimized
+	void exceptions() {
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.allocate(-1, false, false));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.free(0, 0, false));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.free(1, -1, false));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getByte(0));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getByteVolatile(0));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.putByte(0, (byte) 0));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.putByteVolatile(0, (byte) 0));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getShort(0));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getShortVolatile(0));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.putShort(0, (short) 0));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.putShortVolatile(0, (short) 0));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getInt(0));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getIntVolatile(0));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.putInt(0, (int) 0));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.putIntVolatile(0, (int) 0));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getLong(0));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getLongVolatile(0));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.putLong(0, (long) 0));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.putLongVolatile(0, (long) 0));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.get(0, 0, null, 0));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.get(1, 0, null, 0));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.get(1, 1, null, 0));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.get(1, 1, new byte[0], 0));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.get(1, 1, new byte[1], -1));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.get(1, 1, new byte[1], 3));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getVolatile(0, 0, null, 0));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getVolatile(1, 0, null, 0));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getVolatile(1, 1, null, 0));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getVolatile(1, 1, new byte[0], 0));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getVolatile(1, 1, new byte[1], -1));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getVolatile(1, 1, new byte[1], 3));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.put(0, 0, null, 0));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.put(1, 0, null, 0));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.put(1, 1, null, 0));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.put(1, 1, new byte[0], 0));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.put(1, 1, new byte[1], -1));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.put(1, 1, new byte[1], 3));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.putVolatile(0, 0, null, 0));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.putVolatile(1, 0, null, 0));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.putVolatile(1, 1, null, 0));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.putVolatile(1, 1, new byte[0], 0));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.putVolatile(1, 1, new byte[1], -1));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.putVolatile(1, 1, new byte[1], 3));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.copy(0, 0, 0));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.copy(1, 0, 0));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.copy(1, 1, 0));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.copyVolatile(0, 0, 0));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.copyVolatile(1, 0, 0));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.copyVolatile(1, 1, 0));
+		try {
+			val unsafeField = UnsafeMemoryManager.class.getDeclaredField("unsafe");
+			unsafeField.setAccessible(true);
+			val _unsafe = unsafeField.get(mmanager);
+			synchronized (mmanager) {
+				unsafeField.set(mmanager, null);
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanager.getByte(0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanager.getByteVolatile(0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanager.putByte(0, (byte) 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanager.putByteVolatile(0, (byte) 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanager.getShort(0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanager.getShortVolatile(0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanager.putShort(0, (short) 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanager.putShortVolatile(0, (short) 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanager.getInt(0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanager.getIntVolatile(0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanager.putInt(0, (int) 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanager.putIntVolatile(0, (int) 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanager.getLong(0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanager.getLongVolatile(0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanager.putLong(0, (long) 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanager.putLongVolatile(0, (long) 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanager.get(0, 0, null, 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanager.getVolatile(0, 0, null, 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanager.put(0, 0, null, 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanager.putVolatile(0, 0, null, 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanager.copy(0, 0, 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanager.copyVolatile(0, 0, 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanager.virt2phys(0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanager.dmaAllocate(0, false, false));
+				unsafeField.set(mmanager, _unsafe);
+			}
+		} catch (final NoSuchFieldException | IllegalAccessException e) {
+//			e.printStackTrace();
+		}
+	}
+
+	@Test
 	@DisplayName("Page size can be computed")
 	void pageSize() {
-		assertThat(mmanager).isNotNull();
+		assumeThat(mmanager).isNotNull();
 		val pagesize = mmanager.pageSize();
 		assertThat(pagesize)
-				.as("Page size")
-				.isGreaterThan(0)
-				.withFailMessage("should be a power of two")
-				.isEqualTo(pagesize & -pagesize);
+				.as("Page size").isGreaterThan(0)
+				.withFailMessage("should be a power of two").isEqualTo(pagesize & -pagesize);
 	}
 
 	@Test
 	@DisplayName("Address size can be computed")
 	void addressSize() {
-		assertThat(mmanager).isNotNull();
+		assumeThat(mmanager).isNotNull();
 		val addrsize = mmanager.addressSize();
 		assertThat(addrsize)
-				.as("Address size")
-				.isGreaterThan(0)
-				.withFailMessage("should be a power of two")
-				.isEqualTo(addrsize & -addrsize);
+				.as("Address size").isGreaterThan(0)
+				.withFailMessage("should be a power of two").isEqualTo(addrsize & -addrsize);
 	}
 
 	@Test
 	@SuppressWarnings("deprecation")
 	@DisplayName("Huge memory page size cannot be computed")
 	void hugepageSize() {
-		assertThat(mmanager).isNotNull();
+		assumeThat(mmanager).isNotNull();
 		assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(mmanager::hugepageSize);
 	}
 
-	@ParameterizedTest(name = "Memory can be allocated (size={0}; huge={1}; contiguous={2})")
+	@ParameterizedTest(name = "Memory can be allocated and freed (size={0}; huge={1}; contiguous={2})")
 	@MethodSource("allocateSource")
 	@EnabledIfRoot
-	void allocate(final Long size, final Boolean huge, final Boolean contiguous) {
-		assertThat(mmanager).isNotNull();
+	void allocate_free(final Long size, final Boolean huge, final Boolean contiguous) {
+		assumeThat(unsafe).isNotNull();
+		assumeThat(mmanager).isNotNull();
 
 		// Huge memory pages are not supported
 		if (huge) {
 			assertThatExceptionOfType(UnsupportedOperationException.class)
-					.as("Allocation")
-					.isThrownBy(() -> mmanager.allocate(size, huge, contiguous));
+					.as("Allocation").isThrownBy(() -> mmanager.allocate(size, huge, contiguous));
+			assertThatExceptionOfType(UnsupportedOperationException.class)
+					.as("Freeing").isThrownBy(() -> mmanager.free(1, size, huge));
 			return;
 		}
-
-		// Make sure we can use the Unsafe object
-		assertThat(unsafe).isNotNull();
 
 		// Allocate the memory and make sure it's valid
 		val addr = mmanager.allocate(size, huge, contiguous);
@@ -166,142 +251,258 @@ final class UnsafeMemoryManagerTest {
 		}
 
 		// Free the memory
-		unsafe.freeMemory(addr);
-	}
-
-	@ParameterizedTest(name = "Memory can be freed (size={0}; huge={1}; contiguous={2})")
-	@MethodSource("allocateSource")
-	@EnabledIfRoot
-	void free(final Long size, final Boolean huge, final Boolean contiguous) {
-		assertThat(mmanager).isNotNull();
-
-		// Huge memory pages are not supported
-		if (huge) {
-			assertThatExceptionOfType(UnsupportedOperationException.class)
-					.as("Allocation")
-					.isThrownBy(() -> mmanager.allocate(size, huge, contiguous));
-			return;
-		}
-
-		// Allocate the memory
-		val addr = mmanager.allocate(size, huge, contiguous);
-		assertThat(addr).as("Address").isNotZero();
-
-		// Free the memory
 		assertThat(mmanager.free(addr, size, huge)).as("Freeing").isTrue();
 	}
 
 	@Test
 	@DisplayName("Arbitrary bytes can be written and read")
 	void getputByte() {
-		assertThat(mmanager).isNotNull();
-		val virt = mmanager.allocate(Byte.BYTES, false, false);
-		assertThat(virt).as("Address").isNotZero();
+		assumeThat(mmanager).isNotNull();
+
+		// Allocate the memory
+		val address = mmanager.allocate(Byte.BYTES, false, false);
+		assumeThat(address).as("Address").isNotZero();
+
+		// Write some data
 		val number = (byte) random.nextInt(Byte.MAX_VALUE + 1);
-		mmanager.putByte(virt, number);
-		assertThat(mmanager.getByte(virt)).as("Read").isEqualTo(number);
-		assertThat(mmanager.free(virt, Byte.BYTES, false)).as("Freeing").isTrue();
+		mmanager.putByte(address, number);
+
+		// Release the memory and verify the contents
+		val value = mmanager.getByte(address);
+		mmanager.free(address, Byte.BYTES, false);
+		assertThat(value).as("Read").isEqualTo(number);
 	}
 
 	@Test
 	@DisplayName("Arbitrary bytes can be written and read (volatile)")
 	void getputByteVolatile() {
-		assertThat(mmanager).isNotNull();
-		val addr = mmanager.allocate(Byte.BYTES, false, false);
-		assertThat(addr).as("Address").isNotZero();
+		assumeThat(mmanager).isNotNull();
+
+		// Allocate the memory
+		val address = mmanager.allocate(Byte.BYTES, false, false);
+		assumeThat(address).as("Address").isNotZero();
+
+		// Write some data
 		val number = (byte) random.nextInt(Byte.MAX_VALUE + 1);
-		mmanager.putByteVolatile(addr, number);
-		assertThat(mmanager.getByteVolatile(addr)).as("Read").isEqualTo(number);
-		assertThat(mmanager.free(addr, Byte.BYTES, false)).as("Freeing").isTrue();
+		mmanager.putByteVolatile(address, number);
+
+		// Release the memory and verify the contents
+		val value = mmanager.getByteVolatile(address);
+		mmanager.free(address, Byte.BYTES, false);
+		assertThat(value).as("Read").isEqualTo(number);
 	}
 
 	@Test
 	@DisplayName("Arbitrary shorts can be written and read")
 	void getputShort() {
-		assertThat(mmanager).isNotNull();
-		val addr = mmanager.allocate(Short.BYTES, false, false);
-		assertThat(addr).as("Address").isNotZero();
+		assumeThat(mmanager).isNotNull();
+
+		// Allocate the memory
+		val address = mmanager.allocate(Short.BYTES, false, false);
+		assertThat(address).as("Address").isNotZero();
+
+		// Write some data
 		val number = (short) random.nextInt(Short.MAX_VALUE + 1);
-		mmanager.putShort(addr, number);
-		assertThat(mmanager.getShort(addr)).as("Read").isEqualTo(number);
-		assertThat(mmanager.free(addr, Short.BYTES, false)).as("Freeing").isTrue();
+		mmanager.putShort(address, number);
+
+		// Release the memory and verify the contents
+		val value = mmanager.getShort(address);
+		mmanager.free(address, Short.BYTES, false);
+		assertThat(value).as("Read").isEqualTo(number);
 	}
 
 	@Test
 	@DisplayName("Arbitrary shorts can be written and read (volatile)")
 	void getputShortVolatile() {
-		assertThat(mmanager).isNotNull();
-		val addr = mmanager.allocate(Short.BYTES, false, false);
-		assertThat(addr).as("Address").isNotZero();
+		assumeThat(mmanager).isNotNull();
+
+		// Allocate the memory
+		val address = mmanager.allocate(Short.BYTES, false, false);
+		assertThat(address).as("Address").isNotZero();
+
+		// Write some data
 		val number = (short) random.nextInt(Short.MAX_VALUE + 1);
-		mmanager.putShortVolatile(addr, number);
-		assertThat(mmanager.getShortVolatile(addr)).as("Read").isEqualTo(number);
-		assertThat(mmanager.free(addr, Short.BYTES, false)).as("Freeing").isTrue();
+		mmanager.putShortVolatile(address, number);
+
+		// Release the memory and verify the contents
+		val value = mmanager.getShortVolatile(address);
+		mmanager.free(address, Short.BYTES, false);
+		assertThat(value).as("Read").isEqualTo(number);
 	}
 
 	@Test
 	@DisplayName("Arbitrary ints can be written and read")
 	void getputInt() {
-		assertThat(mmanager).isNotNull();
-		val addr = mmanager.allocate(Integer.BYTES, false, false);
-		assertThat(addr).as("Address").isNotZero();
+		assumeThat(mmanager).isNotNull();
+
+		// Allocate the memory
+		val address = mmanager.allocate(Integer.BYTES, false, false);
+		assumeThat(address).as("Address").isNotZero();
+
+		// Write some data
 		val number = random.nextInt();
-		mmanager.putInt(addr, number);
-		assertThat(mmanager.getInt(addr)).as("Read").isEqualTo(number);
-		assertThat(mmanager.free(addr, Integer.BYTES, false)).as("Freeing").isTrue();
+		mmanager.putInt(address, number);
+
+		// Release the memory and verify the contents
+		val value = mmanager.getInt(address);
+		mmanager.free(address, Integer.BYTES, false);
+		assertThat(value).as("Read").isEqualTo(number);
 	}
 
 	@Test
 	@DisplayName("Arbitrary ints can be written and read (volatile)")
 	void getputIntVolatile() {
-		assertThat(mmanager).isNotNull();
-		val addr = mmanager.allocate(Integer.BYTES, false, false);
-		assertThat(addr).as("Address").isNotZero();
+		assumeThat(mmanager).isNotNull();
+
+		// Allocate the memory
+		val address = mmanager.allocate(Integer.BYTES, false, false);
+		assumeThat(address).as("Address").isNotZero();
+
+		// Write some data
 		val number = random.nextInt();
-		mmanager.putIntVolatile(addr, number);
-		assertThat(mmanager.getIntVolatile(addr)).as("Read").isEqualTo(number);
-		assertThat(mmanager.free(addr, Integer.BYTES, false)).as("Freeing").isTrue();
+		mmanager.putIntVolatile(address, number);
+
+		// Release the memory and verify the contents
+		val value = mmanager.getIntVolatile(address);
+		mmanager.free(address, Integer.BYTES, false);
+		assertThat(value).as("Read").isEqualTo(number);
 	}
 
 	@Test
 	@DisplayName("Arbitrary longs can be written and read")
 	void getputLong() {
-		assertThat(mmanager).isNotNull();
-		val addr = mmanager.allocate(Long.BYTES, false, false);
-		assertThat(addr).as("Address").isNotZero();
+		assumeThat(mmanager).isNotNull();
+
+		// Allocate the memory
+		val address = mmanager.allocate(Long.BYTES, false, false);
+		assumeThat(address).as("Address").isNotZero();
+
+		// Write some data
 		val number = random.nextLong();
-		mmanager.putLong(addr, number);
-		assertThat(mmanager.getLong(addr)).as("Read").isEqualTo(number);
-		assertThat(mmanager.free(addr, Long.BYTES, false)).as("Freeing").isTrue();
+		mmanager.putLong(address, number);
+
+		// Release the memory and verify the contents
+		val value = mmanager.getLong(address);
+		mmanager.free(address, Long.BYTES, false);
+		assertThat(value).as("Read").isEqualTo(number);
 	}
 
 	@Test
 	@DisplayName("Arbitrary longs can be written and read (volatile)")
 	void getputLongVolatile() {
-		assertThat(mmanager).isNotNull();
-		val addr = mmanager.allocate(Long.BYTES, false, false);
-		assertThat(addr).as("Address").isNotZero();
+		assumeThat(mmanager).isNotNull();
+
+		// Allocate the memory
+		val address = mmanager.allocate(Long.BYTES, false, false);
+		assumeThat(address).as("Address").isNotZero();
+
+		// Write some data
 		val number = random.nextLong();
-		mmanager.putLongVolatile(addr, number);
-		assertThat(mmanager.getLongVolatile(addr)).as("Read").isEqualTo(number);
-		assertThat(mmanager.free(addr, Long.BYTES, false)).as("Freeing").isTrue();
+		mmanager.putLongVolatile(address, number);
+
+		// Verify it's correct and release the memory
+		assertThat(mmanager.getLongVolatile(address)).as("Read").isEqualTo(number);
+		mmanager.free(address, Long.BYTES, false);
 	}
 
 	@Test
-	@DisplayName("Direct memory can be copied to JVM heap")
-	void copy() {
-		assertThat(mmanager).isNotNull();
-		val bytes = new byte[10];
+	@DisplayName("Direct memory can be copied from/to the JVM heap")
+	void getput() {
+		assumeThat(mmanager).isNotNull();
+
+		// Define the amount of data to write randomly
+		val size = random.nextInt(Short.MAX_VALUE - Byte.MAX_VALUE) + Byte.MAX_VALUE;
+
+		// Allocate the memory
+		val address = mmanager.allocate(size, false, false);
+		assumeThat(address).as("Address").isNotZero();
+
+		// Generate and write some random data
+		val bytes = new byte[size];
 		random.nextBytes(bytes);
-		val addr = mmanager.allocate(bytes.length, false, false);
-		assertThat(addr).as("Address").isNotZero();
-		for (var i = 0; i < bytes.length; i += 1) {
-			mmanager.putByte(addr + i, bytes[i]);
-		}
-		val copy = new byte[bytes.length];
-		mmanager.copy(addr, bytes.length, copy);
-		assertThat(mmanager.free(addr, bytes.length, false)).as("Freeing").isTrue();
-		assertThat(copy).isEqualTo(bytes);
+		mmanager.put(address, size, bytes, 0);
+
+		// Recover the data from memory
+		val copy = new byte[size];
+		mmanager.get(address, size, copy, 0);
+
+		// Release the memory and verify the contents
+		mmanager.free(address, size, false);
+		assertThat(copy).as("Read/Written data").isEqualTo(bytes);
+	}
+
+	@Test
+	@DisplayName("Direct memory can be copied from/to the JVM heap (volatile)")
+	void getputVolatile() {
+		assumeThat(mmanager).isNotNull();
+
+		// Define the amount of data to write randomly
+		val size = random.nextInt(Short.MAX_VALUE - Byte.MAX_VALUE) + Byte.MAX_VALUE;
+
+		// Allocate the memory
+		val address = mmanager.allocate(size, false, false);
+		assumeThat(address).as("Address").isNotZero();
+
+		// Generate some data and catch the exceptions
+		val bytes = new byte[size];
+		val copy = new byte[size];
+		random.nextBytes(bytes);
+		assertThatExceptionOfType(UnsupportedOperationException.class)
+				.as("Written data").isThrownBy(() -> mmanager.putVolatile(address, size, bytes, 0));
+		assertThatExceptionOfType(UnsupportedOperationException.class)
+				.as("Written data").isThrownBy(() -> mmanager.getVolatile(address, size, copy, 0));
+
+		// Release the memory
+		mmanager.free(address, size, false);
+	}
+
+	@Test
+	@DisplayName("Direct memory can be copied to another region")
+	void copy() {
+		assumeThat(mmanager).isNotNull();
+
+		// Define the amount of data to write randomly
+		val size = random.nextInt(Short.MAX_VALUE - Byte.MAX_VALUE) + Byte.MAX_VALUE;
+
+		// Allocate the memory
+		val src = mmanager.allocate(size, false, false);
+		val dest = mmanager.allocate(size, false, false);
+		assumeThat(src).as("Address").isNotZero();
+		assumeThat(dest).as("Address").isNotZero();
+
+		// Generate and write some random data
+		val bytes = new byte[size];
+		random.nextBytes(bytes);
+		mmanager.put(src, size, bytes, 0);
+
+		// Copy the data to another memory region and recover it from memory
+		val copy = new byte[size];
+		mmanager.copy(src, bytes.length, dest);
+		mmanager.get(dest, bytes.length, copy, 0);
+
+		// Release the memory and verify the contents
+		mmanager.free(src, bytes.length, false);
+		mmanager.free(dest, bytes.length, false);
+		assertThat(copy).as("Copied data").isEqualTo(bytes);
+	}
+
+	@Test
+	@DisplayName("Direct memory can be copied to another region (volatile)")
+	void copyVolatile() {
+		assumeThat(mmanager).isNotNull();
+
+		// Define the amount of data to write randomly
+		val size = random.nextInt(Short.MAX_VALUE - Byte.MAX_VALUE) + Byte.MAX_VALUE;
+
+		// Allocate the memory and catch the exception
+		val src = mmanager.allocate(size, false, false);
+		val dest = mmanager.allocate(size, false, false);
+		assertThatExceptionOfType(UnsupportedOperationException.class)
+				.as("Copying").isThrownBy(() -> mmanager.copyVolatile(src, size, dest));
+
+		// Release the memory
+		mmanager.free(src, size, false);
+		mmanager.free(dest, size, false);
 	}
 
 	@Test
@@ -309,20 +510,27 @@ final class UnsafeMemoryManagerTest {
 	@SuppressWarnings("deprecation")
 	@DisplayName("Virtual addresses can be translated to physical addresses")
 	void virt2phys() {
-		assertThat(mmanager).isNotNull();
+		assumeThat(mmanager).isNotNull();
+
+		// Allocate the memory
 		val virt = mmanager.allocate(1, false, false);
-		assertThat(virt).as("Address").isNotZero();
-		assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(() -> mmanager.virt2phys(virt));
-		assertThat(mmanager.free(virt, 1, false)).as("Freeing").isTrue();
+		assumeThat(virt).as("Address").isNotZero();
+
+		// Catch the exception
+		assertThatExceptionOfType(UnsupportedOperationException.class)
+				.as("Translation").isThrownBy(() -> mmanager.virt2phys(virt));
+
+		// Free up the memory and verify the memory addresses
+		mmanager.free(virt, 1, false);
 	}
 
 	@Test
 	@EnabledIfRoot
 	@DisplayName("DmaMemory cannot be allocated")
-	void allocateDma() {
-		assertThat(mmanager).isNotNull();
+	void dmaAllocate() {
+		assumeThat(mmanager).isNotNull();
 		assertThatExceptionOfType(UnsupportedOperationException.class)
-				.isThrownBy(() -> mmanager.dmaAllocate(1, false, false));
+				.as("Translation").isThrownBy(() -> mmanager.dmaAllocate(1, false, false));
 	}
 
 	/**
@@ -403,23 +611,20 @@ final class UnsafeMemoryManagerTest {
 	}
 
 	/**
-	 * The source of arguments for {@link #allocate(Long, Boolean, Boolean)}.
+	 * The source of arguments for {@link #allocate_free(Long, Boolean, Boolean)}.
 	 * <p>
 	 * This method will generate all the combinations that could raise exceptions or behave differently.
 	 *
 	 * @return The {@link Stream} of {@link Arguments}.
 	 */
 	private static Stream<Arguments> allocateSource() {
-		val pagesize = UnsafeMemoryManager.getInstance().pageSize();
-		val sizes = new long[]{pagesize / 2, pagesize * 2};
+		val size = UnsafeMemoryManager.getInstance().pageSize();
 		val hugity = new boolean[]{false, true};
 		val contiguousity = new boolean[]{false, true};
 		Stream.Builder<Arguments> builder = Stream.builder();
-		for (val size : sizes) {
-			for (val huge : hugity) {
-				for (val contiguous : contiguousity) {
-					builder.add(Arguments.of(size, huge, contiguous));
-				}
+		for (val huge : hugity) {
+			for (val contiguous : contiguousity) {
+				builder.add(Arguments.of(huge && contiguous ? size * 2: size / 2, huge, contiguous));
 			}
 		}
 		return builder.build();
