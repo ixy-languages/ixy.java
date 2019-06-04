@@ -1,6 +1,6 @@
 package de.tum.in.net.ixy.memory;
 
-import de.tum.in.net.ixy.generic.IxyMemoryManager;
+import de.tum.in.net.ixy.generic.IxyDmaMemory;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -12,7 +12,7 @@ import lombok.val;
  * @author Esaú García Sánchez-Torija
  */
 @Slf4j
-public final class DmaMemory implements IxyMemoryManager.DualMemory {
+public final class DmaMemory implements IxyDmaMemory {
 
 	/**
 	 * The virtual address.
