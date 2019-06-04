@@ -1,5 +1,6 @@
 package de.tum.in.net.ixy.memory;
 
+import de.tum.in.net.ixy.generic.IxyDmaMemory;
 import de.tum.in.net.ixy.generic.IxyMemoryManager;
 
 import lombok.AccessLevel;
@@ -9,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
 /**
- * Implementation of memory manager backed by a native library and JNI calls.
+ * Implementation of memory manager backed by a native C library using JNI calls.
  * <p>
  * This implementation performs checks on the parameters based on the value of {@link BuildConfig#OPTIMIZED}.
  *
@@ -17,6 +18,15 @@ import lombok.val;
  */
 @Slf4j
 public final class JniMemoryManager implements IxyMemoryManager {
+
+	/** Cached exception thrown by the methods that need a virtual memory address and it is not correctly formatted. */
+	private static final IllegalArgumentException ADDRESS = new IllegalArgumentException("Address must not be null");
+
+	/** Cached exception thrown by the methods that need a size and it is not correctly formatted. */
+	private static final IllegalArgumentException SIZE = new IllegalArgumentException("Size must be an integer greater than 0");
+
+	/** Cached huge page size. */
+	private static long HUGE_PAGE_SIZE;
 
 	/**
 	 * Cached instance to use as singleton.
@@ -29,17 +39,23 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	@Setter(AccessLevel.NONE)
 	private static final JniMemoryManager instance = new JniMemoryManager();
 
-	/** Private constructor that throws an exception if the instance is already instantiated. */
+	/**
+	 * Once-callable private constructor.
+	 * <p>
+	 * This constructor will check if the member {@link #instance} is {@code null} or not. Because the member {@link
+	 * #instance} is initialized with a new instance of this class, any further attempts to instantiate it will produce
+	 * an {@link IllegalStateException} to be thrown.
+	 */
 	private JniMemoryManager() {
 		if (BuildConfig.DEBUG) log.debug("Creating an Unsafe-backed memory manager");
-		if (instance != null) {
+		if (instance != null)
 			throw new IllegalStateException("An instance cannot be created twice. Use getInstance() instead.");
-		}
 	}
 
-	// Load the native library
+	// Load the native library and cache the huge memory page size
 	static {
 		System.loadLibrary("ixy");
+		HUGE_PAGE_SIZE = c_hugepage_size();
 	}
 
 	////////////////////////////////////////////////// NATIVE METHODS //////////////////////////////////////////////////
@@ -69,18 +85,18 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 * When there is an error, two different numbers can be returned, although it is not consistent across operative
 	 * systems:
 	 * <ul>
-	 *   <li>When there is an error or the mount point of the {@code hugetlbfs} is not found, a {@code -1} is returned
-	 *       in {@code Linux} and {@code Windows}.</li>
-	 *   <li>If the mount point was found but the smartHugepageSize size could not be computed, a {@code 0} is returned
-	 *       in {@code Linux}. This error code will never be returned under {@code Windows}.</li>
+	 * <li>When there is an error or the mount point of the {@code hugetlbfs} is not found, a {@code -1} is returned
+	 * in {@code Linux} and {@code Windows}.</li>
+	 * <li>If the mount point was found but the smartHugepageSize size could not be computed, a {@code 0} is returned
+	 * in {@code Linux}. This error code will never be returned under {@code Windows}.</li>
 	 * </ul>
 	 * <p>
 	 * Although the name uses the nomenclature {@code smartHugepageSize}, other operative systems use the same
 	 * technology but with different name, for example, {@code largepage} on {@code Windows}, {@code superpage} in
 	 * {@code BSD} or {@code bigpage} in {@code RHEL}.
 	 * <p>
-	 * This method is only implemented for {@code Linux} and {@code Windows}. Calling this method with another
-	 * operative system will use a dummy implementation that will always return {@code -1}.
+	 * This method is only implemented for {@code Linux} and {@code Windows}. Calling this method with another operative
+	 * system will use a dummy implementation that will always return {@code -1}.
 	 *
 	 * @return The size of a huge memory page.
 	 */
@@ -90,14 +106,12 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 * Allocates {@code size} bytes.
 	 * <p>
 	 * The memory allocated by this method MUST be freed with {@link #c_free(long, long, boolean)}, as it won't be
-	 * garbage collected by the JVM.
+	 * garbage-collected by the JVM.
 	 * <p>
-	 * The allocated memory region can be contiguous if requested, but since the implementation uses {@code hugepages}
-	 * to do so, if the requested size is bigger than the bytes a huge page can store, the allocation will return the
-	 * invalid address {@code 0}.
+	 * All the checks that were once performed by this native method have been moved to the Java interface.
 	 * <p>
-	 * The implementation needs a the mount point of the {@code hugetlbfs}, but it will be used only under Linux.
-	 * On Windows it uses {@code VirtualAlloc} to allocate a huge memory page.
+	 * The implementation needs a the mount point of the {@code hugetlbfs}, but it will be used only under Linux. On
+	 * Windows it uses {@code VirtualAlloc} to allocate a huge memory page.
 	 *
 	 * @param size       The number of bytes to allocate.
 	 * @param huge       Whether huge memory page should used.
@@ -110,8 +124,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	/**
 	 * Frees a previously allocated memory region.
 	 * <p>
-	 * If the given address is not a multiple of the size of a memory page it won't fail because it will be converted to
-	 * the base address of a huge memory page.
+	 * All the checks that were once performed by this native method have been moved to the Java interface.
 	 *
 	 * @param address The address of the previously allocated region.
 	 * @param size    The size of the allocated region.
@@ -122,154 +135,198 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	/**
 	 * Reads a {@code byte} from an arbitrary memory address.
 	 *
-	 * @param address The address to read from.
-	 * @return The read value.
+	 * @param src The memory address to read from.
+	 * @return The read {@code byte}.
 	 */
-	private static native byte c_get_byte(final long address);
+	private static native byte c_get_byte(final long src);
 
 	/**
-	 * Reads a {@code byte} from an arbitrary memory address.
+	 * Reads a {@code byte} from an arbitrary volatile memory address.
 	 *
-	 * @param address The address to read from.
-	 * @return The read value.
+	 * @param src The volatile memory address to read from.
+	 * @return The read {@code byte}.
 	 */
-	private static native byte c_get_byte_volatile(final long address);
-
-	/**
-	 * Writes a {@code byte} to an arbitrary memory address.
-	 *
-	 * @param address The address to write to.
-	 * @param value   The value to write.
-	 */
-	private static native void c_put_byte(final long address, final byte value);
+	private static native byte c_get_byte_volatile(final long src);
 
 	/**
 	 * Writes a {@code byte} to an arbitrary memory address.
 	 *
-	 * @param address The address to write to.
-	 * @param value   The value to write.
+	 * @param dest  The memory address to write to.
+	 * @param value The {@code byte} to write.
 	 */
-	private static native void c_put_byte_volatile(final long address, final byte value);
+	private static native void c_put_byte(final long dest, final byte value);
+
+	/**
+	 * Writes a {@code byte} to an arbitrary volatile memory address.
+	 *
+	 * @param dest  The volatile memory address to write to.
+	 * @param value The {@code byte} to write.
+	 */
+	private static native void c_put_byte_volatile(final long dest, final byte value);
 
 	/**
 	 * Reads a {@code short} from an arbitrary memory address.
 	 *
-	 * @param address The address to read from.
-	 * @return The read value.
+	 * @param src The memory address to read from.
+	 * @return The read {@code short}.
 	 */
-	private static native short c_get_short(final long address);
+	private static native short c_get_short(final long src);
 
 	/**
-	 * Reads a {@code short} from an arbitrary memory address.
+	 * Reads a {@code short} from an arbitrary volatile memory address.
 	 *
-	 * @param address The address to read from.
-	 * @return The read value.
+	 * @param src The volatile memory address to read from.
+	 * @return The read {@code short}.
 	 */
-	private static native short c_get_short_volatile(final long address);
-
-	/**
-	 * Writes a {@code short} to an arbitrary memory address.
-	 *
-	 * @param address The address to write to.
-	 * @param value   The value to write.
-	 */
-	private static native void c_put_short(final long address, final short value);
+	private static native short c_get_short_volatile(final long src);
 
 	/**
 	 * Writes a {@code short} to an arbitrary memory address.
 	 *
-	 * @param address The address to write to.
-	 * @param value   The value to write.
+	 * @param dest  The memory address to write to.
+	 * @param value The {@code short} to write.
 	 */
-	private static native void c_put_short_volatile(final long address, final short value);
+	private static native void c_put_short(final long dest, final short value);
+
+	/**
+	 * Writes a {@code short} to an arbitrary volatile memory address.
+	 *
+	 * @param dest  The volatile memory address to write to.
+	 * @param value The {@code short} to write.
+	 */
+	private static native void c_put_short_volatile(final long dest, final short value);
 
 	/**
 	 * Reads a {@code int} from an arbitrary memory address.
 	 *
-	 * @param address The address to read from.
-	 * @return The read value.
+	 * @param src The memory address to read from.
+	 * @return The read {@code int}.
 	 */
-	private static native int c_get_int(final long address);
+	private static native int c_get_int(final long src);
 
 	/**
-	 * Reads a {@code int} from an arbitrary memory address.
+	 * Reads a {@code int} from an arbitrary volatile memory address.
 	 *
-	 * @param address The address to read from.
-	 * @return The read value.
+	 * @param src The volatile memory address to read from.
+	 * @return The read {@code int}.
 	 */
-	private static native int c_get_int_volatile(final long address);
-
-	/**
-	 * Writes an {@code int} to an arbitrary memory address.
-	 *
-	 * @param address The address to write to.
-	 * @param value   The value to write.
-	 */
-	private static native void c_put_int(final long address, final int value);
+	private static native int c_get_int_volatile(final long src);
 
 	/**
 	 * Writes an {@code int} to an arbitrary memory address.
 	 *
-	 * @param address The address to write to.
-	 * @param value   The value to write.
+	 * @param dest  The memory address to write to.
+	 * @param value The {@code int} to write.
 	 */
-	private static native void c_put_int_volatile(final long address, final int value);
+	private static native void c_put_int(final long dest, final int value);
+
+	/**
+	 * Writes an {@code int} to an arbitrary volatile memory address.
+	 *
+	 * @param dest  The volatile memory address to write to.
+	 * @param value The {@code int} to write.
+	 */
+	private static native void c_put_int_volatile(final long dest, final int value);
 
 	/**
 	 * Reads a {@code long} from an arbitrary memory address.
 	 *
-	 * @param address The address to read from.
-	 * @return The read value.
+	 * @param src The memory address to read from.
+	 * @return The read {@code long}.
 	 */
-	private static native long c_get_long(final long address);
+	private static native long c_get_long(final long src);
 
 	/**
-	 * Reads a {@code long} from an arbitrary memory address.
+	 * Reads a {@code long} from an arbitrary volatile memory address.
 	 *
-	 * @param address The address to read from.
-	 * @return The read value.
+	 * @param src The volatile memory address to read from.
+	 * @return The read {@code long}.
 	 */
-	private static native long c_get_long_volatile(final long address);
-
-	/**
-	 * Writes a {@code long} to an arbitrary memory address.
-	 *
-	 * @param address The address to write to.
-	 * @param value   The value to write.
-	 */
-	private static native void c_put_long(final long address, final long value);
+	private static native long c_get_long_volatile(final long src);
 
 	/**
 	 * Writes a {@code long} to an arbitrary memory address.
 	 *
-	 * @param address The address to write to.
-	 * @param value   The value to write.
+	 * @param dest  The memory address to write to.
+	 * @param value The {@code long} to write.
 	 */
-	private static native void c_put_long_volatile(final long address, final long value);
+	private static native void c_put_long(final long dest, final long value);
+
+	/**
+	 * Writes a {@code long} to an arbitrary volatile memory address.
+	 *
+	 * @param dest  The volatile memory address to write to.
+	 * @param value The {@code long} to write.
+	 */
+	private static native void c_put_long_volatile(final long dest, final long value);
 
 	/**
 	 * Copies a memory region into a primitive byte array.
 	 *
-	 * @param address The source address to copy from.
-	 * @param size    The number of bytes to copy.
-	 * @param buffer  The primitive array to copy to.
+	 * @param src    The source memory address to copy from.
+	 * @param size   The number of bytes to copy.
+	 * @param dest   The destination primitive array to copy to.
+	 * @param offset The offset from which to start copying to.
 	 */
-	private static native long c_copy(final long address, final int size, final byte[] buffer);
+	private static native void c_get(final long src, final int size, final byte[] dest, final int offset);
 
 	/**
 	 * Copies a memory region into a primitive byte array.
 	 *
-	 * @param address The source address to copy from.
-	 * @param size    The number of bytes to copy.
-	 * @param buffer  The primitive array to copy to.
+	 * @param src    The source volatile memory address to copy from.
+	 * @param size   The number of bytes to copy.
+	 * @param dest   The destination primitive array to copy to.
+	 * @param offset The offset from which to start copying to.
 	 */
-	private static native long c_copy_volatile(final long address, final int size, final byte[] buffer);
+	private static native void c_get_volatile(final long src, final int size, final byte[] dest, final int offset);
+
+	/**
+	 * Copies a primitive byte array into a memory region.
+	 *
+	 * @param dest   The destination memory address to copy to.
+	 * @param size   The number of bytes to copy.
+	 * @param src    The source primitive array to copy from.
+	 * @param offset The offset from which to start copying from.
+	 */
+	private static native void c_put(final long dest, final int size, final byte[] src, final int offset);
+
+	/**
+	 * Copies a primitive byte array into a memory region.
+	 *
+	 * @param dest   The destination volatile memory address to copy to.
+	 * @param size   The number of bytes to copy.
+	 * @param src    The source primitive array to copy from.
+	 * @param offset The offset from which to start copying from.
+	 */
+	private static native void c_put_volatile(final long dest, final int size, final byte[] src, final int offset);
+
+	/**
+	 * Copies a memory region into another memory region.
+	 *
+	 * @param src  The source memory address to copy from.
+	 * @param size The number of bytes to copy.
+	 * @param dest The destination memory address to copy to.
+	 */
+	private static native void c_copy(final long src, final int size, final long dest);
+
+	/**
+	 * Copies a memory region into another memory region using volatile memory addresses.
+	 *
+	 * @param src  The source volatile memory address to copy from.
+	 * @param size The number of bytes to copy.
+	 * @param dest The destination volatile memory address to copy to.
+	 */
+	private static native void c_copy_volatile(final long src, final int size, final long dest);
 
 	/**
 	 * Translates a virtual memory {@code address} to its equivalent physical counterpart.
+	 * <p>
+	 * There is no guarantees that the physical memory address will be valid even just after this method returns the
+	 * value. The guarantee has to be made by the allocation method, by locking the memory pages that contain the
+	 * allocated memory region and guaranteeing they will be contiguously ordered on the underlying hardware.
 	 *
-	 * @param address The address to write to.
-	 * @return The physical address.
+	 * @param address The memory address to translate.
+	 * @return The physical memory address.
 	 */
 	private static native long c_virt2phys(final long address);
 
@@ -299,256 +356,391 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	/** {@inheritDoc} */
 	@Override
 	public long allocate(final long size, final boolean huge, final boolean contiguous) {
-		if (!BuildConfig.OPTIMIZED) {
-			if (size < 0) {
-				throw new IllegalArgumentException("Size must be an integer greater than 0");
-			}
-		}
 		if (BuildConfig.DEBUG) {
 			if (huge) {
-				if (contiguous) {
-					log.debug("Allocating {} huge-page-backed contiguous bytes using C", size);
-				} else {
-					log.debug("Allocating {} huge-page-backed non-contiguous bytes using C", size);
-				}
+				if (contiguous) log.debug("Allocating {} huge-page-backed contiguous bytes using C", size);
+				else log.debug("Allocating {} huge-page-backed non-contiguous bytes using C", size);
 			} else {
-				if (contiguous) {
-					log.debug("Allocating {} contiguous bytes using C", size);
-				} else {
-					log.debug("Allocating {} non-contiguous bytes using C", size);
-				}
+				if (contiguous) log.debug("Allocating {} contiguous bytes using C", size);
+				else log.debug("Allocating {} non-contiguous bytes using C", size);
 			}
 		}
-		return c_allocate(size, huge, contiguous, BuildConfig.HUGE_MNT);
+		if (!BuildConfig.OPTIMIZED && size < 0) throw SIZE;
+
+		// Perform some checks when using huge memory pages
+		if (huge) {
+			// If no huge memory page file support has been detected, exit right away
+			if (HUGE_PAGE_SIZE <= 0) return 0;
+
+			// Round the size to a multiple of the page size
+			val mask = (HUGE_PAGE_SIZE - 1);
+			val round = (size & mask) == 0 ? size : (size + HUGE_PAGE_SIZE) & ~mask;
+
+			// Skip if we cannot guarantee contiguity
+			if (contiguous && round > HUGE_PAGE_SIZE) return 0;
+
+			// Call the native method with the correct size
+			return c_allocate(round, huge, contiguous, BuildConfig.HUGE_MNT);
+		} else {
+			return c_allocate(size, huge, contiguous, BuildConfig.HUGE_MNT);
+		}
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public boolean free(final long address, final long size, final boolean huge) {
+	public boolean free(final long src, final long size, final boolean huge) {
 		if (!BuildConfig.OPTIMIZED) {
-			if (address == 0) {
-				throw new IllegalArgumentException("Address must not be null");
-			} else if (size < 0) {
-				throw new IllegalArgumentException("Size must be an integer greater than 0");
-			}
+			if (src == 0) throw ADDRESS;
+			else if (size < 0) throw SIZE;
 		}
 		if (BuildConfig.DEBUG) {
-			val xaddress = Long.toHexString(address);
-			if (huge) {
-				log.debug("Freeing {} huge-page-backed bytes @ 0x{} using the Unsafe object", size, xaddress);
-			} else {
-				log.debug("Freeing {} bytes @ 0x{} using the Unsafe object", size, xaddress);
-			}
+			val xaddress = Long.toHexString(src);
+			if (huge) log.debug("Freeing {} huge-page-backed bytes @ 0x{} using the Unsafe object", size, xaddress);
+			else log.debug("Freeing {} bytes @ 0x{} using the Unsafe object", size, xaddress);
 		}
-		return c_free(address, size, huge);
+
+		// Perform some checks when using huge memory pages
+		if (huge) {
+			// If no huge memory page file support has been detected, exit right away
+			if (HUGE_PAGE_SIZE <= 0) return false;
+
+			// Round the size and address to a multiple of the page size
+			val mask = (HUGE_PAGE_SIZE - 1);
+			val roundAddress = (src & mask) == 0 ? src : src & ~mask;
+			val roundSize = (size & mask) == 0 ? size : (size + HUGE_PAGE_SIZE) & ~mask;
+
+			// Call the native method with the correct size
+			return c_free(roundAddress, roundSize, huge);
+		} else {
+			return c_free(src, size, huge);
+		}
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public byte getByte(final long address) {
+	public byte getByte(final long src) {
 		if (BuildConfig.DEBUG) {
-			val xaddress = Long.toHexString(address);
+			val xaddress = Long.toHexString(src);
 			log.debug("Reading byte @ 0x{} using C", xaddress);
 		}
-		return c_get_byte(address);
+		if (!BuildConfig.OPTIMIZED && src == 0) throw ADDRESS;
+		return c_get_byte(src);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public byte getByteVolatile(final long address) {
+	public byte getByteVolatile(final long src) {
 		if (BuildConfig.DEBUG) {
-			val xaddress = Long.toHexString(address);
+			val xaddress = Long.toHexString(src);
 			log.debug("Reading volatile byte @ 0x{} using C", xaddress);
 		}
-		return c_get_byte_volatile(address);
+		if (!BuildConfig.OPTIMIZED && src == 0) throw ADDRESS;
+		return c_get_byte_volatile(src);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public void putByte(final long address, final byte value) {
+	public void putByte(final long dest, final byte value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
-			val xaddress = Long.toHexString(address);
+			val xaddress = Long.toHexString(dest);
 			log.debug("Putting byte 0x{} @ 0x{} using C", xvalue, xaddress);
 		}
-		c_put_byte(address, value);
+		if (!BuildConfig.OPTIMIZED && dest == 0) throw ADDRESS;
+		c_put_byte(dest, value);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public void putByteVolatile(final long address, final byte value) {
+	public void putByteVolatile(final long dest, final byte value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
-			val xaddress = Long.toHexString(address);
+			val xaddress = Long.toHexString(dest);
 			log.debug("Putting volatile byte 0x{} @ 0x{} using C", xvalue, xaddress);
 		}
-		c_put_byte_volatile(address, value);
+		if (!BuildConfig.OPTIMIZED && dest == 0) throw ADDRESS;
+		c_put_byte_volatile(dest, value);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public short getShort(final long address) {
+	public short getShort(final long src) {
 		if (BuildConfig.DEBUG) {
-			val xaddress = Long.toHexString(address);
+			val xaddress = Long.toHexString(src);
 			log.debug("Reading short @ 0x{} using C", xaddress);
 		}
-		return c_get_short(address);
+		if (!BuildConfig.OPTIMIZED && src == 0) throw ADDRESS;
+		return c_get_short(src);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public short getShortVolatile(final long address) {
+	public short getShortVolatile(final long src) {
 		if (BuildConfig.DEBUG) {
-			val xaddress = Long.toHexString(address);
+			val xaddress = Long.toHexString(src);
 			log.debug("Reading volatile short @ 0x{} using C", xaddress);
 		}
-		return c_get_short_volatile(address);
+		if (!BuildConfig.OPTIMIZED && src == 0) throw ADDRESS;
+		return c_get_short_volatile(src);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public void putShort(final long address, final short value) {
+	public void putShort(final long dest, final short value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
-			val xaddress = Long.toHexString(address);
+			val xaddress = Long.toHexString(dest);
 			log.debug("Putting short 0x{} @ 0x{} using C", xvalue, xaddress);
 		}
-		c_put_short(address, value);
+		if (!BuildConfig.OPTIMIZED && dest == 0) throw ADDRESS;
+		c_put_short(dest, value);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public void putShortVolatile(final long address, final short value) {
+	public void putShortVolatile(final long dest, final short value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
-			val xaddress = Long.toHexString(address);
+			val xaddress = Long.toHexString(dest);
 			log.debug("Putting volatile short 0x{} @ 0x{} using C", xvalue, xaddress);
 		}
-		c_put_short_volatile(address, value);
+		if (!BuildConfig.OPTIMIZED && dest == 0) throw ADDRESS;
+		c_put_short_volatile(dest, value);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public int getInt(final long address) {
+	public int getInt(final long src) {
 		if (BuildConfig.DEBUG) {
-			val xaddress = Long.toHexString(address);
+			val xaddress = Long.toHexString(src);
 			log.debug("Reading int @ 0x{} using C", xaddress);
 		}
-		return c_get_int(address);
+		if (!BuildConfig.OPTIMIZED && src == 0) throw ADDRESS;
+		return c_get_int(src);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public int getIntVolatile(final long address) {
+	public int getIntVolatile(final long src) {
 		if (BuildConfig.DEBUG) {
-			val xaddress = Long.toHexString(address);
+			val xaddress = Long.toHexString(src);
 			log.debug("Reading volatile int @ 0x{} using C", xaddress);
 		}
-		return c_get_int_volatile(address);
+		if (!BuildConfig.OPTIMIZED && src == 0) throw ADDRESS;
+		return c_get_int_volatile(src);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public void putInt(final long address, final int value) {
+	public void putInt(final long dest, final int value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(value);
-			val xaddress = Long.toHexString(address);
+			val xaddress = Long.toHexString(dest);
 			log.debug("Putting int 0x{} @ 0x{} using C", xvalue, xaddress);
 		}
-		c_put_int(address, value);
+		if (!BuildConfig.OPTIMIZED && dest == 0) throw ADDRESS;
+		c_put_int(dest, value);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public void putIntVolatile(final long address, final int value) {
+	public void putIntVolatile(final long dest, final int value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(value);
-			val xaddress = Long.toHexString(address);
+			val xaddress = Long.toHexString(dest);
 			log.debug("Putting volatile int 0x{} @ 0x{} using C", xvalue, xaddress);
 		}
-		c_put_int_volatile(address, value);
+		if (!BuildConfig.OPTIMIZED && dest == 0) throw ADDRESS;
+		c_put_int_volatile(dest, value);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public long getLong(final long address) {
+	public long getLong(final long src) {
 		if (BuildConfig.DEBUG) {
-			val xaddress = Long.toHexString(address);
+			val xaddress = Long.toHexString(src);
 			log.debug("Reading long @ 0x{} using C", xaddress);
 		}
-		return c_get_long(address);
+		if (!BuildConfig.OPTIMIZED && src == 0) throw ADDRESS;
+		return c_get_long(src);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public long getLongVolatile(final long address) {
+	public long getLongVolatile(final long src) {
 		if (BuildConfig.DEBUG) {
-			val xaddress = Long.toHexString(address);
+			val xaddress = Long.toHexString(src);
 			log.debug("Reading volatile long @ 0x{} using C", xaddress);
 		}
-		return c_get_long_volatile(address);
+		if (!BuildConfig.OPTIMIZED && src == 0) throw ADDRESS;
+		return c_get_long_volatile(src);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public void putLong(final long address, final long value) {
+	public void putLong(final long dest, final long value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Long.toHexString(value);
-			val xaddress = Long.toHexString(address);
+			val xaddress = Long.toHexString(dest);
 			log.debug("Putting long 0x{} @ 0x{} using C", xvalue, xaddress);
 		}
-		c_put_long(address, value);
+		if (!BuildConfig.OPTIMIZED && dest == 0) throw ADDRESS;
+		c_put_long(dest, value);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public void putLongVolatile(final long address, final long value) {
+	public void putLongVolatile(final long dest, final long value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Long.toHexString(value);
-			val xaddress = Long.toHexString(address);
+			val xaddress = Long.toHexString(dest);
 			log.debug("Putting volatile long 0x{} @ 0x{} using C", xvalue, xaddress);
 		}
-		c_put_long_volatile(address, value);
+		if (!BuildConfig.OPTIMIZED && dest == 0) throw ADDRESS;
+		c_put_long_volatile(dest, value);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public void copy(final long address, int size, final byte[] buffer) {
+	@SuppressWarnings("Duplicates")
+	public void get(final long src, int size, final byte[] dest, final int offset) {
 		if (!BuildConfig.OPTIMIZED) {
-			if (size <= 0) {
-				throw new IllegalArgumentException("Size must be greater than 0");
-			} else if (buffer == null) {
-				throw new IllegalArgumentException("Buffer must not be null");
-			} else if (buffer.length <= 0) {
-				throw new IllegalArgumentException("Buffer must have a capacity of at least 1");
-			}
-			size = Math.min(size, buffer.length);
+			getCheck(src, size, dest, offset);
+			size = Math.min(size, dest.length - offset);
 		}
 		if (BuildConfig.DEBUG) {
-			val xaddress = Long.toHexString(address);
-			log.debug("Copying data segment of {} bytes at offset 0x{} using C", size, xaddress);
+			val xaddress = Long.toHexString(src);
+			log.debug("Copying memory data segment of {} bytes from 0x{} using the Unsafe object", size, xaddress);
 		}
-		c_copy(address, size, buffer);
+		c_get(src, size, dest, offset);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public void copyVolatile(final long address, int size, final byte[] buffer) {
+	@SuppressWarnings("Duplicates")
+	public void getVolatile(final long src, int size, final byte[] dest, final int offset) {
 		if (!BuildConfig.OPTIMIZED) {
-			if (size <= 0) {
-				throw new IllegalArgumentException("Size must be greater than 0");
-			} else if (buffer == null) {
-				throw new IllegalArgumentException("Buffer must not be null");
-			} else if (buffer.length <= 0) {
-				throw new IllegalArgumentException("Buffer must have a capacity of at least 1");
-			}
-			size = Math.min(size, buffer.length);
+			getCheck(src, size, dest, offset);
+			size = Math.min(size, dest.length - offset);
 		}
 		if (BuildConfig.DEBUG) {
-			val xaddress = Long.toHexString(address);
-			log.debug("Copying volatile data segment of {} bytes at offset 0x{} using C", size, xaddress);
+			val xaddress = Long.toHexString(src);
+			log.debug("Copying memory data segment of {} bytes from 0x{} using the Unsafe object", size, xaddress);
 		}
-		c_copy_volatile(address, size, buffer);
+		c_get_volatile(src, size, dest, offset);
+	}
+
+	/**
+	 * Common checks performed by {@link #get(long, int, byte[], int)} and {@link #getVolatile(long, int, byte[],
+	 * int)}.
+	 * <p>
+	 * If one the parameters is not formatted correctly, an {@link IllegalArgumentException} will be thrown.
+	 *
+	 * @param src    The source memory address to copy from.
+	 * @param size   The number of bytes to copy.
+	 * @param dest   The destination primitive array to copy to.
+	 * @param offset The offset from which to start copying to.
+	 */
+	@SuppressWarnings("Duplicates")
+	private void getCheck(final long src, int size, final byte[] dest, final int offset) {
+		if (src == 0) throw ADDRESS;
+		else if (size <= 0) throw SIZE;
+		else if (dest == null) throw new IllegalArgumentException("Buffer must not be null");
+		else if (dest.length <= 0) throw new IllegalArgumentException("Buffer must have a capacity of at least 1");
+		else if (offset < 0) throw new IllegalArgumentException("Offset must be greater than or equal to 0");
+		else if (offset >= dest.length)
+			throw new IllegalArgumentException("Offset cannot be greater than or equal to the buffer length");
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	@SuppressWarnings("Duplicates")
+	public void put(final long dest, int size, final byte[] src, int offset) {
+		if (!BuildConfig.OPTIMIZED) {
+			putCheck(dest, size, src, offset);
+			size = Math.min(size, src.length);
+		}
+		if (BuildConfig.DEBUG) {
+			val xaddress = Long.toHexString(dest);
+			log.debug("Copying buffer of {} bytes at offset 0x{} using the Unsafe object", size, xaddress);
+		}
+		c_put(dest, size, src, offset);
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	@SuppressWarnings("Duplicates")
+	public void putVolatile(final long dest, int size, final byte[] src, final int offset) {
+		if (!BuildConfig.OPTIMIZED) {
+			putCheck(dest, size, src, offset);
+			size = Math.min(size, src.length);
+		}
+		if (BuildConfig.DEBUG) {
+			val xaddress = Long.toHexString(dest);
+			log.debug("Copying buffer of {} bytes at offset 0x{} using the Unsafe object", size, xaddress);
+		}
+		c_put_volatile(dest, size, src, offset);
+	}
+
+	/**
+	 * Common checks performed by {@link #put(long, int, byte[], int)} and {@link #putVolatile(long, int, byte[],
+	 * int)}.
+	 * <p>
+	 * If one the parameters is not formatted correctly, an {@link IllegalArgumentException} will be thrown.
+	 *
+	 * @param dest   The destination primitive array to copy to.
+	 * @param size   The number of bytes to copy.
+	 * @param src    The source memory address to copy from.
+	 * @param offset The offset from which to start copying to.
+	 */
+	@SuppressWarnings("Duplicates")
+	private void putCheck(final long dest, int size, final byte[] src, final int offset) {
+		if (dest == 0) throw ADDRESS;
+		else if (size <= 0) throw SIZE;
+		else if (src == null) throw new IllegalArgumentException("Buffer must not be null");
+		else if (src.length <= 0) throw new IllegalArgumentException("Buffer must have a capacity of at least 1");
+		else if (offset < 0) throw new IllegalArgumentException("Offset must be greater than or equal to 0");
+		else if (offset >= src.length)
+			throw new IllegalArgumentException("Offset cannot be greater than or equal to the buffer length");
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public void copy(final long src, final int size, final long dest) {
+		if (BuildConfig.DEBUG) {
+			val xsrc = Long.toHexString(src);
+			val xdest = Long.toHexString(dest);
+			log.debug("Copying memory region ({} B) @ 0x{} to 0x{} using C", size, xsrc, xdest);
+		}
+		if (!BuildConfig.OPTIMIZED) copyCheck(src, size, dest);
+		c_copy(src, size, dest);
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public void copyVolatile(final long src, final int size, final long dest) {
+		if (BuildConfig.DEBUG) {
+			val xsrc = Long.toHexString(src);
+			val xdest = Long.toHexString(dest);
+			log.debug("Copying memory region ({} B) @ 0x{} to 0x{} using C", size, xsrc, xdest);
+		}
+		if (!BuildConfig.OPTIMIZED) copyCheck(src, size, dest);
+		c_copy_volatile(src, size, dest);
+	}
+
+	/**
+	 * Common checks performed by {@link #copy(long, int, long)} and {@link #copyVolatile(long, int, long)}.
+	 * <p>
+	 * If one the parameters is not formatted correctly, an {@link IllegalArgumentException} will be thrown.
+	 *
+	 * @param src  The source memory address to copy from.
+	 * @param size The number of bytes to copy.
+	 * @param dest The destination memory address to copy to.
+	 */
+	private void copyCheck(final long src, final int size, final long dest) {
+		if (src == 0) throw ADDRESS;
+		else if (size <= 0) throw SIZE;
+		else if (dest == 0) throw ADDRESS;
 	}
 
 	/** {@inheritDoc} */
@@ -563,7 +755,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 
 	/** {@inheritDoc} */
 	@Override
-	public DualMemory dmaAllocate(long size, boolean huge, boolean contiguous) {
+	public IxyDmaMemory dmaAllocate(long size, boolean huge, boolean contiguous) {
 		if (!BuildConfig.DEBUG) log.debug("Allocating DualMemory using C");
 		val virt = allocate(size, huge, contiguous);
 		val phys = virt2phys(virt);
