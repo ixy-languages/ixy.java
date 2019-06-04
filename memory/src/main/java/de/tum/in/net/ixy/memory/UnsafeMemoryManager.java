@@ -1,5 +1,6 @@
 package de.tum.in.net.ixy.memory;
 
+import de.tum.in.net.ixy.generic.IxyDmaMemory;
 import de.tum.in.net.ixy.generic.IxyMemoryManager;
 
 import sun.misc.Unsafe;
@@ -37,12 +38,16 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	@Setter(AccessLevel.NONE)
 	private static final UnsafeMemoryManager instance = new UnsafeMemoryManager();
 
-	/** Private constructor that throws an exception if the instance is already instantiated. */
+	/**
+	 * Once-callable private constructor.
+	 * <p>
+	 * This constructor will check if the member {@link #instance} is {@code null} or not.
+	 * Because the member {@link #instance} is initialized with a new instance of this class, any further attempts to
+	 * instantiate it will produce an {@link IllegalStateException} to be thrown.
+	 */
 	private UnsafeMemoryManager() {
 		if (BuildConfig.DEBUG) log.debug("Creating an Unsafe-backed memory manager");
-		if (instance != null) {
-			throw new IllegalStateException("An instance cannot be created twice. Use getInstance() instead.");
-		}
+		if (instance != null) throw new IllegalStateException("An instance cannot be created twice. Use getInstance() instead.");
 		try {
 			val theUnsafeField = Unsafe.class.getDeclaredField("theUnsafe");
 			theUnsafeField.setAccessible(true);
@@ -52,26 +57,29 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 	}
 
-	/** Checks if the {@link Unsafe} object is available. */
+	/**
+	 * Throws an {@link IllegalStateException} if the {@link #unsafe} member is null.
+	 * <p>
+	 * This method is only called in conditional blocks using the {@link BuildConfig#OPTIMIZED} member, so when the
+	 * library is build for production mode this method is never called as a way of speeding up the whole program.
+	 */
 	private void checkUnsafe() {
-		if (unsafe == null) {
-			throw new IllegalStateException("The Unsafe object is not available");
-		}
+		if (unsafe == null) throw new IllegalStateException("The Unsafe object is not available");
 	}
 
 	/** {@inheritDoc} */
 	@Override
 	public int addressSize() {
-		if (!BuildConfig.OPTIMIZED) checkUnsafe();
 		if (BuildConfig.DEBUG) log.debug("Computing address size using the Unsafe object");
+		if (!BuildConfig.OPTIMIZED) checkUnsafe();
 		return unsafe.addressSize();
 	}
 
 	/** {@inheritDoc} */
 	@Override
 	public long pageSize() {
-		if (!BuildConfig.OPTIMIZED) checkUnsafe();
 		if (BuildConfig.DEBUG) log.debug("Computing page size using the Unsafe object");
+		if (!BuildConfig.OPTIMIZED) checkUnsafe();
 		return unsafe.pageSize();
 	}
 
@@ -83,22 +91,23 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	 * <p>
 	 * This method is marked as deprecated to prevent accidental usage, however it won't be removed in future versions.
 	 *
-	 * @return The size of a huge memory page.
+	 * @return The size of a huge memory page in the host system it is being executed.
 	 * @see #pageSize()
 	 * @deprecated
 	 */
 	@Override
 	@Deprecated
 	public long hugepageSize() {
-		if (!BuildConfig.OPTIMIZED) checkUnsafe();
 		if (BuildConfig.DEBUG) log.debug("Computing huge page size using the Unsafe object");
+		if (!BuildConfig.OPTIMIZED) checkUnsafe();
 		throw new UnsupportedOperationException("Unsafe does not provide an implementation for this operation");
 	}
 
 	/**
 	 * Allocates {@code size} bytes.
 	 * <p>
-	 * The method can be customized to use huge memory pages or to fail if the physical contiguity cannot be guaranteed.
+	 * The method can be customized to use huge memory pages or to fail if the physical contiguity cannot be
+	 * guaranteed.
 	 * <p>
 	 * This method will throw an {@link UnsupportedOperationException} when allocating using huge memory pages because
 	 * the {@link Unsafe} object does not provide an implementation for this operation.
@@ -110,28 +119,20 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	 */
 	@Override
 	public long allocate(final long size, final boolean huge, final boolean contiguous) {
-		if (!BuildConfig.OPTIMIZED) {
-			checkUnsafe();
-			if (size < 0) {
-				throw new IllegalArgumentException("Size must be an integer greater than 0");
-			}
-		}
 		if (huge) {
 			if (BuildConfig.DEBUG) {
-				if (contiguous) {
-					log.debug("Allocating {} contiguous huge-page-backed bytes using the Unsafe object", size);
-				} else {
-					log.debug("Allocating {} non-contiguous huge-page-backed bytes using the Unsafe object", size);
-				}
+				if (contiguous) log.debug("Allocating {} contiguous huge-page-backed bytes using the Unsafe object", size);
+				else log.debug("Allocating {} non-contiguous huge-page-backed bytes using the Unsafe object", size);
 			}
 			throw new UnsupportedOperationException("Unsafe does not provide an implementation for this operation");
 		}
+		if (!BuildConfig.OPTIMIZED) {
+			checkUnsafe();
+			if (size < 0) throw new IllegalArgumentException("Size must be an integer greater than 0");
+		}
 		if (BuildConfig.DEBUG) {
-			if (contiguous) {
-				log.debug("Allocating {} contiguous bytes using the Unsafe object", size);
-			} else {
-				log.debug("Allocating {} non-contiguous bytes using the Unsafe object", size);
-			}
+			if (contiguous) log.debug("Allocating {} contiguous bytes using the Unsafe object", size);
+			else log.debug("Allocating {} non-contiguous bytes using the Unsafe object", size);
 		}
 		if (BuildConfig.OPTIMIZED) {
 			return unsafe.allocateMemory(size);
@@ -153,37 +154,34 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	 * This method will throw an {@link UnsupportedOperationException} when allocating using huge memory pages because
 	 * the {@link Unsafe} object does not provide an implementation for this operation.
 	 *
-	 * @param address The address of the previously allocated region.
-	 * @param size    The size of the allocated region.
-	 * @param huge    Whether huge memory pages should be used.
+	 * @param src  The address of the previously allocated region.
+	 * @param size The size of the allocated region.
+	 * @param huge Whether huge memory pages should be used.
 	 * @return Whether the operation succeeded.
 	 */
 	@Override
-	public boolean free(final long address, final long size, final boolean huge) {
-		if (!BuildConfig.OPTIMIZED) {
-			checkUnsafe();
-			if (address == 0) {
-				throw new IllegalArgumentException("Address must not be null");
-			} else if (size < 0) {
-				throw new IllegalArgumentException("Size must be an integer greater than 0");
-			}
-		}
+	public boolean free(final long src, final long size, final boolean huge) {
 		if (huge) {
 			if (BuildConfig.DEBUG) {
-				val xaddress = Long.toHexString(address);
-				log.debug("Freeing {} huge-page-backed bytes @ 0x{} using the Unsafe object", size, xaddress);
+				val xsrc = Long.toHexString(src);
+				log.debug("Freeing {} huge-page-backed bytes @ 0x{} using the Unsafe object", size, xsrc);
 			}
 			throw new UnsupportedOperationException("Unsafe does not provide an implementation for this operation");
 		}
 		if (BuildConfig.DEBUG) {
-			val xaddress = Long.toHexString(address);
-			log.debug("Freeing {} bytes @ 0x{} using the Unsafe object", size, xaddress);
+			val xsrc = Long.toHexString(src);
+			log.debug("Freeing {} bytes @ 0x{} using the Unsafe object", size, xsrc);
+		}
+		if (!BuildConfig.OPTIMIZED) {
+			checkUnsafe();
+			if (src == 0) throw new IllegalArgumentException("Address must not be null");
+			else if (size < 0) throw new IllegalArgumentException("Size must be an integer greater than 0");
 		}
 		if (BuildConfig.OPTIMIZED) {
-			unsafe.freeMemory(address);
+			unsafe.freeMemory(src);
 		} else {
 			try {
-				unsafe.freeMemory(address);
+				unsafe.freeMemory(src);
 			} catch (final RuntimeException e) {
 				if (BuildConfig.DEBUG) log.error("Could not free memory", e);
 				return false;
@@ -194,293 +192,391 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 
 	/** {@inheritDoc} */
 	@Override
-	public byte getByte(final long address) {
+	public byte getByte(final long src) {
+		if (BuildConfig.DEBUG) {
+			val xsrc = Long.toHexString(src);
+			log.debug("Reading byte @ 0x{} using the Unsafe object", xsrc);
+		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (address == 0) {
-				throw new IllegalArgumentException("Address must not be null");
-			}
+			if (src == 0) throw new IllegalArgumentException("Address must not be null");
 		}
-		if (BuildConfig.DEBUG) {
-			val xaddress = Long.toHexString(address);
-			log.debug("Reading byte @ 0x{} using the Unsafe object", xaddress);
-		}
-		return unsafe.getByte(address);
+		return unsafe.getByte(src);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public byte getByteVolatile(final long address) {
+	public byte getByteVolatile(final long src) {
+		if (BuildConfig.DEBUG) {
+			val xsrc = Long.toHexString(src);
+			log.debug("Reading volatile byte @ 0x{} using the Unsafe object", xsrc);
+		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (address == 0) {
-				throw new IllegalArgumentException("Address must not be null");
-			}
+			if (src == 0) throw new IllegalArgumentException("Address must not be null");
 		}
-		if (BuildConfig.DEBUG) {
-			val xaddress = Long.toHexString(address);
-			log.debug("Reading volatile byte @ 0x{} using the Unsafe object", xaddress);
-		}
-		return unsafe.getByteVolatile(null, address);
+		return unsafe.getByteVolatile(null, src);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public void putByte(final long address, final byte value) {
-		if (!BuildConfig.OPTIMIZED) {
-			checkUnsafe();
-			if (address == 0) {
-				throw new IllegalArgumentException("Address must not be null");
-			}
-		}
+	public void putByte(final long dest, final byte value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
-			val xaddress = Long.toHexString(address);
-			log.debug("Putting byte 0x{} @ 0x{} using the Unsafe object", xvalue, xaddress);
+			val xdest = Long.toHexString(dest);
+			log.debug("Putting byte 0x{} @ 0x{} using the Unsafe object", xvalue, xdest);
 		}
-		unsafe.putByte(address, value);
+		if (!BuildConfig.OPTIMIZED) {
+			checkUnsafe();
+			if (dest == 0) throw new IllegalArgumentException("Address must not be null");
+		}
+		unsafe.putByte(dest, value);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public void putByteVolatile(final long address, final byte value) {
-		if (!BuildConfig.OPTIMIZED) {
-			checkUnsafe();
-			if (address == 0) {
-				throw new IllegalArgumentException("Address must not be null");
-			}
-		}
+	public void putByteVolatile(final long dest, final byte value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
-			val xaddress = Long.toHexString(address);
-			log.debug("Putting volatile byte 0x{} @ 0x{} using the Unsafe object", xvalue, xaddress);
+			val xdest = Long.toHexString(dest);
+			log.debug("Putting volatile byte 0x{} @ 0x{} using the Unsafe object", xvalue, xdest);
 		}
-		unsafe.putByteVolatile(null, address, value);
+		if (!BuildConfig.OPTIMIZED) {
+			checkUnsafe();
+			if (dest == 0) throw new IllegalArgumentException("Address must not be null");
+		}
+		unsafe.putByteVolatile(null, dest, value);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public short getShort(final long address) {
-		if (!BuildConfig.OPTIMIZED) {
-			checkUnsafe();
-			if (address == 0) {
-				throw new IllegalArgumentException("Address must not be null");
-			}
-		}
+	public short getShort(final long src) {
 		if (BuildConfig.DEBUG) {
-			val xaddress = Long.toHexString(address);
-			log.debug("Reading short @ 0x{} using the Unsafe object", xaddress);
+			val xsrc = Long.toHexString(src);
+			log.debug("Reading short @ 0x{} using the Unsafe object", xsrc);
 		}
-		return unsafe.getShort(address);
+		if (!BuildConfig.OPTIMIZED) {
+			checkUnsafe();
+			if (src == 0) throw new IllegalArgumentException("Address must not be null");
+		}
+		return unsafe.getShort(src);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public short getShortVolatile(final long address) {
-		if (!BuildConfig.OPTIMIZED) {
-			checkUnsafe();
-			if (address == 0) {
-				throw new IllegalArgumentException("Address must not be null");
-			}
-		}
+	public short getShortVolatile(final long src) {
 		if (BuildConfig.DEBUG) {
-			val xaddress = Long.toHexString(address);
-			log.debug("Reading volatile short @ 0x{} using the Unsafe object", xaddress);
+			val xsrc = Long.toHexString(src);
+			log.debug("Reading volatile short @ 0x{} using the Unsafe object", xsrc);
 		}
-		return unsafe.getShortVolatile(null, address);
+		if (!BuildConfig.OPTIMIZED) {
+			checkUnsafe();
+			if (src == 0) throw new IllegalArgumentException("Address must not be null");
+		}
+		return unsafe.getShortVolatile(null, src);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public void putShort(final long address, final short value) {
-		if (!BuildConfig.OPTIMIZED) {
-			checkUnsafe();
-			if (address == 0) {
-				throw new IllegalArgumentException("Address must not be null");
-			}
-		}
+	public void putShort(final long dest, final short value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
-			val xaddress = Long.toHexString(address);
-			log.debug("Putting short 0x{} @ 0x{} using the Unsafe object", xvalue, xaddress);
+			val xdest = Long.toHexString(dest);
+			log.debug("Putting short 0x{} @ 0x{} using the Unsafe object", xvalue, xdest);
 		}
-		unsafe.putShort(address, value);
+		if (!BuildConfig.OPTIMIZED) {
+			checkUnsafe();
+			if (dest == 0) throw new IllegalArgumentException("Address must not be null");
+		}
+		unsafe.putShort(dest, value);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public void putShortVolatile(final long address, final short value) {
-		if (!BuildConfig.OPTIMIZED) {
-			checkUnsafe();
-			if (address == 0) {
-				throw new IllegalArgumentException("Address must not be null");
-			}
-		}
+	public void putShortVolatile(final long dest, final short value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
-			val xaddress = Long.toHexString(address);
-			log.debug("Putting volatile short 0x{} @ 0x{} using the Unsafe object", xvalue, xaddress);
+			val xdest = Long.toHexString(dest);
+			log.debug("Putting volatile short 0x{} @ 0x{} using the Unsafe object", xvalue, xdest);
 		}
-		unsafe.putShortVolatile(null, address, value);
+		if (!BuildConfig.OPTIMIZED) {
+			checkUnsafe();
+			if (dest == 0) throw new IllegalArgumentException("Address must not be null");
+		}
+		unsafe.putShortVolatile(null, dest, value);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public int getInt(final long address) {
-		if (!BuildConfig.OPTIMIZED) {
-			checkUnsafe();
-			if (address == 0) {
-				throw new IllegalArgumentException("Address must not be null");
-			}
-		}
+	public int getInt(final long src) {
 		if (BuildConfig.DEBUG) {
-			val xaddress = Long.toHexString(address);
-			log.debug("Reading int @ 0x{} using the Unsafe object", xaddress);
+			val xsrc = Long.toHexString(src);
+			log.debug("Reading int @ 0x{} using the Unsafe object", xsrc);
 		}
-		return unsafe.getInt(address);
+		if (!BuildConfig.OPTIMIZED) {
+			checkUnsafe();
+			if (src == 0) throw new IllegalArgumentException("Address must not be null");
+		}
+		return unsafe.getInt(src);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public int getIntVolatile(final long address) {
-		if (!BuildConfig.OPTIMIZED) {
-			checkUnsafe();
-			if (address == 0) {
-				throw new IllegalArgumentException("Address must not be null");
-			}
-		}
+	public int getIntVolatile(final long src) {
 		if (BuildConfig.DEBUG) {
-			val xaddress = Long.toHexString(address);
-			log.debug("Reading volatile int @ 0x{} using the Unsafe object", xaddress);
+			val xsrc = Long.toHexString(src);
+			log.debug("Reading volatile int @ 0x{} using the Unsafe object", xsrc);
 		}
-		return unsafe.getIntVolatile(null, address);
+		if (!BuildConfig.OPTIMIZED) {
+			checkUnsafe();
+			if (src == 0) throw new IllegalArgumentException("Address must not be null");
+		}
+		return unsafe.getIntVolatile(null, src);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public void putInt(final long address, final int value) {
-		if (!BuildConfig.OPTIMIZED) {
-			checkUnsafe();
-			if (address == 0) {
-				throw new IllegalArgumentException("Address must not be null");
-			}
-		}
+	public void putInt(final long dest, final int value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(value);
-			val xaddress = Long.toHexString(address);
-			log.debug("Putting int 0x{} @ 0x{} using the Unsafe object", xvalue, xaddress);
+			val xdest = Long.toHexString(dest);
+			log.debug("Putting int 0x{} @ 0x{} using the Unsafe object", xvalue, xdest);
 		}
-		unsafe.putInt(address, value);
+		if (!BuildConfig.OPTIMIZED) {
+			checkUnsafe();
+			if (dest == 0) throw new IllegalArgumentException("Address must not be null");
+		}
+		unsafe.putInt(dest, value);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public void putIntVolatile(final long address, final int value) {
-		if (!BuildConfig.OPTIMIZED) {
-			checkUnsafe();
-			if (address == 0) {
-				throw new IllegalArgumentException("Address must not be null");
-			}
-		}
+	public void putIntVolatile(final long dest, final int value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(value);
-			val xaddress = Long.toHexString(address);
-			log.debug("Putting volatile int 0x{} @ 0x{} using the Unsafe object", xvalue, xaddress);
+			val xdest = Long.toHexString(dest);
+			log.debug("Putting volatile int 0x{} @ 0x{} using the Unsafe object", xvalue, xdest);
 		}
-		unsafe.putIntVolatile(null, address, value);
+		if (!BuildConfig.OPTIMIZED) {
+			checkUnsafe();
+			if (dest == 0) throw new IllegalArgumentException("Address must not be null");
+		}
+		unsafe.putIntVolatile(null, dest, value);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public long getLong(final long address) {
-		if (!BuildConfig.OPTIMIZED) {
-			checkUnsafe();
-			if (address == 0) {
-				throw new IllegalArgumentException("Address must not be null");
-			}
-		}
+	public long getLong(final long src) {
 		if (BuildConfig.DEBUG) {
-			val xaddress = Long.toHexString(address);
-			log.debug("Reading long @ 0x{} using the Unsafe object", xaddress);
+			val xsrc = Long.toHexString(src);
+			log.debug("Reading long @ 0x{} using the Unsafe object", xsrc);
 		}
-		return unsafe.getLong(address);
+		if (!BuildConfig.OPTIMIZED) {
+			checkUnsafe();
+			if (src == 0) throw new IllegalArgumentException("Address must not be null");
+		}
+		return unsafe.getLong(src);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public long getLongVolatile(final long address) {
-		if (!BuildConfig.OPTIMIZED) {
-			if (address == 0) {
-				throw new IllegalArgumentException("Address must not be null");
-			}
-			checkUnsafe();
-		}
+	public long getLongVolatile(final long src) {
 		if (BuildConfig.DEBUG) {
-			val xaddress = Long.toHexString(address);
-			log.debug("Reading volatile long @ 0x{} using the Unsafe object", xaddress);
+			val xsrc = Long.toHexString(src);
+			log.debug("Reading volatile long @ 0x{} using the Unsafe object", xsrc);
 		}
-		return unsafe.getLongVolatile(null, address);
+		if (!BuildConfig.OPTIMIZED) {
+			checkUnsafe();
+			if (src == 0) throw new IllegalArgumentException("Address must not be null");
+		}
+		return unsafe.getLongVolatile(null, src);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public void putLong(final long address, final long value) {
-		if (!BuildConfig.OPTIMIZED) {
-			checkUnsafe();
-			if (address == 0) {
-				throw new IllegalArgumentException("Address must not be null");
-			}
-		}
+	public void putLong(final long dest, final long value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Long.toHexString(value);
-			val xaddress = Long.toHexString(address);
-			log.debug("Putting long 0x{} @ 0x{} using the Unsafe object", xvalue, xaddress);
+			val xdest = Long.toHexString(dest);
+			log.debug("Putting long 0x{} @ 0x{} using the Unsafe object", xvalue, xdest);
 		}
-		unsafe.putLong(address, value);
+		if (!BuildConfig.OPTIMIZED) {
+			checkUnsafe();
+			if (dest == 0) throw new IllegalArgumentException("Address must not be null");
+		}
+		unsafe.putLong(dest, value);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public void putLongVolatile(final long address, final long value) {
-		if (!BuildConfig.OPTIMIZED) {
-			checkUnsafe();
-			if (address == 0) {
-				throw new IllegalArgumentException("Address must not be null");
-			}
-		}
+	public void putLongVolatile(final long dest, final long value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Long.toHexString(value);
-			val xaddress = Long.toHexString(address);
-			log.debug("Putting volatile long 0x{} @ 0x{} using the Unsafe object", xvalue, xaddress);
+			val xdest = Long.toHexString(dest);
+			log.debug("Writing volatile long 0x{} @ 0x{} using the Unsafe object", xvalue, xdest);
 		}
-		unsafe.putLongVolatile(null, address, value);
-	}
-
-	/** {@inheritDoc} */
-	@Override
-	public void copy(final long address, int size, final byte[] buffer) {
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (size <= 0) {
-				throw new IllegalArgumentException("Size must be greater than 0");
-			} else if (buffer == null) {
-				throw new IllegalArgumentException("Buffer must not be null");
-			} else if (buffer.length <= 0) {
-				throw new IllegalArgumentException("Buffer must have a capacity of at least 1");
-			}
-			size = Math.min(size, buffer.length);
+			if (dest == 0) throw new IllegalArgumentException("Address must not be null");
 		}
-		if (BuildConfig.DEBUG) {
-			val xaddress = Long.toHexString(address);
-			log.debug("Copying data segment of {} bytes at offset 0x{} using the Unsafe object", size, xaddress);
-		}
-		unsafe.copyMemory(null, address, buffer, Unsafe.ARRAY_BYTE_BASE_OFFSET, size);
+		unsafe.putLongVolatile(null, dest, value);
 	}
 
 	/** {@inheritDoc} */
 	@Override
-	public void copyVolatile(final long address, int size, final byte[] buffer) {
-		copy(address, size, buffer);
+	public void get(final long src, int size, final byte[] dest, final int offset) {
+		if (!BuildConfig.OPTIMIZED) {
+			checkUnsafe();
+			if (src == 0) throw new IllegalArgumentException("Address must not be null");
+			else if (size <= 0) throw new IllegalArgumentException("Size must be greater than 0");
+			else if (dest == null) throw new IllegalArgumentException("Buffer must not be null");
+			else if (dest.length <= 0) throw new IllegalArgumentException("Buffer must have a capacity of at least 1");
+			else if (offset < 0) throw new IllegalArgumentException("Offset must be greater than or equal to 0");
+			else if (offset >= dest.length) throw new IllegalArgumentException("Offset cannot be greater than or equal to the buffer length");
+			size = Math.min(size, dest.length - offset);
+		}
+		if (BuildConfig.DEBUG) {
+			val xoffset = Long.toHexString(offset);
+			val xsrc = Long.toHexString(src);
+			log.debug("Reading memory region ({} B) @ 0x{} with offset {} using the Unsafe object", size, xsrc, xoffset);
+		}
+		unsafe.copyMemory(null, src, dest, Unsafe.ARRAY_BYTE_BASE_OFFSET + offset, size);
+	}
+
+	/**
+	 * Copies a memory region into a primitive byte array using volatile memory addresses.
+	 * <p>
+	 * The method will throw an {@link UnsupportedOperationException} because the {@link Unsafe} object does not provide
+	 * an implementation for this operation.
+	 * <p>
+	 * This method is marked as deprecated to prevent accidental usage and it won't be removed in future versions.
+	 *
+	 * @param src    The source memory address to copy from.
+	 * @param size   The number of bytes to copy.
+	 * @param dest   The destination primitive array to copy to.
+	 * @param offset The offset from which to start copying to.
+	 * @deprecated
+	 */
+	@Override
+	@Deprecated
+	public void getVolatile(final long src, int size, final byte[] dest, final int offset) {
+		if (!BuildConfig.OPTIMIZED) {
+			checkUnsafe();
+			if (src == 0) throw new IllegalArgumentException("Address must not be null");
+			else if (size <= 0) throw new IllegalArgumentException("Size must be greater than 0");
+			else if (dest == null) throw new IllegalArgumentException("Buffer must not be null");
+			else if (dest.length <= 0) throw new IllegalArgumentException("Buffer must have a capacity of at least 1");
+			else if (offset < 0) throw new IllegalArgumentException("Offset must be greater than or equal to 0");
+			else if (offset >= dest.length) throw new IllegalArgumentException("Offset cannot be greater than or equal to the buffer length");
+			size = Math.min(size, dest.length - offset);
+		}
+		if (BuildConfig.DEBUG) {
+			val xoffset = Long.toHexString(offset);
+			val xsrc = Long.toHexString(src);
+			log.debug("Reading volatile memory region ({} B) @ 0x{} with offset {} using the Unsafe object", size, xsrc, xoffset);
+		}
+		throw new UnsupportedOperationException("Unsafe does not provide an implementation for this operation");
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public void put(final long dest, int size, final byte[] src, int offset) {
+		if (!BuildConfig.OPTIMIZED) {
+			checkUnsafe();
+			if (dest == 0) throw new IllegalArgumentException("Address must not be null");
+			else if (size <= 0) throw new IllegalArgumentException("Size must be greater than 0");
+			else if (src == null) throw new IllegalArgumentException("Buffer must not be null");
+			else if (src.length <= 0) throw new IllegalArgumentException("Buffer must have a capacity of at least 1");
+			else if (offset < 0) throw new IllegalArgumentException("Offset must be greater than or equal to 0");
+			else if (offset >= src.length) throw new IllegalArgumentException("Offset cannot be greater than or equal to the buffer length");
+			size = Math.min(size, src.length);
+		}
+		if (BuildConfig.DEBUG) {
+			val xoffset = Long.toHexString(offset);
+			val xdest = Long.toHexString(dest);
+			log.debug("Writing buffer ({} B) @ 0x{} with offset {} using the Unsafe object", size, xdest, xoffset);
+		}
+		unsafe.copyMemory(src, Unsafe.ARRAY_BYTE_BASE_OFFSET + offset, null, dest, size);
+	}
+
+	/**
+	 * Copies a primitive byte array into a memory region using volatile memory addresses.
+	 * <p>
+	 * The method will throw an {@link UnsupportedOperationException} because the {@link Unsafe} object does not provide
+	 * an implementation for this operation.
+	 * <p>
+	 * This method is marked as deprecated to prevent accidental usage and it won't be removed in future versions.
+	 *
+	 * @param dest   The destination primitive array to copy to.
+	 * @param size   The number of bytes to copy.
+	 * @param src    The source memory address to copy from.
+	 * @param offset The offset from which to start copying to.
+	 * @deprecated
+	 */
+	@Override
+	@Deprecated
+	public void putVolatile(final long dest, int size, final byte[] src, final int offset) {
+		if (!BuildConfig.OPTIMIZED) {
+			checkUnsafe();
+			if (dest == 0) throw new IllegalArgumentException("Address must not be null");
+			else if (size <= 0) throw new IllegalArgumentException("Size must be greater than 0");
+			else if (src == null) throw new IllegalArgumentException("Buffer must not be null");
+			else if (src.length <= 0) throw new IllegalArgumentException("Buffer must have a capacity of at least 1");
+			else if (offset < 0) throw new IllegalArgumentException("Offset must be greater than or equal to 0");
+			else if (offset >= src.length) throw new IllegalArgumentException("Offset cannot be greater than or equal to the buffer length");
+			size = Math.min(size, src.length);
+		}
+		if (BuildConfig.DEBUG) {
+			val xoffset = Long.toHexString(offset);
+			val xdest = Long.toHexString(dest);
+			log.debug("Writing volatile buffer ({} B) @ 0x{} with offset {} using the Unsafe object", size, xdest, xoffset);
+		}
+		throw new UnsupportedOperationException("Unsafe does not provide an implementation for this operation");
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public void copy(final long src, final int size, final long dest) {
+		if (BuildConfig.DEBUG) {
+			val xsrc = Long.toHexString(src);
+			val xdest = Long.toHexString(dest);
+			log.debug("Copying memory region ({} B) @ 0x{} to 0x{} using the Unsafe object", size, xsrc, xdest);
+		}
+		if (!BuildConfig.OPTIMIZED) {
+			checkUnsafe();
+			if (src == 0) throw new IllegalArgumentException("Source address must not be null");
+			else if (size <= 0) throw new IllegalArgumentException("Size must be greater than 0");
+			else if (dest == 0) throw new IllegalArgumentException("Destination address must not be null");
+		}
+		unsafe.copyMemory(src, dest, size);
+	}
+
+	/**
+	 * Copies a memory region into another memory region using volatile memory addresses.
+	 * <p>
+	 * The method will throw an {@link UnsupportedOperationException} because the {@link Unsafe} object does not provide
+	 * an implementation for this operation.
+	 * <p>
+	 * This method is marked as deprecated to prevent accidental usage and it won't be removed in future versions.
+	 *
+	 * @param src  The source memory address to copy from.
+	 * @param size The number of bytes to copy.
+	 * @param dest The destination memory address to copy to.
+	 */
+	@Override
+	public void copyVolatile(long src, int size, long dest, int offset) {
+		if (BuildConfig.DEBUG) {
+			val xsrc = Long.toHexString(src);
+			val xdest = Long.toHexString(dest);
+			log.debug("Copying volatile memory region ({} B) @ 0x{} to 0x{} using the Unsafe object", size, xsrc, xdest);
+		}
+		if (!BuildConfig.OPTIMIZED) {
+			checkUnsafe();
+			if (src == 0) throw new IllegalArgumentException("Source address must not be null");
+			else if (size <= 0) throw new IllegalArgumentException("Size must be greater than 0");
+			else if (dest == 0) throw new IllegalArgumentException("Destination address must not be null");
+		}
+		throw new UnsupportedOperationException("Unsafe does not provide an implementation for this operation");
 	}
 
 	/**
@@ -489,21 +585,21 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	 * The method will throw an {@link UnsupportedOperationException} because the {@link Unsafe} object does not provide
 	 * an implementation for this operation.
 	 * <p>
-	 * This method is marked as deprecated to prevent accidental usage, however it won't be removed in future versions.
+	 * This method is marked as deprecated to prevent accidental usage and it won't be removed in future versions.
 	 *
-	 * @param address The address to translate.
-	 * @return The equivalent physical address.
+	 * @param address The memory address to translate.
+	 * @return The physical memory address.
 	 * @deprecated
 	 */
 	@Override
 	@Deprecated
 	public long virt2phys(final long address) {
-		if (!BuildConfig.OPTIMIZED) {
-			checkUnsafe();
-		}
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
 			log.debug("Translating virtual address 0x{} using the Unsafe object", xaddress);
+		}
+		if (!BuildConfig.OPTIMIZED) {
+			checkUnsafe();
 		}
 		throw new UnsupportedOperationException("Unsafe does not provide an implementation for this operation");
 	}
@@ -512,18 +608,20 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	 * Allocates {@code size} bytes.
 	 * <p>
 	 * The method will throw an {@link UnsupportedOperationException} because the {@link Unsafe} object does not provide
-	 * an implementation for this operation.
+	 * an implementation for the method {@link #virt2phys(long)}.
 	 * <p>
 	 * This method is marked as deprecated to prevent accidental usage, however it won't be removed in future versions.
 	 *
 	 * @param size       The number of bytes to allocate.
-	 * @param huge       Whether huge memory page should used.
+	 * @param huge       Whether huge memory pages should used.
 	 * @param contiguous Whether the memory region should be physically contiguous.
-	 * @return The {@link DualMemory} instance with the virtual and physical addresses.
+	 * @return The {@link DmaMemory} instance with the virtual and physical addresses.
+	 * @deprecated
 	 */
 	@Override
-	public DualMemory dmaAllocate(long size, boolean huge, boolean contiguous) {
-		if (!BuildConfig.DEBUG) log.debug("Allocating DualMemory using the Unsafe object");
+	@Deprecated
+	public IxyDmaMemory dmaAllocate(long size, boolean huge, boolean contiguous) {
+		if (!BuildConfig.DEBUG) log.debug("Allocating DmaMemory using the Unsafe object");
 		val virt = allocate(size, huge, contiguous);
 		val phys = virt2phys(virt);
 		return new DmaMemory(virt, phys);
