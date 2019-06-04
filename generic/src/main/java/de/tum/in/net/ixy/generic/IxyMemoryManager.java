@@ -245,7 +245,7 @@ public interface IxyMemoryManager {
 	 * @param size The number of bytes to copy.
 	 * @param dest The destination memory address to copy to.
 	 */
-	void copyVolatile(final long src, final int size, final long dest, final int offset);
+	void copyVolatile(final long src, final int size, final long dest);
 
 	/**
 	 * Translates a virtual memory {@code address} to its equivalent physical counterpart.
