@@ -1,5 +1,8 @@
 package de.tum.in.net.ixy.generic;
 
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.Setter;
 import lombok.val;
 
 /**
@@ -8,6 +11,100 @@ import lombok.val;
  * @author Esaú García Sánchez-Torija
  */
 public interface IxyPacketBuffer {
+
+	/**
+	 * Packet builder pattern.
+	 * <p>
+	 * This pattern is very useful when several instances need to be created with similar properties.
+	 *
+	 * @author Esaú García Sánchez-Torija
+	 */
+	abstract class Builder {
+
+		/**
+		 * The virtual address of the packet.
+		 * ----------------- GETTER -----------------
+		 * Returns the virtual address of the packet.
+		 *
+		 * @return The virtual address of the packet.
+		 * ----------------- SETTER -----------------
+		 * Sets the virtual address of the packet.
+		 *
+		 * @param virtualAddress The virtual address of the packet.
+		 */
+		@Getter
+		@Setter
+		protected long virtualAddress;
+
+		/**
+		 * The physical address of the packet.
+		 * ------------------ GETTER ------------------
+		 * Returns the physical address of the packet.
+		 * <p>
+		 * The value {@code null} is used to prevent performing memory access when building the packet.
+		 *
+		 * @return The physical address of the packet.
+		 * ---------------- SETTER ----------------
+		 * Sets the physical address of the packet.
+		 * <p>
+		 * The value {@code null} is used to prevent performing memory access when building the packet.
+		 *
+		 * @param virtualAddress The physical address of the packet.
+		 */
+		@Getter
+		@Setter
+		protected Long physicalAddress = null;
+
+		/**
+		 * The memory pool id of the packet.
+		 * ------------------ GETTER ------------------
+		 * Returns the memory pool id of the packet.
+		 * <p>
+		 * The value {@code null} is used to prevent performing memory access when building the packet.
+		 *
+		 * @return The memory pool id of the packet.
+		 * ---------------- SETTER ----------------
+		 * Sets the memory pool id of the packet.
+		 * <p>
+		 * The value {@code null} is used to prevent performing memory access when building the packet.
+		 *
+		 * @param memoryPoolId The memory pool id of the packet.
+		 */
+		@Getter
+		@Setter
+		protected Integer memoryPoolId = null;
+
+		/**
+		 * The size of the packet.
+		 * ------------------ GETTER ------------------
+		 * Returns the size of the packet.
+		 * <p>
+		 * The value {@code null} is used to prevent performing memory access when building the packet.
+		 *
+		 * @return The size of the packet.
+		 * ---------------- SETTER ----------------
+		 * Sets the size of the packet.
+		 * <p>
+		 * The value {@code null} is used to prevent performing memory access when building the packet.
+		 *
+		 * @param size The size of the packet.
+		 */
+		@Getter
+		@Setter
+		protected Integer size = null;
+
+		/**
+		 * Builds the packet with the properties of the builder.
+		 * <p>
+		 * If a property is {@code null}, it is recommended to not set it, as it may have been set on purpose to prevent
+		 * memory access.
+		 *
+		 * @return The new packet.
+		 */
+		@NonNull
+		public abstract IxyPacketBuffer build();
+
+	}
 
 	/**
 	 * Returns the virtual address in which this packet buffer is allocated.
@@ -20,12 +117,12 @@ public interface IxyPacketBuffer {
 	long getVirtualAddress();
 
 	/**
-	 * Returns the physical address in which this packet buffer is allocated.
+	 * Returns the physical memory address in which this packet buffer is allocated.
 	 * <p>
 	 * The packet should be allocated in a contiguous region of physical memory, and the address should be the first
 	 * writable byte of the packet.
 	 *
-	 * @return The physical address.
+	 * @return The physical memory address.
 	 */
 	long getPhysicalAddress();
 

@@ -5,8 +5,10 @@ import de.tum.in.net.ixy.memory.PacketBuffer;
 
 import java.util.Random;
 
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.ResourceLock;
@@ -20,7 +22,10 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assumptions.assumeThat;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atMost;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
@@ -38,22 +43,119 @@ import static org.mockito.Mockito.atMostOnce;
 @ExtendWith(MockitoExtension.class)
 final class PacketBufferTest {
 
-//	/** A cached instance of the {@link Unsafe} object. */
-//	private static Unsafe unsafe;
-//
-//	/** A cached instance of a pseudo-random number generator. */
-//	private static final Random random = new Random();
-//
-//	// Load the Unsafe object
-//	static {
-//		try {
-//			val theUnsafe = Unsafe.class.getDeclaredField("theUnsafe");
-//			theUnsafe.setAccessible(true);
-//			unsafe = (Unsafe) theUnsafe.get(null);
-//		} catch (NoSuchFieldException | IllegalAccessException e) {
-//			throw new RuntimeException(e);
-//		}
-//	}
+	@Nested
+	final class BuilderTest {
+
+		/** A constant expression used to resource lock the mocked memory manager. */
+		private static final String MOCK_LOCK = "MOCK";
+
+		/** A cached instance of a pseudo-random number generator. */
+		private final Random random = new Random();
+
+		/** Holds the packet builder. */
+		private transient PacketBuffer.Builder builder;
+
+		/** Holds a mocked memory manager. */
+		@Mock
+		private IxyMemoryManager mmanager;
+
+		// Creates the packet builder with the mocked memory manager
+		@BeforeEach
+		void setUp() {
+			builder = new PacketBuffer.Builder(mmanager);
+		}
+
+		@Test
+		@DisplayName("Wrong arguments produce exceptions")
+		void exceptions() {
+			assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> new PacketBuffer.Builder(null));
+		}
+
+		@Test
+		@ResourceLock(MOCK_LOCK)
+		@DisplayName("The virtual address can be written and read")
+		void getsetVirtualAddress() {
+			assumeThat(random).isNotNull();
+			assumeThat(builder).isNotNull();
+			val number = random.nextLong();
+			builder.setVirtualAddress(number);
+			assertThat(builder.getVirtualAddress()).as("Virtual address").isEqualTo(number);
+		}
+
+		@Test
+		@ResourceLock(MOCK_LOCK)
+		@DisplayName("The packet can be built")
+		void build() {
+			assumeThat(random).isNotNull();
+			assumeThat(builder).isNotNull();
+			assumeThat(mmanager).isNotNull();
+
+			// Generate the values
+			val virtual = random.nextLong();
+			val physical = random.nextLong();
+			val size = random.nextInt();
+			val id = random.nextInt();
+
+			// Set the values
+			builder.setVirtualAddress(virtual);
+			builder.setPhysicalAddress(physical);
+			builder.setSize(size);
+			builder.setMemoryPoolId(id);
+			reset(mmanager);
+			when(mmanager.getLong(virtual + PacketBuffer.PAP_OFFSET)).thenReturn(physical);
+			when(mmanager.getLongVolatile(virtual + PacketBuffer.PAP_OFFSET)).thenReturn(physical);
+			when(mmanager.getInt(virtual + PacketBuffer.MPI_OFFSET)).thenReturn(id);
+			when(mmanager.getIntVolatile(virtual + PacketBuffer.MPI_OFFSET)).thenReturn(id);
+			when(mmanager.getInt(virtual + PacketBuffer.PKT_OFFSET)).thenReturn(size);
+			when(mmanager.getIntVolatile(virtual + PacketBuffer.PKT_OFFSET)).thenReturn(size);
+
+			// Assert the values on the builder
+			var softly = new SoftAssertions();
+			softly.assertThat(builder.getVirtualAddress()).as("Virtual address").isEqualTo(virtual);
+			softly.assertThat(builder.getPhysicalAddress()).as("Physical address").isEqualTo(physical);
+			softly.assertThat(builder.getMemoryPoolId()).as("Memory pool id").isEqualTo(id);
+			softly.assertThat(builder.getSize()).as("Size").isEqualTo(size);
+			softly.assertAll();
+
+			// Assert the values on the built packet
+			var packet = builder.build();
+			verify(mmanager, atMost(1).description("pointers should have been written")).putLong(anyLong(), anyLong());
+			verify(mmanager, atMost(1).description("pointers should have been written")).putLongVolatile(anyLong(), anyLong());
+			verify(mmanager, atMost(2).description("values should have been written")).putInt(anyLong(), anyInt());
+			verify(mmanager, atMost(2).description("values should have been written")).putIntVolatile(anyLong(), anyInt());
+			assertThat(packet).as("Packet").isNotNull();
+			softly = new SoftAssertions();
+			softly.assertThat(packet.getVirtualAddress()).as("Virtual address").isEqualTo(virtual);
+			softly.assertThat(packet.getPhysicalAddress()).as("Physical address").isEqualTo(physical);
+			softly.assertThat(packet.getMemoryPoolId()).as("Memory pool id").isEqualTo(id);
+			softly.assertThat(packet.getSize()).as("Size").isEqualTo(size);
+			softly.assertAll();
+
+			// Don't write anything to memory
+			builder.setPhysicalAddress(null);
+			builder.setMemoryPoolId(null);
+			builder.setSize(null);
+			reset(mmanager);
+
+			// Assert again with the missing values
+			softly = new SoftAssertions();
+			softly.assertThat(builder.getVirtualAddress()).as("Virtual address").isEqualTo(virtual);
+			softly.assertThat(builder.getPhysicalAddress()).as("Physical address").isNull();
+			softly.assertThat(builder.getMemoryPoolId()).as("Memory pool id").isNull();
+			softly.assertThat(builder.getSize()).as("Size").isNull();
+			softly.assertAll();
+
+			// Assert the values on the built packet
+			packet = builder.build();
+			verify(mmanager, times(0).description("pointers should not have been written")).putLong(anyLong(), anyLong());
+			verify(mmanager, times(0).description("pointers should not have been written")).putLongVolatile(anyLong(), anyLong());
+			verify(mmanager, times(0).description("values should not have been written")).putInt(anyLong(), anyInt());
+			verify(mmanager, times(0).description("values should not have been written")).putIntVolatile(anyLong(), anyInt());
+			assertThat(packet).as("Packet").isNotNull();
+			assertThat(packet.getVirtualAddress()).as("Virtual address").isEqualTo(virtual);
+		}
+
+	}
 
 	/** A constant expression used to resource lock the mocked memory manager. */
 	private static final String MOCK_LOCK = "MOCK";
@@ -151,10 +253,11 @@ final class PacketBufferTest {
 
 	@Test
 	@ResourceLock(MOCK_LOCK)
-	@DisplayName("The physical address is correct")
+	@DisplayName("The physical address can be read")
 	void getPhysicalAddress() {
-		assumeThat(packetBuffer).isNotNull();
+		assumeThat(random).isNotNull();
 		assumeThat(mmanager).isNotNull();
+		assumeThat(packetBuffer).isNotNull();
 		val number = random.nextLong();
 		val offset = PacketBuffer.HEADER_OFFSET + PacketBuffer.PAP_OFFSET;
 		when(mmanager.getLong(virtual + offset)).thenReturn(number);
@@ -166,10 +269,26 @@ final class PacketBufferTest {
 
 	@Test
 	@ResourceLock(MOCK_LOCK)
-	@DisplayName("The memory pool index is correct")
-	void getMemoryPoolId() {
-		assumeThat(packetBuffer).isNotNull();
+	@DisplayName("The physical address can be written")
+	void setPhysicalAddress() {
+		assumeThat(random).isNotNull();
 		assumeThat(mmanager).isNotNull();
+		assumeThat(packetBuffer).isNotNull();
+		val number = random.nextLong();
+		val offset = PacketBuffer.HEADER_OFFSET + PacketBuffer.PAP_OFFSET;
+		packetBuffer.setPhysicalAddress(number);
+		verify(mmanager, atMostOnce().description("memory address should be read once")).putLong(virtual + offset, number);
+		verify(mmanager, atMostOnce().description("memory address should be read once")).putLongVolatile(virtual + offset, number);
+		reset(mmanager);
+	}
+
+	@Test
+	@ResourceLock(MOCK_LOCK)
+	@DisplayName("The memory pool index can be read")
+	void getMemoryPoolId() {
+		assumeThat(random).isNotNull();
+		assumeThat(mmanager).isNotNull();
+		assumeThat(packetBuffer).isNotNull();
 		val number = random.nextInt();
 		val offset = PacketBuffer.HEADER_OFFSET + PacketBuffer.MPI_OFFSET;
 		when(mmanager.getInt(virtual + offset)).thenReturn(number);
@@ -181,10 +300,26 @@ final class PacketBufferTest {
 
 	@Test
 	@ResourceLock(MOCK_LOCK)
+	@DisplayName("The memory pool index can be written")
+	void setMemoryPoolId() {
+		assumeThat(random).isNotNull();
+		assumeThat(mmanager).isNotNull();
+		assumeThat(packetBuffer).isNotNull();
+		val number = random.nextInt();
+		val offset = PacketBuffer.HEADER_OFFSET + PacketBuffer.MPI_OFFSET;
+		packetBuffer.setMemoryPoolId(number);
+		verify(mmanager, atMostOnce().description("memory address should be read once")).putInt(virtual + offset, number);
+		verify(mmanager, atMostOnce().description("memory address should be read once")).putIntVolatile(virtual + offset, number);
+		reset(mmanager);
+	}
+
+	@Test
+	@ResourceLock(MOCK_LOCK)
 	@DisplayName("The size can be read")
 	void getSize() {
-		assumeThat(packetBuffer).isNotNull();
+		assumeThat(random).isNotNull();
 		assumeThat(mmanager).isNotNull();
+		assumeThat(packetBuffer).isNotNull();
 		val number = random.nextInt();
 		val offset = PacketBuffer.HEADER_OFFSET + PacketBuffer.PKT_OFFSET;
 		when(mmanager.getInt(virtual + offset)).thenReturn(number);
@@ -198,8 +333,9 @@ final class PacketBufferTest {
 	@ResourceLock(MOCK_LOCK)
 	@DisplayName("The size can be written")
 	void setSize() {
-		assumeThat(packetBuffer).isNotNull();
+		assumeThat(random).isNotNull();
 		assumeThat(mmanager).isNotNull();
+		assumeThat(packetBuffer).isNotNull();
 		val number = random.nextInt();
 		val offset = PacketBuffer.HEADER_OFFSET + PacketBuffer.PKT_OFFSET;
 		packetBuffer.setSize(number);
@@ -212,8 +348,9 @@ final class PacketBufferTest {
 	@ResourceLock(MOCK_LOCK)
 	@DisplayName("A byte can be read")
 	void getByte() {
-		assumeThat(packetBuffer).isNotNull();
+		assumeThat(random).isNotNull();
 		assumeThat(mmanager).isNotNull();
+		assumeThat(packetBuffer).isNotNull();
 		val base = virtual + PacketBuffer.DATA_OFFSET;
 		val size = random.nextInt(PacketBuffer.HEADER_BYTES/2 + 1) + PacketBuffer.HEADER_BYTES/2;
 		for (var i = 0; i < size; i += 1) {
@@ -229,8 +366,9 @@ final class PacketBufferTest {
 	@ResourceLock(MOCK_LOCK)
 	@DisplayName("A volatile byte can be read")
 	void getByteVolatile() {
-		assumeThat(packetBuffer).isNotNull();
+		assumeThat(random).isNotNull();
 		assumeThat(mmanager).isNotNull();
+		assumeThat(packetBuffer).isNotNull();
 		val base = virtual + PacketBuffer.DATA_OFFSET;
 		val size = random.nextInt(PacketBuffer.HEADER_BYTES/2 + 1) + PacketBuffer.HEADER_BYTES/2;
 		for (var i = 0; i < size; i += 1) {
@@ -246,8 +384,9 @@ final class PacketBufferTest {
 	@ResourceLock(MOCK_LOCK)
 	@DisplayName("A byte can be written")
 	void putByte() {
-		assumeThat(packetBuffer).isNotNull();
+		assumeThat(random).isNotNull();
 		assumeThat(mmanager).isNotNull();
+		assumeThat(packetBuffer).isNotNull();
 		val base = virtual + PacketBuffer.DATA_OFFSET;
 		val size = random.nextInt(PacketBuffer.HEADER_BYTES/2 + 1) + PacketBuffer.HEADER_BYTES/2;
 		for (var i = 0; i < size; i += 1) {
@@ -262,8 +401,9 @@ final class PacketBufferTest {
 	@ResourceLock(MOCK_LOCK)
 	@DisplayName("A volatile byte can be written")
 	void putByteVolatile() {
-		assumeThat(packetBuffer).isNotNull();
+		assumeThat(random).isNotNull();
 		assumeThat(mmanager).isNotNull();
+		assumeThat(packetBuffer).isNotNull();
 		val base = virtual + PacketBuffer.DATA_OFFSET;
 		val size = random.nextInt(PacketBuffer.HEADER_BYTES/2 + 1) + PacketBuffer.HEADER_BYTES/2;
 		for (var i = 0; i < size; i += 1) {
@@ -278,8 +418,9 @@ final class PacketBufferTest {
 	@ResourceLock(MOCK_LOCK)
 	@DisplayName("A short can be read")
 	void getShort() {
-		assumeThat(packetBuffer).isNotNull();
+		assumeThat(random).isNotNull();
 		assumeThat(mmanager).isNotNull();
+		assumeThat(packetBuffer).isNotNull();
 		val base = virtual + PacketBuffer.DATA_OFFSET;
 		val size = random.nextInt(PacketBuffer.HEADER_BYTES/2 + 1) + PacketBuffer.HEADER_BYTES/2;
 		for (var i = 0; i < size; i += 1) {
@@ -295,8 +436,9 @@ final class PacketBufferTest {
 	@ResourceLock(MOCK_LOCK)
 	@DisplayName("A volatile short can be read")
 	void getShortVolatile() {
-		assumeThat(packetBuffer).isNotNull();
+		assumeThat(random).isNotNull();
 		assumeThat(mmanager).isNotNull();
+		assumeThat(packetBuffer).isNotNull();
 		val base = virtual + PacketBuffer.DATA_OFFSET;
 		val size = random.nextInt(PacketBuffer.HEADER_BYTES/2 + 1) + PacketBuffer.HEADER_BYTES/2;
 		for (var i = 0; i < size; i += 1) {
@@ -312,8 +454,9 @@ final class PacketBufferTest {
 	@ResourceLock(MOCK_LOCK)
 	@DisplayName("A short can be written")
 	void putShort() {
-		assumeThat(packetBuffer).isNotNull();
+		assumeThat(random).isNotNull();
 		assumeThat(mmanager).isNotNull();
+		assumeThat(packetBuffer).isNotNull();
 		val base = virtual + PacketBuffer.DATA_OFFSET;
 		val size = random.nextInt(PacketBuffer.HEADER_BYTES/2 + 1) + PacketBuffer.HEADER_BYTES/2;
 		for (var i = 0; i < size; i += 1) {
@@ -328,8 +471,9 @@ final class PacketBufferTest {
 	@ResourceLock(MOCK_LOCK)
 	@DisplayName("A volatile short can be written")
 	void putShortVolatile() {
-		assumeThat(packetBuffer).isNotNull();
+		assumeThat(random).isNotNull();
 		assumeThat(mmanager).isNotNull();
+		assumeThat(packetBuffer).isNotNull();
 		val base = virtual + PacketBuffer.DATA_OFFSET;
 		val size = random.nextInt(PacketBuffer.HEADER_BYTES/2 + 1) + PacketBuffer.HEADER_BYTES/2;
 		for (var i = 0; i < size; i += 1) {
@@ -344,8 +488,9 @@ final class PacketBufferTest {
 	@ResourceLock(MOCK_LOCK)
 	@DisplayName("A int can be read")
 	void getInt() {
-		assumeThat(packetBuffer).isNotNull();
+		assumeThat(random).isNotNull();
 		assumeThat(mmanager).isNotNull();
+		assumeThat(packetBuffer).isNotNull();
 		val base = virtual + PacketBuffer.DATA_OFFSET;
 		val size = random.nextInt(PacketBuffer.HEADER_BYTES/2 + 1) + PacketBuffer.HEADER_BYTES/2;
 		for (var i = 0; i < size; i += 1) {
@@ -361,8 +506,9 @@ final class PacketBufferTest {
 	@ResourceLock(MOCK_LOCK)
 	@DisplayName("A volatile int can be read")
 	void getIntVolatile() {
-		assumeThat(packetBuffer).isNotNull();
+		assumeThat(random).isNotNull();
 		assumeThat(mmanager).isNotNull();
+		assumeThat(packetBuffer).isNotNull();
 		val base = virtual + PacketBuffer.DATA_OFFSET;
 		val size = random.nextInt(PacketBuffer.HEADER_BYTES/2 + 1) + PacketBuffer.HEADER_BYTES/2;
 		for (var i = 0; i < size; i += 1) {
@@ -378,8 +524,9 @@ final class PacketBufferTest {
 	@ResourceLock(MOCK_LOCK)
 	@DisplayName("A int can be written")
 	void putInt() {
-		assumeThat(packetBuffer).isNotNull();
+		assumeThat(random).isNotNull();
 		assumeThat(mmanager).isNotNull();
+		assumeThat(packetBuffer).isNotNull();
 		val base = virtual + PacketBuffer.DATA_OFFSET;
 		val size = random.nextInt(PacketBuffer.HEADER_BYTES/2 + 1) + PacketBuffer.HEADER_BYTES/2;
 		for (var i = 0; i < size; i += 1) {
@@ -394,8 +541,9 @@ final class PacketBufferTest {
 	@ResourceLock(MOCK_LOCK)
 	@DisplayName("A volatile int can be written")
 	void putIntVolatile() {
-		assumeThat(packetBuffer).isNotNull();
+		assumeThat(random).isNotNull();
 		assumeThat(mmanager).isNotNull();
+		assumeThat(packetBuffer).isNotNull();
 		val base = virtual + PacketBuffer.DATA_OFFSET;
 		val size = random.nextInt(PacketBuffer.HEADER_BYTES/2 + 1) + PacketBuffer.HEADER_BYTES/2;
 		for (var i = 0; i < size; i += 1) {
@@ -410,8 +558,9 @@ final class PacketBufferTest {
 	@ResourceLock(MOCK_LOCK)
 	@DisplayName("A long can be read")
 	void getLong() {
-		assumeThat(packetBuffer).isNotNull();
+		assumeThat(random).isNotNull();
 		assumeThat(mmanager).isNotNull();
+		assumeThat(packetBuffer).isNotNull();
 		val base = virtual + PacketBuffer.DATA_OFFSET;
 		val size = random.nextInt(PacketBuffer.HEADER_BYTES/2 + 1) + PacketBuffer.HEADER_BYTES/2;
 		for (var i = 0; i < size; i += 1) {
@@ -427,8 +576,9 @@ final class PacketBufferTest {
 	@ResourceLock(MOCK_LOCK)
 	@DisplayName("A volatile long can be read")
 	void getLongVolatile() {
-		assumeThat(packetBuffer).isNotNull();
+		assumeThat(random).isNotNull();
 		assumeThat(mmanager).isNotNull();
+		assumeThat(packetBuffer).isNotNull();
 		val base = virtual + PacketBuffer.DATA_OFFSET;
 		val size = random.nextInt(PacketBuffer.HEADER_BYTES/2 + 1) + PacketBuffer.HEADER_BYTES/2;
 		for (var i = 0; i < size; i += 1) {
@@ -444,8 +594,9 @@ final class PacketBufferTest {
 	@ResourceLock(MOCK_LOCK)
 	@DisplayName("A long can be written")
 	void putLong() {
-		assumeThat(packetBuffer).isNotNull();
+		assumeThat(random).isNotNull();
 		assumeThat(mmanager).isNotNull();
+		assumeThat(packetBuffer).isNotNull();
 		val base = virtual + PacketBuffer.DATA_OFFSET;
 		val size = random.nextInt(PacketBuffer.HEADER_BYTES/2 + 1) + PacketBuffer.HEADER_BYTES/2;
 		for (var i = 0; i < size; i += 1) {
@@ -460,8 +611,9 @@ final class PacketBufferTest {
 	@ResourceLock(MOCK_LOCK)
 	@DisplayName("A volatile long can be written")
 	void putLongVolatile() {
-		assumeThat(packetBuffer).isNotNull();
+		assumeThat(random).isNotNull();
 		assumeThat(mmanager).isNotNull();
+		assumeThat(packetBuffer).isNotNull();
 		val base = virtual + PacketBuffer.DATA_OFFSET;
 		val size = random.nextInt(PacketBuffer.HEADER_BYTES/2 + 1) + PacketBuffer.HEADER_BYTES/2;
 		for (var i = 0; i < size; i += 1) {
@@ -476,8 +628,9 @@ final class PacketBufferTest {
 	@ResourceLock(MOCK_LOCK)
 	@DisplayName("A segment can be read (buffer parameter)")
 	void get3() {
-		assumeThat(packetBuffer).isNotNull();
+		assumeThat(random).isNotNull();
 		assumeThat(mmanager).isNotNull();
+		assumeThat(packetBuffer).isNotNull();
 		val bytes = new byte[PacketBuffer.HEADER_BYTES * 2];
 		random.nextBytes(bytes);
 		val copy = new byte[bytes.length];
@@ -497,8 +650,9 @@ final class PacketBufferTest {
 	@ResourceLock(MOCK_LOCK)
 	@DisplayName("A segment can be read")
 	void get2() {
-		assumeThat(packetBuffer).isNotNull();
+		assumeThat(random).isNotNull();
 		assumeThat(mmanager).isNotNull();
+		assumeThat(packetBuffer).isNotNull();
 		val bytes = new byte[PacketBuffer.HEADER_BYTES * 2];
 		random.nextBytes(bytes);
 		doAnswer(invocation -> {
@@ -517,8 +671,9 @@ final class PacketBufferTest {
 	@ResourceLock(MOCK_LOCK)
 	@DisplayName("A volatile segment can be read (buffer parameter)")
 	void getVolatile3() {
-		assumeThat(packetBuffer).isNotNull();
+		assumeThat(random).isNotNull();
 		assumeThat(mmanager).isNotNull();
+		assumeThat(packetBuffer).isNotNull();
 		val bytes = new byte[PacketBuffer.HEADER_BYTES * 2];
 		random.nextBytes(bytes);
 		val copy = new byte[bytes.length];
@@ -538,8 +693,9 @@ final class PacketBufferTest {
 	@ResourceLock(MOCK_LOCK)
 	@DisplayName("A volatile segment can be read")
 	void getVolatile2() {
-		assumeThat(packetBuffer).isNotNull();
+		assumeThat(random).isNotNull();
 		assumeThat(mmanager).isNotNull();
+		assumeThat(packetBuffer).isNotNull();
 		val bytes = new byte[PacketBuffer.HEADER_BYTES * 2];
 		random.nextBytes(bytes);
 		doAnswer(invocation -> {
@@ -558,8 +714,9 @@ final class PacketBufferTest {
 	@ResourceLock(MOCK_LOCK)
 	@DisplayName("A segment can be written")
 	void put() {
-		assumeThat(packetBuffer).isNotNull();
+		assumeThat(random).isNotNull();
 		assumeThat(mmanager).isNotNull();
+		assumeThat(packetBuffer).isNotNull();
 		val bytes = new byte[PacketBuffer.HEADER_BYTES * 2];
 		random.nextBytes(bytes);
 		packetBuffer.put(0, bytes.length, bytes);
@@ -571,8 +728,9 @@ final class PacketBufferTest {
 	@ResourceLock(MOCK_LOCK)
 	@DisplayName("A segment can be written")
 	void putVolatile() {
-		assumeThat(packetBuffer).isNotNull();
+		assumeThat(random).isNotNull();
 		assumeThat(mmanager).isNotNull();
+		assumeThat(packetBuffer).isNotNull();
 		val bytes = new byte[PacketBuffer.HEADER_BYTES * 2];
 		random.nextBytes(bytes);
 		packetBuffer.putVolatile(0, bytes.length, bytes);

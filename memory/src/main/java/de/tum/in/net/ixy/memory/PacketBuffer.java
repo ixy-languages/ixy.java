@@ -32,6 +32,57 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class PacketBuffer implements IxyPacketBuffer, Comparable<PacketBuffer>, Cloneable {
 
+	///////////////////////////////////////////////////// BUILDER //////////////////////////////////////////////////////
+
+	/** {@inheritDoc} */
+	public static final class Builder extends IxyPacketBuffer.Builder {
+
+		/** The memory manager to use with the packets. */
+		@NonNull
+		private IxyMemoryManager mmanager;
+
+		/**
+		 * Creates the packet builder with a fixed memory manager.
+		 *
+		 * @param mmanager The memory manage to use.
+		 */
+		public Builder(@NonNull final IxyMemoryManager mmanager) {
+			this.mmanager = mmanager;
+		}
+
+		/**
+		 * Sets the virtual address of the packet.
+		 * <p>
+		 * This method will automatically set the physical memory address using the underlying memory manager {@link
+		 * #mmanager}.
+		 *
+		 * @param virtualAddress The virtual address of the packet.
+		 */
+		@Override
+		public void setVirtualAddress(long virtualAddress) {
+			super.setVirtualAddress(virtualAddress);
+			physicalAddress = mmanager.virt2phys(virtualAddress);
+		}
+
+		/**
+		 * Builds the packet with the properties of the builder.
+		 * <p>
+		 * If a property is {@code null}, it won't be set.
+		 *
+		 * @return The new packet.
+		 */
+		@Override
+		@NonNull
+		public IxyPacketBuffer build() {
+			val packet = new PacketBuffer(virtualAddress, mmanager);
+			if (physicalAddress != null) packet.setPhysicalAddress(physicalAddress);
+			if (size != null) packet.setSize(size);
+			if (memoryPoolId != null) packet.setMemoryPoolId(memoryPoolId);
+			return packet;
+		}
+
+	}
+
 	//////////////////////////////////////////////////// EXCEPTIONS ////////////////////////////////////////////////////
 
 	/** Cached exception thrown when an offset is not correctly formatted. */
@@ -157,6 +208,33 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<PacketBuf
 		if (BuildConfig.DEBUG) log.trace("Instantiating packet buffer with address 0x{}", Long.toHexString(address));
 		virtualAddress = address;
 		mmanager = memoryManager;
+	}
+
+	/**
+	 * Sets the physical memory address in which this packet buffer is allocated.
+	 * <p>
+	 * The packet should be allocated in a contiguous region of physical memory, and the address should be the first
+	 * writable byte of the packet.
+	 *
+	 * @param physicalAddress The physical memory address.
+	 */
+	public void setPhysicalAddress(final long physicalAddress) {
+		if (BuildConfig.DEBUG) log.trace("Writing physical address pointer field");
+		if (!BuildConfig.OPTIMIZED) checkMemoryManager();
+		mmanager.putLong(virtualAddress + PAP_OFFSET, physicalAddress);
+	}
+
+	/**
+	 * Sets the memory pool id of the underlying packet buffer.
+	 * <p>
+	 * This method is necessary for packet generation applications.
+	 *
+	 * @param memoryPoolId The memory pool id.
+	 */
+	public void setMemoryPoolId(final int memoryPoolId) {
+		if (BuildConfig.DEBUG) log.trace("Writing memory pool index field");
+		if (!BuildConfig.OPTIMIZED) checkMemoryManager();
+		mmanager.putInt(virtualAddress + PAP_OFFSET, memoryPoolId);
 	}
 
 	/** Checks whether a memory manager has been defined. */
@@ -481,13 +559,16 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<PacketBuf
 	/** {@inheritDoc} */
 	@Override
 	public int compareTo(@NonNull final PacketBuffer that) {
+		if (BuildConfig.DEBUG) log.debug("Comparing with another packet");
 		return Long.compare(virtualAddress, that.virtualAddress);
 	}
 
 	/** {@inheritDoc} */
 	@Override
 	public PacketBuffer clone() throws CloneNotSupportedException {
-		return (PacketBuffer) super.clone();
+		val clone = (PacketBuffer) super.clone();
+		if (BuildConfig.DEBUG) log.debug("Cloning packet");
+		return clone;
 	}
 
 }
