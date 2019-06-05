@@ -24,7 +24,7 @@ final class DisabledIfOptimizedCondition implements ExecutionCondition {
 	private static final ConditionEvaluationResult ENABLED_BY_DEFAULT = enabled("@EnabledIfRoot is not present");
 
 	/** Cached evaluation result. */
-	private static final ConditionEvaluationResult CACHED_RESULT = BuildConfig.OPTIMIZED
+	private static final ConditionEvaluationResult CACHED_RESULT = !BuildConfig.OPTIMIZED
 			? enabled("The OPTIMIZED flag is false")
 			: disabled("The OPTIMIZED flag is true");
 
