@@ -14,6 +14,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
+import org.junit.jupiter.api.parallel.ResourceLock;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -33,6 +34,9 @@ import static org.assertj.core.api.Assumptions.assumeThat;
  */
 @DisplayName("UnsafeMemoryManager")
 final class UnsafeMemoryManagerTest {
+
+	/** A constant expression used to resource lock the unsafe object of the memory manager. */
+	private static final String UNSAFE_LOCK = "UNSAFE";
 
 	/** A cached instance of a pseudo-random number generator. */
 	private static final Random random = new Random();
@@ -76,8 +80,9 @@ final class UnsafeMemoryManagerTest {
 	}
 
 	@Test
-	@DisplayName("Wrong arguments produce exceptions")
 	@DisabledIfOptimized
+	@ResourceLock(UNSAFE_LOCK)
+	@DisplayName("Wrong arguments produce exceptions")
 	void exceptions() {
 		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.allocate(-1, false, false));
 		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.free(0, 0, false));
@@ -128,6 +133,13 @@ final class UnsafeMemoryManagerTest {
 		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.copyVolatile(0, 0, 0));
 		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.copyVolatile(1, 0, 0));
 		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.copyVolatile(1, 1, 0));
+	}
+
+	@Test
+	@DisabledIfOptimized
+	@ResourceLock(UNSAFE_LOCK)
+	@DisplayName("Missing unsafe object produces exceptions")
+	void stateException() {
 		try {
 			val unsafeField = UnsafeMemoryManager.class.getDeclaredField("unsafe");
 			unsafeField.setAccessible(true);
@@ -166,6 +178,7 @@ final class UnsafeMemoryManagerTest {
 	}
 
 	@Test
+	@ResourceLock(UNSAFE_LOCK)
 	@DisplayName("Page size can be computed")
 	void pageSize() {
 		assumeThat(mmanager).isNotNull();
@@ -176,6 +189,7 @@ final class UnsafeMemoryManagerTest {
 	}
 
 	@Test
+	@ResourceLock(UNSAFE_LOCK)
 	@DisplayName("Address size can be computed")
 	void addressSize() {
 		assumeThat(mmanager).isNotNull();
@@ -186,6 +200,7 @@ final class UnsafeMemoryManagerTest {
 	}
 
 	@Test
+	@ResourceLock(UNSAFE_LOCK)
 	@SuppressWarnings("deprecation")
 	@DisplayName("Huge memory page size cannot be computed")
 	void hugepageSize() {
@@ -195,6 +210,7 @@ final class UnsafeMemoryManagerTest {
 
 	@ParameterizedTest(name = "Memory can be allocated and freed (size={0}; huge={1}; contiguous={2})")
 	@MethodSource("allocateSource")
+	@ResourceLock(UNSAFE_LOCK)
 	@EnabledIfRoot
 	void allocate_free(final Long size, final Boolean huge, final Boolean contiguous) {
 		assumeThat(unsafe).isNotNull();
@@ -255,6 +271,7 @@ final class UnsafeMemoryManagerTest {
 	}
 
 	@Test
+	@ResourceLock(UNSAFE_LOCK)
 	@DisplayName("Arbitrary bytes can be written and read")
 	void getputByte() {
 		assumeThat(mmanager).isNotNull();
@@ -274,6 +291,7 @@ final class UnsafeMemoryManagerTest {
 	}
 
 	@Test
+	@ResourceLock(UNSAFE_LOCK)
 	@DisplayName("Arbitrary bytes can be written and read (volatile)")
 	void getputByteVolatile() {
 		assumeThat(mmanager).isNotNull();
@@ -293,6 +311,7 @@ final class UnsafeMemoryManagerTest {
 	}
 
 	@Test
+	@ResourceLock(UNSAFE_LOCK)
 	@DisplayName("Arbitrary shorts can be written and read")
 	void getputShort() {
 		assumeThat(mmanager).isNotNull();
@@ -312,6 +331,7 @@ final class UnsafeMemoryManagerTest {
 	}
 
 	@Test
+	@ResourceLock(UNSAFE_LOCK)
 	@DisplayName("Arbitrary shorts can be written and read (volatile)")
 	void getputShortVolatile() {
 		assumeThat(mmanager).isNotNull();
@@ -331,6 +351,7 @@ final class UnsafeMemoryManagerTest {
 	}
 
 	@Test
+	@ResourceLock(UNSAFE_LOCK)
 	@DisplayName("Arbitrary ints can be written and read")
 	void getputInt() {
 		assumeThat(mmanager).isNotNull();
@@ -350,6 +371,7 @@ final class UnsafeMemoryManagerTest {
 	}
 
 	@Test
+	@ResourceLock(UNSAFE_LOCK)
 	@DisplayName("Arbitrary ints can be written and read (volatile)")
 	void getputIntVolatile() {
 		assumeThat(mmanager).isNotNull();
@@ -369,6 +391,7 @@ final class UnsafeMemoryManagerTest {
 	}
 
 	@Test
+	@ResourceLock(UNSAFE_LOCK)
 	@DisplayName("Arbitrary longs can be written and read")
 	void getputLong() {
 		assumeThat(mmanager).isNotNull();
@@ -388,6 +411,7 @@ final class UnsafeMemoryManagerTest {
 	}
 
 	@Test
+	@ResourceLock(UNSAFE_LOCK)
 	@DisplayName("Arbitrary longs can be written and read (volatile)")
 	void getputLongVolatile() {
 		assumeThat(mmanager).isNotNull();
@@ -406,6 +430,7 @@ final class UnsafeMemoryManagerTest {
 	}
 
 	@Test
+	@ResourceLock(UNSAFE_LOCK)
 	@DisplayName("Direct memory can be copied from/to the JVM heap")
 	void getput() {
 		assumeThat(mmanager).isNotNull();
@@ -432,6 +457,7 @@ final class UnsafeMemoryManagerTest {
 	}
 
 	@Test
+	@ResourceLock(UNSAFE_LOCK)
 	@DisplayName("Direct memory can be copied from/to the JVM heap (volatile)")
 	void getputVolatile() {
 		assumeThat(mmanager).isNotNull();
@@ -457,6 +483,7 @@ final class UnsafeMemoryManagerTest {
 	}
 
 	@Test
+	@ResourceLock(UNSAFE_LOCK)
 	@DisplayName("Direct memory can be copied to another region")
 	void copy() {
 		assumeThat(mmanager).isNotNull();
@@ -487,6 +514,7 @@ final class UnsafeMemoryManagerTest {
 	}
 
 	@Test
+	@ResourceLock(UNSAFE_LOCK)
 	@DisplayName("Direct memory can be copied to another region (volatile)")
 	void copyVolatile() {
 		assumeThat(mmanager).isNotNull();
@@ -507,6 +535,7 @@ final class UnsafeMemoryManagerTest {
 
 	@Test
 	@EnabledOnOs(OS.LINUX)
+	@ResourceLock(UNSAFE_LOCK)
 	@SuppressWarnings("deprecation")
 	@DisplayName("Virtual addresses can be translated to physical addresses")
 	void virt2phys() {
@@ -526,6 +555,7 @@ final class UnsafeMemoryManagerTest {
 
 	@Test
 	@EnabledIfRoot
+	@ResourceLock(UNSAFE_LOCK)
 	@DisplayName("DmaMemory cannot be allocated")
 	void dmaAllocate() {
 		assumeThat(mmanager).isNotNull();

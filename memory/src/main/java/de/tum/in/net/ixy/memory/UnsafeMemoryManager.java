@@ -24,6 +24,8 @@ import lombok.val;
 @Slf4j
 public final class UnsafeMemoryManager implements IxyMemoryManager {
 
+	//////////////////////////////////////////////////// EXCEPTIONS ////////////////////////////////////////////////////
+
 	/** Cached exception thrown by the methods that cannot be implemented using the {@link Unsafe} object. */
 	private static final UnsupportedOperationException UNSUPPORTED = new UnsupportedOperationException("Unsafe does not provide an implementation for this operation");
 
@@ -33,8 +35,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	/** Cached exception thrown by the methods that need a size and it is not correctly formatted. */
 	private static final IllegalArgumentException SIZE = new IllegalArgumentException("Size must be an integer greater than 0");
 
-	/** The unsafe object that will do all the operations. */
-	private transient Unsafe unsafe;
+	////////////////////////////////////////////////// STATIC METHODS //////////////////////////////////////////////////
 
 	/**
 	 * Cached instance to use as singleton.
@@ -46,6 +47,68 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	@Getter
 	@Setter(AccessLevel.NONE)
 	private static final UnsafeMemoryManager instance = new UnsafeMemoryManager();
+
+	/**
+	 * Common checks performed by {@link #get(long, int, byte[], int)} and {@link #getVolatile(long, int, byte[], int)}.
+	 * <p>
+	 * If one the parameters is not formatted correctly, an {@link IllegalArgumentException} will be thrown.
+	 *
+	 * @param src    The source memory address to copy from.
+	 * @param size   The number of bytes to copy.
+	 * @param dest   The destination primitive array to copy to.
+	 * @param offset The offset from which to start copying to.
+	 */
+	@SuppressWarnings("Duplicates")
+	private static void getCheck(final long src, int size, final byte[] dest, final int offset) {
+		if (src == 0) throw ADDRESS;
+		else if (size <= 0) throw SIZE;
+		else if (dest == null) throw new IllegalArgumentException("Buffer must not be null");
+		else if (dest.length <= 0) throw new IllegalArgumentException("Buffer must have a capacity of at least 1");
+		else if (offset < 0) throw new IllegalArgumentException("Offset must be greater than or equal to 0");
+		else if (offset >= dest.length) throw new IllegalArgumentException("Offset cannot be greater than or equal to the buffer length");
+	}
+
+	/**
+	 * Common checks performed by {@link #put(long, int, byte[], int)} and {@link #putVolatile(long, int, byte[], int)}.
+	 * <p>
+	 * If one the parameters is not formatted correctly, an {@link IllegalArgumentException} will be thrown.
+	 *
+	 * @param dest   The destination primitive array to copy to.
+	 * @param size   The number of bytes to copy.
+	 * @param src    The source memory address to copy from.
+	 * @param offset The offset from which to start copying to.
+	 */
+	@SuppressWarnings("Duplicates")
+	private static void putCheck(final long dest, int size, final byte[] src, final int offset) {
+		if (dest == 0) throw ADDRESS;
+		else if (size <= 0) throw SIZE;
+		else if (src == null) throw new IllegalArgumentException("Buffer must not be null");
+		else if (src.length <= 0) throw new IllegalArgumentException("Buffer must have a capacity of at least 1");
+		else if (offset < 0) throw new IllegalArgumentException("Offset must be greater than or equal to 0");
+		else if (offset >= src.length) throw new IllegalArgumentException("Offset cannot be greater than or equal to the buffer length");
+	}
+
+	/**
+	 * Common checks performed by {@link #copy(long, int, long)} and {@link #copyVolatile(long, int, long)}.
+	 * <p>
+	 * If one the parameters is not formatted correctly, an {@link IllegalArgumentException} will be thrown.
+	 *
+	 * @param src  The source memory address to copy from.
+	 * @param size The number of bytes to copy.
+	 * @param dest The destination memory address to copy to.
+	 */
+	private static void copyCheck(final long src, final int size, final long dest) {
+		if (src == 0) throw ADDRESS;
+		else if (size <= 0) throw SIZE;
+		else if (dest == 0) throw ADDRESS;
+	}
+
+	///////////////////////////////////////////////////// MEMBERS //////////////////////////////////////////////////////
+
+	/** The unsafe object that will do all the operations. */
+	private transient Unsafe unsafe;
+
+	//////////////////////////////////////////////// NON-STATIC METHODS ////////////////////////////////////////////////
 
 	/**
 	 * Once-callable private constructor.
@@ -76,21 +139,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		if (unsafe == null) throw new IllegalStateException("The Unsafe object is not available");
 	}
 
-	/** {@inheritDoc} */
-	@Override
-	public int addressSize() {
-		if (BuildConfig.DEBUG) log.debug("Computing address size using the Unsafe object");
-		if (!BuildConfig.OPTIMIZED) checkUnsafe();
-		return unsafe.addressSize();
-	}
-
-	/** {@inheritDoc} */
-	@Override
-	public long pageSize() {
-		if (BuildConfig.DEBUG) log.debug("Computing page size using the Unsafe object");
-		if (!BuildConfig.OPTIMIZED) checkUnsafe();
-		return unsafe.pageSize();
-	}
+	/////////////////////////////////////////////// UNSUPPORTED METHODS ////////////////////////////////////////////////
 
 	/**
 	 * Computes the size of a huge memory page.
@@ -197,6 +246,160 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 			}
 		}
 		return true;
+	}
+
+	/**
+	 * Copies a memory region into a primitive byte array using volatile memory addresses.
+	 * <p>
+	 * The method will throw an {@link UnsupportedOperationException} because the {@link Unsafe} object does not provide
+	 * an implementation for this operation.
+	 * <p>
+	 * This method is marked as deprecated to prevent accidental usage and it won't be removed in future versions.
+	 *
+	 * @param src    The source memory address to copy from.
+	 * @param size   The number of bytes to copy.
+	 * @param dest   The destination primitive array to copy to.
+	 * @param offset The offset from which to start copying to.
+	 * @deprecated
+	 */
+	@Override
+	@Deprecated
+	public void getVolatile(final long src, int size, final byte[] dest, final int offset) {
+		if (!BuildConfig.OPTIMIZED) {
+			checkUnsafe();
+			getCheck(src, size, dest, offset);
+			size = Math.min(size, dest.length - offset);
+		}
+		if (BuildConfig.DEBUG) {
+			val xoffset = Long.toHexString(offset);
+			val xsrc = Long.toHexString(src);
+			log.debug("Reading volatile memory region ({} B) @ 0x{} with offset {} using the Unsafe object", size, xsrc, xoffset);
+		}
+		throw UNSUPPORTED;
+	}
+
+	/**
+	 * Copies a primitive byte array into a memory region using volatile memory addresses.
+	 * <p>
+	 * The method will throw an {@link UnsupportedOperationException} because the {@link Unsafe} object does not provide
+	 * an implementation for this operation.
+	 * <p>
+	 * This method is marked as deprecated to prevent accidental usage and it won't be removed in future versions.
+	 *
+	 * @param dest   The destination primitive array to copy to.
+	 * @param size   The number of bytes to copy.
+	 * @param src    The source memory address to copy from.
+	 * @param offset The offset from which to start copying to.
+	 * @deprecated
+	 */
+	@Override
+	@Deprecated
+	public void putVolatile(final long dest, int size, final byte[] src, final int offset) {
+		if (!BuildConfig.OPTIMIZED) {
+			checkUnsafe();
+			putCheck(dest, size, src, offset);
+			size = Math.min(size, src.length);
+		}
+		if (BuildConfig.DEBUG) {
+			val xoffset = Long.toHexString(offset);
+			val xdest = Long.toHexString(dest);
+			log.debug("Writing volatile buffer ({} B) @ 0x{} with offset {} using the Unsafe object", size, xdest, xoffset);
+		}
+		throw UNSUPPORTED;
+	}
+
+	/**
+	 * Copies a memory region into another memory region using volatile memory addresses.
+	 * <p>
+	 * The method will throw an {@link UnsupportedOperationException} because the {@link Unsafe} object does not provide
+	 * an implementation for this operation.
+	 * <p>
+	 * This method is marked as deprecated to prevent accidental usage and it won't be removed in future versions.
+	 *
+	 * @param src  The source memory address to copy from.
+	 * @param size The number of bytes to copy.
+	 * @param dest The destination memory address to copy to.
+	 * @deprecated
+	 */
+	@Override
+	@Deprecated
+	public void copyVolatile(final long src, final int size, final long dest) {
+		if (BuildConfig.DEBUG) {
+			val xsrc = Long.toHexString(src);
+			val xdest = Long.toHexString(dest);
+			log.debug("Copying volatile memory region ({} B) @ 0x{} to 0x{} using the Unsafe object", size, xsrc, xdest);
+		}
+		if (!BuildConfig.OPTIMIZED) {
+			checkUnsafe();
+			copyCheck(src, size, dest);
+		}
+		throw UNSUPPORTED;
+	}
+
+	/**
+	 * Translates a virtual memory {@code address} to its equivalent physical counterpart.
+	 * <p>
+	 * The method will throw an {@link UnsupportedOperationException} because the {@link Unsafe} object does not provide
+	 * an implementation for this operation.
+	 * <p>
+	 * This method is marked as deprecated to prevent accidental usage and it won't be removed in future versions.
+	 *
+	 * @param address The memory address to translate.
+	 * @return The physical memory address.
+	 * @deprecated
+	 */
+	@Override
+	@Deprecated
+	public long virt2phys(final long address) {
+		if (BuildConfig.DEBUG) {
+			val xaddress = Long.toHexString(address);
+			log.debug("Translating virtual address 0x{} using the Unsafe object", xaddress);
+		}
+		if (!BuildConfig.OPTIMIZED) {
+			checkUnsafe();
+		}
+		throw UNSUPPORTED;
+	}
+
+	/**
+	 * Allocates {@code size} bytes.
+	 * <p>
+	 * The method will throw an {@link UnsupportedOperationException} because the {@link Unsafe} object does not provide
+	 * an implementation for the method {@link #virt2phys(long)}.
+	 * <p>
+	 * This method is marked as deprecated to prevent accidental usage, however it won't be removed in future versions.
+	 *
+	 * @param size       The number of bytes to allocate.
+	 * @param huge       Whether huge memory pages should used.
+	 * @param contiguous Whether the memory region should be physically contiguous.
+	 * @return The {@link DmaMemory} instance with the virtual and physical addresses.
+	 * @deprecated
+	 */
+	@Override
+	@Deprecated
+	public IxyDmaMemory dmaAllocate(long size, boolean huge, boolean contiguous) {
+		if (!BuildConfig.DEBUG) log.debug("Allocating DmaMemory using the Unsafe object");
+		val virt = allocate(size, huge, contiguous);
+		val phys = virt2phys(virt);
+		return new DmaMemory(virt, phys);
+	}
+
+	//////////////////////////////////////////////// OVERRIDDEN METHODS ////////////////////////////////////////////////
+
+	/** {@inheritDoc} */
+	@Override
+	public int addressSize() {
+		if (BuildConfig.DEBUG) log.debug("Computing address size using the Unsafe object");
+		if (!BuildConfig.OPTIMIZED) checkUnsafe();
+		return unsafe.addressSize();
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public long pageSize() {
+		if (BuildConfig.DEBUG) log.debug("Computing page size using the Unsafe object");
+		if (!BuildConfig.OPTIMIZED) checkUnsafe();
+		return unsafe.pageSize();
 	}
 
 	/** {@inheritDoc} */
@@ -447,56 +650,6 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		unsafe.copyMemory(null, src, dest, Unsafe.ARRAY_BYTE_BASE_OFFSET + offset, size);
 	}
 
-	/**
-	 * Copies a memory region into a primitive byte array using volatile memory addresses.
-	 * <p>
-	 * The method will throw an {@link UnsupportedOperationException} because the {@link Unsafe} object does not provide
-	 * an implementation for this operation.
-	 * <p>
-	 * This method is marked as deprecated to prevent accidental usage and it won't be removed in future versions.
-	 *
-	 * @param src    The source memory address to copy from.
-	 * @param size   The number of bytes to copy.
-	 * @param dest   The destination primitive array to copy to.
-	 * @param offset The offset from which to start copying to.
-	 * @deprecated
-	 */
-	@Override
-	@Deprecated
-	public void getVolatile(final long src, int size, final byte[] dest, final int offset) {
-		if (!BuildConfig.OPTIMIZED) {
-			checkUnsafe();
-			getCheck(src, size, dest, offset);
-			size = Math.min(size, dest.length - offset);
-		}
-		if (BuildConfig.DEBUG) {
-			val xoffset = Long.toHexString(offset);
-			val xsrc = Long.toHexString(src);
-			log.debug("Reading volatile memory region ({} B) @ 0x{} with offset {} using the Unsafe object", size, xsrc, xoffset);
-		}
-		throw UNSUPPORTED;
-	}
-
-	/**
-	 * Common checks performed by {@link #get(long, int, byte[], int)} and {@link #getVolatile(long, int, byte[], int)}.
-	 * <p>
-	 * If one the parameters is not formatted correctly, an {@link IllegalArgumentException} will be thrown.
-	 *
-	 * @param src    The source memory address to copy from.
-	 * @param size   The number of bytes to copy.
-	 * @param dest   The destination primitive array to copy to.
-	 * @param offset The offset from which to start copying to.
-	 */
-	@SuppressWarnings("Duplicates")
-	private void getCheck(final long src, int size, final byte[] dest, final int offset) {
-		if (src == 0) throw ADDRESS;
-		else if (size <= 0) throw SIZE;
-		else if (dest == null) throw new IllegalArgumentException("Buffer must not be null");
-		else if (dest.length <= 0) throw new IllegalArgumentException("Buffer must have a capacity of at least 1");
-		else if (offset < 0) throw new IllegalArgumentException("Offset must be greater than or equal to 0");
-		else if (offset >= dest.length) throw new IllegalArgumentException("Offset cannot be greater than or equal to the buffer length");
-	}
-
 	/** {@inheritDoc} */
 	@Override
 	public void put(final long dest, int size, final byte[] src, int offset) {
@@ -513,56 +666,6 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		unsafe.copyMemory(src, Unsafe.ARRAY_BYTE_BASE_OFFSET + offset, null, dest, size);
 	}
 
-	/**
-	 * Copies a primitive byte array into a memory region using volatile memory addresses.
-	 * <p>
-	 * The method will throw an {@link UnsupportedOperationException} because the {@link Unsafe} object does not provide
-	 * an implementation for this operation.
-	 * <p>
-	 * This method is marked as deprecated to prevent accidental usage and it won't be removed in future versions.
-	 *
-	 * @param dest   The destination primitive array to copy to.
-	 * @param size   The number of bytes to copy.
-	 * @param src    The source memory address to copy from.
-	 * @param offset The offset from which to start copying to.
-	 * @deprecated
-	 */
-	@Override
-	@Deprecated
-	public void putVolatile(final long dest, int size, final byte[] src, final int offset) {
-		if (!BuildConfig.OPTIMIZED) {
-			checkUnsafe();
-			putCheck(dest, size, src, offset);
-			size = Math.min(size, src.length);
-		}
-		if (BuildConfig.DEBUG) {
-			val xoffset = Long.toHexString(offset);
-			val xdest = Long.toHexString(dest);
-			log.debug("Writing volatile buffer ({} B) @ 0x{} with offset {} using the Unsafe object", size, xdest, xoffset);
-		}
-		throw UNSUPPORTED;
-	}
-
-	/**
-	 * Common checks performed by {@link #put(long, int, byte[], int)} and {@link #putVolatile(long, int, byte[], int)}.
-	 * <p>
-	 * If one the parameters is not formatted correctly, an {@link IllegalArgumentException} will be thrown.
-	 *
-	 * @param dest   The destination primitive array to copy to.
-	 * @param size   The number of bytes to copy.
-	 * @param src    The source memory address to copy from.
-	 * @param offset The offset from which to start copying to.
-	 */
-	@SuppressWarnings("Duplicates")
-	private void putCheck(final long dest, int size, final byte[] src, final int offset) {
-		if (dest == 0) throw ADDRESS;
-		else if (size <= 0) throw SIZE;
-		else if (src == null) throw new IllegalArgumentException("Buffer must not be null");
-		else if (src.length <= 0) throw new IllegalArgumentException("Buffer must have a capacity of at least 1");
-		else if (offset < 0) throw new IllegalArgumentException("Offset must be greater than or equal to 0");
-		else if (offset >= src.length) throw new IllegalArgumentException("Offset cannot be greater than or equal to the buffer length");
-	}
-
 	/** {@inheritDoc} */
 	@Override
 	public void copy(final long src, final int size, final long dest) {
@@ -576,97 +679,6 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 			copyCheck(src, size, dest);
 		}
 		unsafe.copyMemory(src, dest, size);
-	}
-
-	/**
-	 * Copies a memory region into another memory region using volatile memory addresses.
-	 * <p>
-	 * The method will throw an {@link UnsupportedOperationException} because the {@link Unsafe} object does not provide
-	 * an implementation for this operation.
-	 * <p>
-	 * This method is marked as deprecated to prevent accidental usage and it won't be removed in future versions.
-	 *
-	 * @param src  The source memory address to copy from.
-	 * @param size The number of bytes to copy.
-	 * @param dest The destination memory address to copy to.
-	 * @deprecated
-	 */
-	@Override
-	@Deprecated
-	public void copyVolatile(final long src, final int size, final long dest) {
-		if (BuildConfig.DEBUG) {
-			val xsrc = Long.toHexString(src);
-			val xdest = Long.toHexString(dest);
-			log.debug("Copying volatile memory region ({} B) @ 0x{} to 0x{} using the Unsafe object", size, xsrc, xdest);
-		}
-		if (!BuildConfig.OPTIMIZED) {
-			checkUnsafe();
-			copyCheck(src, size, dest);
-		}
-		throw UNSUPPORTED;
-	}
-
-	/**
-	 * Common checks performed by {@link #copy(long, int, long)} and {@link #copyVolatile(long, int, long)}.
-	 * <p>
-	 * If one the parameters is not formatted correctly, an {@link IllegalArgumentException} will be thrown.
-	 *
-	 * @param src  The source memory address to copy from.
-	 * @param size The number of bytes to copy.
-	 * @param dest The destination memory address to copy to.
-	 */
-	private void copyCheck(final long src, final int size, final long dest) {
-		if (src == 0) throw ADDRESS;
-		else if (size <= 0) throw SIZE;
-		else if (dest == 0) throw ADDRESS;
-	}
-
-	/**
-	 * Translates a virtual memory {@code address} to its equivalent physical counterpart.
-	 * <p>
-	 * The method will throw an {@link UnsupportedOperationException} because the {@link Unsafe} object does not provide
-	 * an implementation for this operation.
-	 * <p>
-	 * This method is marked as deprecated to prevent accidental usage and it won't be removed in future versions.
-	 *
-	 * @param address The memory address to translate.
-	 * @return The physical memory address.
-	 * @deprecated
-	 */
-	@Override
-	@Deprecated
-	public long virt2phys(final long address) {
-		if (BuildConfig.DEBUG) {
-			val xaddress = Long.toHexString(address);
-			log.debug("Translating virtual address 0x{} using the Unsafe object", xaddress);
-		}
-		if (!BuildConfig.OPTIMIZED) {
-			checkUnsafe();
-		}
-		throw UNSUPPORTED;
-	}
-
-	/**
-	 * Allocates {@code size} bytes.
-	 * <p>
-	 * The method will throw an {@link UnsupportedOperationException} because the {@link Unsafe} object does not provide
-	 * an implementation for the method {@link #virt2phys(long)}.
-	 * <p>
-	 * This method is marked as deprecated to prevent accidental usage, however it won't be removed in future versions.
-	 *
-	 * @param size       The number of bytes to allocate.
-	 * @param huge       Whether huge memory pages should used.
-	 * @param contiguous Whether the memory region should be physically contiguous.
-	 * @return The {@link DmaMemory} instance with the virtual and physical addresses.
-	 * @deprecated
-	 */
-	@Override
-	@Deprecated
-	public IxyDmaMemory dmaAllocate(long size, boolean huge, boolean contiguous) {
-		if (!BuildConfig.DEBUG) log.debug("Allocating DmaMemory using the Unsafe object");
-		val virt = allocate(size, huge, contiguous);
-		val phys = virt2phys(virt);
-		return new DmaMemory(virt, phys);
 	}
 
 }

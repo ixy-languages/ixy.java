@@ -16,6 +16,7 @@ import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.junit.jupiter.api.parallel.ResourceLock;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -37,6 +38,9 @@ import static org.assertj.core.api.Assumptions.assumeThat;
 @DisplayName("JniMemoryManager")
 @Execution(ExecutionMode.SAME_THREAD)
 final class JniMemoryManagerTest {
+
+	/** A constant expression used to resource lock the cached huge memory page size of the memory manager. */
+	private static final String HUGEPAGE_LOCK = "CACHED_HUGEPAGE_SIZE";
 
 	/** A cached instance of a pseudo-random number generator. */
 	private static final Random random = new Random();
@@ -80,8 +84,8 @@ final class JniMemoryManagerTest {
 	}
 
 	@Test
-	@DisplayName("Wrong arguments produce exceptions")
 	@DisabledIfOptimized
+	@DisplayName("Wrong arguments produce exceptions")
 	void exceptions() {
 		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.allocate(-1, false, false));
 		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.free(0, 0, false));
@@ -132,6 +136,12 @@ final class JniMemoryManagerTest {
 		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.copyVolatile(0, 0, 0));
 		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.copyVolatile(1, 0, 0));
 		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.copyVolatile(1, 1, 0));
+	}
+
+	@Test
+	@ResourceLock(HUGEPAGE_LOCK)
+	@DisplayName("Wrong huge memory page size produces exceptions")
+	void stateExceptions() {
 		try {
 			val hugepageSizeField = JniMemoryManager.class.getDeclaredField("HUGE_PAGE_SIZE");
 			hugepageSizeField.setAccessible(true);
@@ -179,6 +189,7 @@ final class JniMemoryManagerTest {
 
 	@ParameterizedTest(name = "Memory can be allocated and freed (size={0}; huge={1}; contiguous={2})")
 	@MethodSource("allocateSource")
+	@ResourceLock(HUGEPAGE_LOCK)
 	@EnabledIfRoot
 	void allocate_free(final Long size, final Boolean huge, final Boolean contiguous) {
 		assumeThat(unsafe).isNotNull();
@@ -382,6 +393,7 @@ final class JniMemoryManagerTest {
 	}
 
 	@Test
+	@ResourceLock(HUGEPAGE_LOCK)
 	@DisplayName("Arbitrary longs can be written and read (volatile)")
 	void getputLongVolatile() {
 		assumeThat(mmanager).isNotNull();

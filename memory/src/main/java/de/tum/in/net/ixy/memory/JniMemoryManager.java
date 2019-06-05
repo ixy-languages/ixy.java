@@ -19,11 +19,15 @@ import lombok.val;
 @Slf4j
 public final class JniMemoryManager implements IxyMemoryManager {
 
+	//////////////////////////////////////////////////// EXCEPTIONS ////////////////////////////////////////////////////
+
 	/** Cached exception thrown by the methods that need a virtual memory address and it is not correctly formatted. */
 	private static final IllegalArgumentException ADDRESS = new IllegalArgumentException("Address must not be null");
 
 	/** Cached exception thrown by the methods that need a size and it is not correctly formatted. */
 	private static final IllegalArgumentException SIZE = new IllegalArgumentException("Size must be an integer greater than 0");
+
+	////////////////////////////////////////////////// STATIC METHODS //////////////////////////////////////////////////
 
 	/** Cached huge page size. */
 	private static long HUGE_PAGE_SIZE;
@@ -40,16 +44,62 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	private static final JniMemoryManager instance = new JniMemoryManager();
 
 	/**
-	 * Once-callable private constructor.
+	 * Common checks performed by {@link #get(long, int, byte[], int)} and {@link #getVolatile(long, int, byte[],
+	 * int)}.
 	 * <p>
-	 * This constructor will check if the member {@link #instance} is {@code null} or not. Because the member {@link
-	 * #instance} is initialized with a new instance of this class, any further attempts to instantiate it will produce
-	 * an {@link IllegalStateException} to be thrown.
+	 * If one the parameters is not formatted correctly, an {@link IllegalArgumentException} will be thrown.
+	 *
+	 * @param src    The source memory address to copy from.
+	 * @param size   The number of bytes to copy.
+	 * @param dest   The destination primitive array to copy to.
+	 * @param offset The offset from which to start copying to.
 	 */
-	private JniMemoryManager() {
-		if (BuildConfig.DEBUG) log.debug("Creating an Unsafe-backed memory manager");
-		if (instance != null)
-			throw new IllegalStateException("An instance cannot be created twice. Use getInstance() instead.");
+	@SuppressWarnings("Duplicates")
+	private static void getCheck(final long src, int size, final byte[] dest, final int offset) {
+		if (src == 0) throw ADDRESS;
+		else if (size <= 0) throw SIZE;
+		else if (dest == null) throw new IllegalArgumentException("Buffer must not be null");
+		else if (dest.length <= 0) throw new IllegalArgumentException("Buffer must have a capacity of at least 1");
+		else if (offset < 0) throw new IllegalArgumentException("Offset must be greater than or equal to 0");
+		else if (offset >= dest.length)
+			throw new IllegalArgumentException("Offset cannot be greater than or equal to the buffer length");
+	}
+
+	/**
+	 * Common checks performed by {@link #put(long, int, byte[], int)} and {@link #putVolatile(long, int, byte[],
+	 * int)}.
+	 * <p>
+	 * If one the parameters is not formatted correctly, an {@link IllegalArgumentException} will be thrown.
+	 *
+	 * @param dest   The destination primitive array to copy to.
+	 * @param size   The number of bytes to copy.
+	 * @param src    The source memory address to copy from.
+	 * @param offset The offset from which to start copying to.
+	 */
+	@SuppressWarnings("Duplicates")
+	private static void putCheck(final long dest, int size, final byte[] src, final int offset) {
+		if (dest == 0) throw ADDRESS;
+		else if (size <= 0) throw SIZE;
+		else if (src == null) throw new IllegalArgumentException("Buffer must not be null");
+		else if (src.length <= 0) throw new IllegalArgumentException("Buffer must have a capacity of at least 1");
+		else if (offset < 0) throw new IllegalArgumentException("Offset must be greater than or equal to 0");
+		else if (offset >= src.length)
+			throw new IllegalArgumentException("Offset cannot be greater than or equal to the buffer length");
+	}
+
+	/**
+	 * Common checks performed by {@link #copy(long, int, long)} and {@link #copyVolatile(long, int, long)}.
+	 * <p>
+	 * If one the parameters is not formatted correctly, an {@link IllegalArgumentException} will be thrown.
+	 *
+	 * @param src  The source memory address to copy from.
+	 * @param size The number of bytes to copy.
+	 * @param dest The destination memory address to copy to.
+	 */
+	private static void copyCheck(final long src, final int size, final long dest) {
+		if (src == 0) throw ADDRESS;
+		else if (size <= 0) throw SIZE;
+		else if (dest == 0) throw ADDRESS;
 	}
 
 	// Load the native library and cache the huge memory page size
@@ -329,6 +379,21 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 * @return The physical memory address.
 	 */
 	private static native long c_virt2phys(final long address);
+
+	//////////////////////////////////////////////// NON-STATIC METHODS ////////////////////////////////////////////////
+
+	/**
+	 * Once-callable private constructor.
+	 * <p>
+	 * This constructor will check if the member {@link #instance} is {@code null} or not. Because the member {@link
+	 * #instance} is initialized with a new instance of this class, any further attempts to instantiate it will produce
+	 * an {@link IllegalStateException} to be thrown.
+	 */
+	private JniMemoryManager() {
+		if (BuildConfig.DEBUG) log.debug("Creating an Unsafe-backed memory manager");
+		if (instance != null)
+			throw new IllegalStateException("An instance cannot be created twice. Use getInstance() instead.");
+	}
 
 	//////////////////////////////////////////////// OVERRIDDEN METHODS ////////////////////////////////////////////////
 
@@ -630,28 +695,6 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		c_get_volatile(src, size, dest, offset);
 	}
 
-	/**
-	 * Common checks performed by {@link #get(long, int, byte[], int)} and {@link #getVolatile(long, int, byte[],
-	 * int)}.
-	 * <p>
-	 * If one the parameters is not formatted correctly, an {@link IllegalArgumentException} will be thrown.
-	 *
-	 * @param src    The source memory address to copy from.
-	 * @param size   The number of bytes to copy.
-	 * @param dest   The destination primitive array to copy to.
-	 * @param offset The offset from which to start copying to.
-	 */
-	@SuppressWarnings("Duplicates")
-	private void getCheck(final long src, int size, final byte[] dest, final int offset) {
-		if (src == 0) throw ADDRESS;
-		else if (size <= 0) throw SIZE;
-		else if (dest == null) throw new IllegalArgumentException("Buffer must not be null");
-		else if (dest.length <= 0) throw new IllegalArgumentException("Buffer must have a capacity of at least 1");
-		else if (offset < 0) throw new IllegalArgumentException("Offset must be greater than or equal to 0");
-		else if (offset >= dest.length)
-			throw new IllegalArgumentException("Offset cannot be greater than or equal to the buffer length");
-	}
-
 	/** {@inheritDoc} */
 	@Override
 	@SuppressWarnings("Duplicates")
@@ -682,28 +725,6 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		c_put_volatile(dest, size, src, offset);
 	}
 
-	/**
-	 * Common checks performed by {@link #put(long, int, byte[], int)} and {@link #putVolatile(long, int, byte[],
-	 * int)}.
-	 * <p>
-	 * If one the parameters is not formatted correctly, an {@link IllegalArgumentException} will be thrown.
-	 *
-	 * @param dest   The destination primitive array to copy to.
-	 * @param size   The number of bytes to copy.
-	 * @param src    The source memory address to copy from.
-	 * @param offset The offset from which to start copying to.
-	 */
-	@SuppressWarnings("Duplicates")
-	private void putCheck(final long dest, int size, final byte[] src, final int offset) {
-		if (dest == 0) throw ADDRESS;
-		else if (size <= 0) throw SIZE;
-		else if (src == null) throw new IllegalArgumentException("Buffer must not be null");
-		else if (src.length <= 0) throw new IllegalArgumentException("Buffer must have a capacity of at least 1");
-		else if (offset < 0) throw new IllegalArgumentException("Offset must be greater than or equal to 0");
-		else if (offset >= src.length)
-			throw new IllegalArgumentException("Offset cannot be greater than or equal to the buffer length");
-	}
-
 	/** {@inheritDoc} */
 	@Override
 	public void copy(final long src, final int size, final long dest) {
@@ -726,21 +747,6 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		}
 		if (!BuildConfig.OPTIMIZED) copyCheck(src, size, dest);
 		c_copy_volatile(src, size, dest);
-	}
-
-	/**
-	 * Common checks performed by {@link #copy(long, int, long)} and {@link #copyVolatile(long, int, long)}.
-	 * <p>
-	 * If one the parameters is not formatted correctly, an {@link IllegalArgumentException} will be thrown.
-	 *
-	 * @param src  The source memory address to copy from.
-	 * @param size The number of bytes to copy.
-	 * @param dest The destination memory address to copy to.
-	 */
-	private void copyCheck(final long src, final int size, final long dest) {
-		if (src == 0) throw ADDRESS;
-		else if (size <= 0) throw SIZE;
-		else if (dest == 0) throw ADDRESS;
 	}
 
 	/** {@inheritDoc} */

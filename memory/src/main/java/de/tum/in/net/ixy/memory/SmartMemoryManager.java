@@ -31,8 +31,12 @@ import lombok.val;
 @Slf4j
 public final class SmartMemoryManager implements IxyMemoryManager {
 
+	/////////////////////////////////////////////////// RETURN CODES ///////////////////////////////////////////////////
+
 	/** The return code used when no huge memory page technology is supported by the CPU. */
 	private static final int HUGE_PAGE_NOT_SUPPORTED = -1;
+
+	////////////////////////////////////////////////// STATIC METHODS //////////////////////////////////////////////////
 
 	/**
 	 * Cached instance to use as singleton.
@@ -45,17 +49,23 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 	@Setter(AccessLevel.NONE)
 	private static final SmartMemoryManager instance = new SmartMemoryManager();
 
+	///////////////////////////////////////////////////// MEMBERS //////////////////////////////////////////////////////
+
 	/** The singleton instance of the JNI-based memory manager. */
 	private transient UnsafeMemoryManager unsafe = UnsafeMemoryManager.getInstance();
 
 	/** The singleton instance of the JNI-based memory manager. */
 	private transient JniMemoryManager jni = JniMemoryManager.getInstance();
 
+	//////////////////////////////////////////////// NON-STATIC METHODS ////////////////////////////////////////////////
+
 	/** Private constructor that throws an exception if the instance is already instantiated. */
 	private SmartMemoryManager() {
 		if (BuildConfig.DEBUG) log.debug("Creating a smart memory manager");
 		if (instance != null) throw new IllegalStateException("An instance cannot be created twice. Use getInstance() instead.");
 	}
+
+	//////////////////////////////////////////////// OVERRIDDEN METHODS ////////////////////////////////////////////////
 
 	/** {@inheritDoc} */
 	@Override
