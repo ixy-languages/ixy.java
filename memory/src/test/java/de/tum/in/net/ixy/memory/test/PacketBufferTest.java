@@ -99,6 +99,7 @@ final class PacketBufferTest {
 		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> packetBuffer.putVolatile(-1, -1, null));
 		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> packetBuffer.putVolatile(0, -1, null));
 		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> packetBuffer.putVolatile(0, 0, null));
+		assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> packetBuffer.compareTo(null));
 	}
 
 	@Test
@@ -576,6 +577,19 @@ final class PacketBufferTest {
 		packetBuffer.putVolatile(0, bytes.length, bytes);
 		verify(mmanager, times(1).description("batch copy should be called once")).putVolatile(virtual, bytes.length, bytes, 0);
 		reset(mmanager);
+	}
+
+	@Test
+	@ResourceLock(MOCK_LOCK)
+	@DisplayName("Packets can be compared")
+	void compareTo() {
+		assumeThat(packetBuffer).isNotNull();
+		assertThat(packetBuffer.compareTo(packetBuffer)).isEqualTo(0);
+		for (var i = -1; i <= 1; i += 1 ) {
+			val packet = new PacketBuffer(virtual + i, mmanager);
+			assertThat(packetBuffer.compareTo(packet)).isEqualTo(-i);
+			assertThat(packet.compareTo(packetBuffer)).isEqualTo(i);
+		}
 	}
 
 }

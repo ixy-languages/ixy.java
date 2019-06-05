@@ -5,6 +5,7 @@ import de.tum.in.net.ixy.generic.IxyPacketBuffer;
 
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author Esaú García Sánchez-Torija
  */
 @Slf4j
-public final class PacketBuffer implements IxyPacketBuffer {
+public final class PacketBuffer implements IxyPacketBuffer, Comparable<PacketBuffer> {
 
 	//////////////////////////////////////////////////// EXCEPTIONS ////////////////////////////////////////////////////
 
@@ -475,6 +476,12 @@ public final class PacketBuffer implements IxyPacketBuffer {
 			size = Math.min(size, buffer.length);
 		}
 		mmanager.putVolatile(virtualAddress + offset, size, buffer, 0);
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public int compareTo(@NonNull final PacketBuffer that) {
+		return Long.compare(virtualAddress, that.virtualAddress);
 	}
 
 }
