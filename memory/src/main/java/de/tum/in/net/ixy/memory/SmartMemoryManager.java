@@ -20,9 +20,11 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
 /**
- * Implementation of memory manager backed by a native library and JNI calls.
+ * Implementation of memory manager backed by both {@link UnsafeMemoryManager} and {@link JniMemoryManager}.
  * <p>
  * This implementation performs checks on the parameters based on the value of {@link BuildConfig#OPTIMIZED}.
+ * The backend chose for delegation depends on the value of {@link BuildConfig#UNSAFE} or the compatibility of the
+ * operation.
  *
  * @author Esaú García Sánchez-Torija
  */
@@ -30,7 +32,7 @@ import lombok.val;
 public final class SmartMemoryManager implements IxyMemoryManager {
 
 	/** The return code used when no huge memory page technology is supported by the CPU. */
-	public static final int HUGE_PAGE_NOT_SUPPORTED = -1;
+	private static final int HUGE_PAGE_NOT_SUPPORTED = -1;
 
 	/**
 	 * Cached instance to use as singleton.
