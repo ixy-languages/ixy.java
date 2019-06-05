@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author Esaú García Sánchez-Torija
  */
 @Slf4j
-public final class PacketBuffer implements IxyPacketBuffer, Comparable<PacketBuffer> {
+public final class PacketBuffer implements IxyPacketBuffer, Comparable<PacketBuffer>, Cloneable {
 
 	//////////////////////////////////////////////////// EXCEPTIONS ////////////////////////////////////////////////////
 
@@ -482,6 +482,12 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<PacketBuf
 	@Override
 	public int compareTo(@NonNull final PacketBuffer that) {
 		return Long.compare(virtualAddress, that.virtualAddress);
+	}
+
+	/** {@inheritDoc} */
+	@Override
+	public PacketBuffer clone() throws CloneNotSupportedException {
+		return (PacketBuffer) super.clone();
 	}
 
 }

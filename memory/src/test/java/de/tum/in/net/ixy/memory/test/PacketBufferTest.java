@@ -18,6 +18,7 @@ import lombok.val;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assumptions.assumeThat;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
@@ -580,7 +581,6 @@ final class PacketBufferTest {
 	}
 
 	@Test
-	@ResourceLock(MOCK_LOCK)
 	@DisplayName("Packets can be compared")
 	void compareTo() {
 		assumeThat(packetBuffer).isNotNull();
@@ -589,6 +589,19 @@ final class PacketBufferTest {
 			val packet = new PacketBuffer(virtual + i, mmanager);
 			assertThat(packetBuffer.compareTo(packet)).isEqualTo(-i);
 			assertThat(packet.compareTo(packetBuffer)).isEqualTo(i);
+		}
+	}
+
+	@Test
+	@DisplayName("Packets can be cloned")
+	void clonable() {
+		assumeThat(packetBuffer).isNotNull();
+		try {
+			val cloned = packetBuffer.clone();
+			assertThat(cloned).isNotEqualTo(packetBuffer);
+			assertThat(cloned).isEqualByComparingTo(packetBuffer);
+		} catch (final CloneNotSupportedException e) {
+			fail("Failed to clone", e);
 		}
 	}
 
