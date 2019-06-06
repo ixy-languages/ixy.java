@@ -1,53 +1,59 @@
 package de.tum.in.net.ixy.memory;
 
 import de.tum.in.net.ixy.generic.IxyDmaMemory;
-
+import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
+import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 
 /**
- * A simple implementation of a dual memory address (virtualAddress and physicalAddress).
+ * A simple implementation of Ixy's direct memory addresses specification.
+ * <p>
+ * All the implementation of the class is automatically generated using Lombok.
  *
  * @author Esaú García Sánchez-Torija
  */
-@Slf4j
+@ToString(onlyExplicitlyIncluded = true, doNotUseGetters = true)
+@RequiredArgsConstructor(staticName = "of", access = AccessLevel.PUBLIC)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, doNotUseGetters = true)
+@SuppressWarnings({"HardCodedStringLiteral", "ClassWithoutNoArgConstructor"})
 public final class DmaMemory implements IxyDmaMemory {
 
 	/**
-	 * The virtual address.
-	 * -------- GETTER --------
-	 * Returns virtual address.
+	 * -------------- GETTER --------------
+	 * Returns virtual memory address.
 	 *
-	 * @return The virtual address.
+	 * @return The virtual memory address.
 	 */
 	@Getter
-	private long virtualAddress;
+	@EqualsAndHashCode.Include
+	@SuppressWarnings("JavaDoc")
+	@ToString.Include(name = "virtual", rank = 2)
+	private final long virtualAddress;
 
 	/**
-	 * The physical address.
-	 * ----------- GETTER -----------
-	 * Returns the physical address.
+	 * -------------- GETTER --------------
+	 * Returns the physical memory address.
 	 *
-	 * @return The physical address.
+	 * @return The physical memory address.
 	 */
 	@Getter
-	private long physicalAddress;
+	@EqualsAndHashCode.Include
+	@SuppressWarnings("JavaDoc")
+	@ToString.Include(name = "physical", rank = 1)
+	private final long physicalAddress;
 
 	/**
-	 * Constructs a new instance with the given {@code virtual} and {@code physical} addresses.
+	 * Creates a copy of another Ixy's direct memory address specification implementation.
 	 *
-	 * @param virtual  The virtual address.
-	 * @param physical The physical address.
+	 * @param dmaMemory The direct memory address specification to copy.
+	 * @return A copy of the {@code dmaMemory}.
 	 */
-	public DmaMemory(final long virtual, final long physical) {
-		if (BuildConfig.DEBUG) {
-			val xvirtual = Long.toHexString(virtual);
-			val xphysical = Long.toHexString(physical);
-			log.debug("Creating DmaMemory [virt=0x{}, phys=0x{}]", xvirtual, xphysical);
-		}
-		virtualAddress = virtual;
-		physicalAddress = physical;
+	@SuppressWarnings("MethodReturnOfConcreteClass")
+	public static DmaMemory of(IxyDmaMemory dmaMemory) {
+		if (dmaMemory == null) throw new InvalidNullParameterException();
+		return of(dmaMemory.getVirtualAddress(), dmaMemory.getPhysicalAddress());
 	}
 
 }

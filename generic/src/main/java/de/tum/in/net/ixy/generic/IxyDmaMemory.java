@@ -1,11 +1,11 @@
 package de.tum.in.net.ixy.generic;
 
 /**
- * Represents a memory address in its two states: virtual and physical.
+ * Ixy's direct memory addresses specification.
  * <p>
- * Both addresses should have the same offset given a page size, but no checks are enforced as that depends on {@link
- * IxyMemoryManager#pageSize()} or {@link IxyMemoryManager#hugepageSize()} and loosely coupled programming is a good
- * practice.
+ * The specification is based on the <em>principle of least knowledge</em> or <em>Law of Demeter</em> (LoD).
+ * This means that only the methods needed to build a packet forwarder and generator will be exposed.
+ * Any driver-dependent methods must be implemented and exposed in the driver's package and module.
  *
  * @author Esaú García Sánchez-Torija
  */
