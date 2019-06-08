@@ -1,19 +1,18 @@
 package de.tum.in.net.ixy.memory.test;
 
-import java.util.Objects;
-import java.util.regex.Pattern;
-import java.util.stream.Stream;
-
+import lombok.val;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
+
+import java.util.Objects;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static org.junit.jupiter.api.extension.ConditionEvaluationResult.disabled;
 import static org.junit.jupiter.api.extension.ConditionEvaluationResult.enabled;
 import static org.junit.platform.commons.util.AnnotationUtils.findAnnotation;
-
-import lombok.val;
 
 /**
  * Allows the execution of a test case if the user name is {@code root} or the user id {@code 0}.
@@ -32,7 +31,7 @@ final class EnabledIfRootCondition implements ExecutionCondition {
 	private static final ConditionEvaluationResult ENABLED_ROOT = enabled("The user id is 0");
 
 	/** Cached evaluation result computed once, because the user does not change during the whole execution. */
-	private static ConditionEvaluationResult CACHED_RESULT;
+	private static final ConditionEvaluationResult CACHED_RESULT;
 
 	// Compute the value of CACHED_RESULT to use it every time an ExtensionContext needs to be evaluated
 	static {
@@ -57,17 +56,12 @@ final class EnabledIfRootCondition implements ExecutionCondition {
 		} else {
 			// Enable if the user id is root's
 			val number = id.getAsInt();
-			if (number == 0) {
-				CACHED_RESULT = ENABLED_ROOT;
-			} else {
-				CACHED_RESULT = disabled(format("The user id is %d", number));
-			}
+			CACHED_RESULT = number == 0 ? ENABLED_ROOT : disabled(format("The user id is %d", number));
 		}
 	}
 
-	/** {@inheritDoc */
 	@Override
-	public ConditionEvaluationResult evaluateExecutionCondition(final ExtensionContext context) {
+	public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
 		val optional = findAnnotation(context.getElement(), EnabledIfRoot.class);
 		return optional.isEmpty() ? ENABLED_BY_DEFAULT : CACHED_RESULT;
 	}
