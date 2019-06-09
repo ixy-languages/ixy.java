@@ -1,3 +1,4 @@
+
 #include "ixy.h"
 
 // Common dependencies
@@ -41,7 +42,7 @@ Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1page_1size(const JNIEnv *env, 
 #ifdef __linux__
 	return sysconf(_SC_PAGESIZE);
 #elif _WIN32
-	const SYSTEM_INFO si;
+	SYSTEM_INFO si;
 	GetSystemInfo(&si);
 	return si.dwPageSize;
 #else
@@ -133,7 +134,7 @@ Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1hugepage_1size(const JNIEnv *e
 static unsigned int hugepageid = 0;
 
 JNIEXPORT jlong JNICALL
-Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1allocate(JNIEnv *env, const jclass klass, const jlong size, const jboolean huge, const jboolean contiguous, jstring mnt) {
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1allocate(JNIEnv *env, const jclass klass, const jlong size, const jboolean huge, jstring mnt) {
 	// If no huge memory pages should be employed, then use the simple C memory allocation function
 	if (!huge) return (jlong) malloc(size);
 
@@ -187,13 +188,13 @@ Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1allocate(JNIEnv *env, const jc
 	return (jlong) virt_addr;
 #elif _WIN32
 	// Open process token
-	const HANDLE token;
+	HANDLE token;
 	if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &token)) {
 		printf("OpenProcessToken error (%d)\n", GetLastError());
 	}
 
 	// Get the luid
-	const TOKEN_PRIVILEGES tp;
+	TOKEN_PRIVILEGES tp;
 	if (!LookupPrivilegeValue(NULL, "SeLockMemoryPrivilege", &tp.Privileges[0].Luid)) {
 		printf("LookupPrivilegeValue error (%d)\n", GetLastError());
 	}
