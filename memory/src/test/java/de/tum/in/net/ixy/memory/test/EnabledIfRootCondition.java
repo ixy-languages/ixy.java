@@ -1,6 +1,8 @@
 package de.tum.in.net.ixy.memory.test;
 
 import lombok.val;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -19,19 +21,20 @@ import static org.junit.platform.commons.util.AnnotationUtils.findAnnotation;
  *
  * @author Esaú García Sánchez-Torija
  */
+@SuppressWarnings("AccessOfSystemProperties")
 final class EnabledIfRootCondition implements ExecutionCondition {
 
 	/** Cached evaluation result used when the annotation {@code @EnabledIfRoot} is not present. */
-	private static final ConditionEvaluationResult ENABLED_BY_DEFAULT = enabled("@EnabledIfRoot is not present");
+	private static final @NotNull ConditionEvaluationResult ENABLED_BY_DEFAULT = enabled("@EnabledIfRoot is not present");
 
 	/** Cached evaluation result used when the user cannot be identified. */
-	private static final ConditionEvaluationResult ENABLED_NOT_FOUND = enabled("Cannot identify user id");
+	private static final @NotNull ConditionEvaluationResult ENABLED_NOT_FOUND = enabled("Cannot identify user id");
 
 	/** Cached evaluation result used when the user is {@code root}. */
-	private static final ConditionEvaluationResult ENABLED_ROOT = enabled("The user id is 0");
+	private static final @NotNull ConditionEvaluationResult ENABLED_ROOT = enabled("The user id is 0");
 
 	/** Cached evaluation result computed once, because the user does not change during the whole execution. */
-	private static final ConditionEvaluationResult CACHED_RESULT;
+	private static final @NotNull ConditionEvaluationResult CACHED_RESULT;
 
 	// Compute the value of CACHED_RESULT to use it every time an ExtensionContext needs to be evaluated
 	static {
@@ -48,7 +51,7 @@ final class EnabledIfRootCondition implements ExecutionCondition {
 			val name = System.getProperty("user.name");
 			if (name == null || name.isBlank()) {
 				CACHED_RESULT = ENABLED_NOT_FOUND;
-			} else if (!name.equals("root")) {
+			} else if (!Objects.equals(name, "root")) {
 				CACHED_RESULT = disabled(format("The user name is %s", name));
 			} else {
 				CACHED_RESULT = ENABLED_ROOT;
@@ -61,7 +64,8 @@ final class EnabledIfRootCondition implements ExecutionCondition {
 	}
 
 	@Override
-	public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
+	@Contract(value = "null -> fail; !null -> !null", pure = true)
+	public @NotNull ConditionEvaluationResult evaluateExecutionCondition(@NotNull ExtensionContext context) {
 		val optional = findAnnotation(context.getElement(), EnabledIfRoot.class);
 		return optional.isEmpty() ? ENABLED_BY_DEFAULT : CACHED_RESULT;
 	}

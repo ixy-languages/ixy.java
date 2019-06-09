@@ -1,5 +1,8 @@
 package de.tum.in.net.ixy.generic;
 
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+
 /**
  * Ixy's memory manager specification.
  * <p>
@@ -9,6 +12,7 @@ package de.tum.in.net.ixy.generic;
  *
  * @author Esaú García Sánchez-Torija
  */
+@SuppressWarnings({"HardCodedStringLiteral", "DuplicateStringLiteralInspection"})
 public interface IxyMemoryManager {
 
 	/**
@@ -52,6 +56,7 @@ public interface IxyMemoryManager {
 	 *
 	 * @return The size of a memory address.
 	 */
+	@Contract(pure = true)
 	int addressSize();
 
 	/**
@@ -59,6 +64,7 @@ public interface IxyMemoryManager {
 	 *
 	 * @return The size of a memory page.
 	 */
+	@Contract(pure = true)
 	long pageSize();
 
 	/**
@@ -70,6 +76,7 @@ public interface IxyMemoryManager {
 	 * @return The size of a huge memory page.
 	 * @see #pageSize()
 	 */
+	@Contract(pure = true)
 	long hugepageSize();
 
 	/**
@@ -95,7 +102,8 @@ public interface IxyMemoryManager {
 	 * @param layoutType     The memory layout type.
 	 * @return The base address of the allocated memory region.
 	 */
-	long allocate(long size, AllocationType allocationType, LayoutType layoutType);
+	@Contract(value = "_, null, _ -> fail; _, _, null -> fail; _, !null, !null -> _", pure = true)
+	long allocate(long size, @NotNull AllocationType allocationType, @NotNull LayoutType layoutType);
 
 	/**
 	 * Allocates {@code size} bytes.
@@ -111,7 +119,8 @@ public interface IxyMemoryManager {
 	 * @param layoutType     The memory layout type.
 	 * @return The {@link IxyDmaMemory} instance.
 	 */
-	IxyDmaMemory dmaAllocate(long size, AllocationType allocationType, LayoutType layoutType);
+	@Contract(value = "_, null, _ -> fail; _, _, null -> fail; _, !null, !null -> new", pure = true)
+	@NotNull IxyDmaMemory dmaAllocate(long size, @NotNull AllocationType allocationType, @NotNull LayoutType layoutType);
 
 	/**
 	 * Frees a previously allocated memory region.
@@ -133,7 +142,8 @@ public interface IxyMemoryManager {
 	 * @param allocationType The memory allocation type.
 	 * @return Whether the operation succeeded.
 	 */
-	boolean free(long address, long size, AllocationType allocationType);
+	@Contract(value = "_, _, null -> fail", pure = true)
+	boolean free(long address, long size, @NotNull AllocationType allocationType);
 
 	/**
 	 * Reads a {@code byte} from an arbitrary memory address.
@@ -143,6 +153,7 @@ public interface IxyMemoryManager {
 	 * @param address The memory address to read from.
 	 * @return The read {@code byte}.
 	 */
+	@Contract(pure = true)
 	byte getByte(long address);
 
 	/**
@@ -153,6 +164,7 @@ public interface IxyMemoryManager {
 	 * @param address The volatile memory address to read from.
 	 * @return The read {@code byte}.
 	 */
+	@Contract(pure = true)
 	byte getByteVolatile(long address);
 
 	/**
@@ -163,6 +175,7 @@ public interface IxyMemoryManager {
 	 * @param address The memory address to write to.
 	 * @param value   The {@code byte} to write.
 	 */
+	@Contract(pure = true)
 	void putByte(long address, byte value);
 
 	/**
@@ -173,6 +186,7 @@ public interface IxyMemoryManager {
 	 * @param address The volatile memory address to write to.
 	 * @param value   The {@code byte} to write.
 	 */
+	@Contract(pure = true)
 	void putByteVolatile(long address, byte value);
 
 	/**
@@ -183,6 +197,7 @@ public interface IxyMemoryManager {
 	 * @param address The memory address to read from.
 	 * @return The read {@code short}.
 	 */
+	@Contract(pure = true)
 	short getShort(long address);
 
 	/**
@@ -193,6 +208,7 @@ public interface IxyMemoryManager {
 	 * @param address The volatile memory address to read from.
 	 * @return The read {@code short}.
 	 */
+	@Contract(pure = true)
 	short getShortVolatile(long address);
 
 	/**
@@ -203,6 +219,7 @@ public interface IxyMemoryManager {
 	 * @param address The memory address to write to.
 	 * @param value   The {@code short} to write.
 	 */
+	@Contract(pure = true)
 	void putShort(long address, short value);
 
 	/**
@@ -213,6 +230,7 @@ public interface IxyMemoryManager {
 	 * @param address The volatile memory address to write to.
 	 * @param value   The {@code short} to write.
 	 */
+	@Contract(pure = true)
 	void putShortVolatile(long address, short value);
 
 	/**
@@ -223,6 +241,7 @@ public interface IxyMemoryManager {
 	 * @param address The memory address to read from.
 	 * @return The read {@code int}.
 	 */
+	@Contract(pure = true)
 	int getInt(long address);
 
 	/**
@@ -233,6 +252,7 @@ public interface IxyMemoryManager {
 	 * @param address The volatile memory address to read from.
 	 * @return The read {@code int}.
 	 */
+	@Contract(pure = true)
 	int getIntVolatile(long address);
 
 	/**
@@ -243,6 +263,7 @@ public interface IxyMemoryManager {
 	 * @param address The memory address to write to.
 	 * @param value   The {@code int} to write.
 	 */
+	@Contract(pure = true)
 	void putInt(long address, int value);
 
 	/**
@@ -253,6 +274,7 @@ public interface IxyMemoryManager {
 	 * @param address The volatile memory address to write to.
 	 * @param value   The {@code int} to write.
 	 */
+	@Contract(pure = true)
 	void putIntVolatile(long address, int value);
 
 	/**
@@ -263,6 +285,7 @@ public interface IxyMemoryManager {
 	 * @param address The memory address to read from.
 	 * @return The read {@code long}.
 	 */
+	@Contract(pure = true)
 	long getLong(long address);
 
 	/**
@@ -273,6 +296,7 @@ public interface IxyMemoryManager {
 	 * @param address The volatile memory address to read from.
 	 * @return The read {@code long}.
 	 */
+	@Contract(pure = true)
 	long getLongVolatile(long address);
 
 	/**
@@ -283,6 +307,7 @@ public interface IxyMemoryManager {
 	 * @param address The memory address to write to.
 	 * @param value   The {@code long} to write.
 	 */
+	@Contract(pure = true)
 	void putLong(long address, long value);
 
 	/**
@@ -293,6 +318,7 @@ public interface IxyMemoryManager {
 	 * @param address The volatile memory address to write to.
 	 * @param value   The {@code long} to write.
 	 */
+	@Contract(pure = true)
 	void putLongVolatile(long address, long value);
 
 	/**
@@ -305,7 +331,8 @@ public interface IxyMemoryManager {
 	 * @param dest   The destination primitive array to copy to.
 	 * @param offset The offset from which to start copying to.
 	 */
-	void get(long src, int size, byte[] dest, int offset);
+	@Contract(value = "_, _, null, _ -> fail", mutates = "param3")
+	void get(long src, int size, @NotNull byte[] dest, int offset);
 
 	/**
 	 * Copies an arbitrary volatile memory region into the JVM heap using a primitive byte array.
@@ -317,7 +344,8 @@ public interface IxyMemoryManager {
 	 * @param dest   The destination primitive array to copy to.
 	 * @param offset The offset from which to start copying to.
 	 */
-	void getVolatile(long src, int size, byte[] dest, int offset);
+	@Contract(value = "_, _, null, _ -> fail", mutates = "param3")
+	void getVolatile(long src, int size, @NotNull byte[] dest, int offset);
 
 	/**
 	 * Copies a primitive byte array from the JVM heap into an arbitrary memory region.
@@ -329,7 +357,8 @@ public interface IxyMemoryManager {
 	 * @param src    The source memory address to copy from.
 	 * @param offset The offset from which to start copying to.
 	 */
-	void put(long dest, int size, byte[] src, int offset);
+	@Contract(value = "_, _, null, _ -> fail", pure = true)
+	void put(long dest, int size, @NotNull byte[] src, int offset);
 
 	/**
 	 * Copies a primitive byte array from the JVM heap into an arbitrary volatile memory region.
@@ -341,7 +370,8 @@ public interface IxyMemoryManager {
 	 * @param src    The source memory address to copy from.
 	 * @param offset The offset from which to start copying to.
 	 */
-	void putVolatile(long dest, int size, byte[] src, int offset);
+	@Contract(value = "_, _, null, _ -> fail", pure = true)
+	void putVolatile(long dest, int size, @NotNull byte[] src, int offset);
 
 	/**
 	 * Copies an arbitrary memory region into another arbitrary memory region.
@@ -352,6 +382,7 @@ public interface IxyMemoryManager {
 	 * @param size The number of bytes to copy.
 	 * @param dest The destination memory address to copy to.
 	 */
+	@Contract(pure = true)
 	void copy(long src, int size, long dest);
 
 	/**
@@ -363,6 +394,7 @@ public interface IxyMemoryManager {
 	 * @param size The number of bytes to copy.
 	 * @param dest The destination memory address to copy to.
 	 */
+	@Contract(pure = true)
 	void copyVolatile(long src, int size, long dest);
 
 	/**
@@ -375,6 +407,7 @@ public interface IxyMemoryManager {
 	 * @param address The virtual memory address.
 	 * @return The physical memory address.
 	 */
+	@Contract(pure = true)
 	long virt2phys(long address);
 
 }

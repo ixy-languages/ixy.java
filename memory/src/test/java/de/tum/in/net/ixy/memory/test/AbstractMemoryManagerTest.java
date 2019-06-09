@@ -2,6 +2,8 @@ package de.tum.in.net.ixy.memory.test;
 
 import de.tum.in.net.ixy.generic.IxyMemoryManager;
 import lombok.val;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -24,6 +26,7 @@ import static org.assertj.core.api.Assumptions.assumeThat;
  *
  * @author Esaú García Sánchez-Torija
  */
+@SuppressWarnings("ResultOfMethodCallIgnored")
 abstract class AbstractMemoryManagerTest {
 
 	/** The memory manager to test. */
@@ -35,7 +38,8 @@ abstract class AbstractMemoryManagerTest {
 	 * @param mmanager The memory manager.
 	 * @return The dynamic tests.
 	 */
-	static Collection<DynamicTest> commonTest_parameters(IxyMemoryManager mmanager) {
+	@Contract(value = "null -> fail; !null -> new", pure = true)
+	static @NotNull Collection<DynamicTest> commonTest_parameters(@NotNull IxyMemoryManager mmanager) {
 		var expected = 0;
 		expected += 2 * 3 * 3 * 3; // get
 		expected += 2 * 3 * 3 * 3; // getVolatile
@@ -208,6 +212,7 @@ abstract class AbstractMemoryManagerTest {
 	}
 
 	/** Tests the method {@link IxyMemoryManager#pageSize()}. */
+	@Contract(pure = true)
 	final void commonTest_pageSize() {
 		assumeThat(mmanager).isNotNull();
 		val pagesize = mmanager.pageSize();
@@ -217,6 +222,7 @@ abstract class AbstractMemoryManagerTest {
 	}
 
 	/** Tests the method {@link IxyMemoryManager#addressSize()}. */
+	@Contract(pure = true)
 	final void commonTest_addressSize() {
 		assumeThat(mmanager).isNotNull();
 		val addrsize = mmanager.addressSize();
@@ -226,6 +232,7 @@ abstract class AbstractMemoryManagerTest {
 	}
 
 	/** Tests the method {@link IxyMemoryManager#hugepageSize()}. */
+	@Contract(pure = true)
 	final void commonTest_hugepageSize() {
 		assumeThat(mmanager).isNotNull();
 		val hpsz = mmanager.hugepageSize();
@@ -241,6 +248,7 @@ abstract class AbstractMemoryManagerTest {
 	 * @param number      The data sample.
 	 * @param useVolatile Whether to use volatile methods or not.
 	 */
+	@Contract(pure = true)
 	final void commonTest_getputByte(byte number, boolean useVolatile) {
 		val address = assumeAllocate(Byte.BYTES);
 		// Write the data
@@ -259,6 +267,7 @@ abstract class AbstractMemoryManagerTest {
 	 * @param number      The data sample.
 	 * @param useVolatile Whether to use volatile methods or not.
 	 */
+	@Contract(pure = true)
 	final void commonTest_getputShort(short number, boolean useVolatile) {
 		val address = assumeAllocate(Short.BYTES);
 		// Write the data
@@ -277,6 +286,7 @@ abstract class AbstractMemoryManagerTest {
 	 * @param number      The data sample.
 	 * @param useVolatile Whether to use volatile methods or not.
 	 */
+	@Contract(pure = true)
 	final void commonTest_getputInt(int number, boolean useVolatile) {
 		val address = assumeAllocate(Integer.BYTES);
 		// Write the data
@@ -295,6 +305,7 @@ abstract class AbstractMemoryManagerTest {
 	 * @param number      The data sample.
 	 * @param useVolatile Whether to use volatile methods or not.
 	 */
+	@Contract(pure = true)
 	final void commonTest_getputLong(long number, boolean useVolatile) {
 		val address = assumeAllocate(Long.BYTES);
 		// Write the data
@@ -312,7 +323,8 @@ abstract class AbstractMemoryManagerTest {
 	 *
 	 * @param data The data sample.
 	 */
-	final void commonTest_getput(byte[] data) {
+	@Contract(value = "null -> fail", pure = true)
+	final void commonTest_getput(@NotNull byte[] data) {
 		val address = assumeAllocate(data.length);
 		// Write the data
 		mmanager.put(address, data.length, data, 0);
@@ -332,7 +344,8 @@ abstract class AbstractMemoryManagerTest {
 	 *
 	 * @param data The data sample.
 	 */
-	final void commonTest_getputVolatile(byte[] data) {
+	@Contract(value = "null -> fail", pure = true)
+	final void commonTest_getputVolatile(@NotNull byte[] data) {
 		val address = assumeAllocate(data.length);
 		// Write the data
 		mmanager.putVolatile(address, data.length, data, 0);
@@ -352,7 +365,8 @@ abstract class AbstractMemoryManagerTest {
 	 * @param data     The data sample.
 	 * @param reversed Whether the addresses should be reversed.
 	 */
-	final void commonTest_copy(byte[] data, boolean reversed) {
+	@Contract(value = "null, _ -> fail", pure = true)
+	final void commonTest_copy(@NotNull byte[] data, boolean reversed) {
 		assumeThat(mmanager).isNotNull();
 		// Allocate the memory
 		val addr1 = mmanager.allocate(data.length, AllocationType.STANDARD, LayoutType.STANDARD);
@@ -384,7 +398,8 @@ abstract class AbstractMemoryManagerTest {
 	 * @param data     The data sample.
 	 * @param reversed Whether the addresses should be reversed.
 	 */
-	final void commonTest_copyVolatile(byte[] data, boolean reversed) {
+	@Contract(value = "null, _ -> fail", pure = true)
+	final void commonTest_copyVolatile(@NotNull byte[] data, boolean reversed) {
 		assumeThat(mmanager).isNotNull();
 		// Allocate the memory
 		val addr1 = mmanager.allocate(data.length, AllocationType.STANDARD, LayoutType.STANDARD);
@@ -403,6 +418,8 @@ abstract class AbstractMemoryManagerTest {
 		assertThat(copy).as("Copied data").isEqualTo(data);
 		// Try to copy to the same address just to get 100% coverage
 		mmanager.copyVolatile(dest, copy.length, dest);
+		mmanager.copyVolatile(dest, 0, dest);
+		mmanager.copyVolatile(src, 0, dest);
 		mmanager.getVolatile(dest, copy.length, copy, 0);
 		// Release the memory and verify the contents
 		mmanager.free(src, data.length, AllocationType.STANDARD);
@@ -416,6 +433,7 @@ abstract class AbstractMemoryManagerTest {
 	 * @param size The data sample.
 	 * @return The base address of the allocated memory region.
 	 */
+	@Contract(pure = true)
 	final long assumeAllocate(long size) {
 		assumeThat(mmanager).isNotNull();
 		val address = mmanager.allocate(size, AllocationType.STANDARD, LayoutType.STANDARD);
@@ -430,6 +448,7 @@ abstract class AbstractMemoryManagerTest {
 	 * @param value       The value to use.
 	 * @param useVolatile Whether to use volatile methods or not.
 	 */
+	@Contract(pure = true)
 	final void testWrite(long address, byte value, boolean useVolatile) {
 		if (useVolatile) {
 			mmanager.putByteVolatile(address, value);
@@ -447,6 +466,7 @@ abstract class AbstractMemoryManagerTest {
 	 * @param value       The value to use.
 	 * @param useVolatile Whether to use volatile methods or not.
 	 */
+	@Contract(pure = true)
 	final void testWrite(long address, short value, boolean useVolatile) {
 		if (useVolatile) {
 			mmanager.putShortVolatile(address, value);
@@ -464,6 +484,7 @@ abstract class AbstractMemoryManagerTest {
 	 * @param value       The value to use.
 	 * @param useVolatile Whether to use volatile methods or not.
 	 */
+	@Contract(pure = true)
 	final void testWrite(long address, int value, boolean useVolatile) {
 		if (useVolatile) {
 			mmanager.putIntVolatile(address, value);
@@ -481,6 +502,7 @@ abstract class AbstractMemoryManagerTest {
 	 * @param value       The value to use.
 	 * @param useVolatile Whether to use volatile methods or not.
 	 */
+	@Contract(pure = true)
 	final void testWrite(long address, long value, boolean useVolatile) {
 		if (useVolatile) {
 			mmanager.putLongVolatile(address, value);
@@ -499,7 +521,8 @@ abstract class AbstractMemoryManagerTest {
 	 * @param hugepageSize The size of a huge memory page.
 	 * @return The combination of arguments.
 	 */
-	static Stream<Arguments> commonMethodSource_allocate(long pageSize, long hugepageSize) {
+	@Contract(value = "_, _ -> new", pure = true)
+	static @NotNull Stream<@NotNull Arguments> commonMethodSource_allocate(long pageSize, long hugepageSize) {
 		AllocationType[] hugity = {AllocationType.STANDARD, AllocationType.HUGE};
 		LayoutType[] contigity = {LayoutType.STANDARD, LayoutType.CONTIGUOUS};
 		Stream.Builder<Arguments> builder = Stream.builder();
@@ -521,7 +544,8 @@ abstract class AbstractMemoryManagerTest {
 	 * @param name The field name.
 	 * @return The field.
 	 */
-	static @Nullable Field getDeclaredField(Class<?> cls, String name) {
+	@Contract(value = "null, _ -> fail; _, null -> fail; !null, !null -> new", pure = true)
+	static @Nullable Field getDeclaredField(@NotNull Class<?> cls, @NotNull String name) {
 		try {
 			return cls.getDeclaredField(name);
 		} catch (NoSuchFieldException e) {
@@ -537,7 +561,8 @@ abstract class AbstractMemoryManagerTest {
 	 * @param obj   The object.
 	 * @return The field value.
 	 */
-	static @Nullable Object fieldGet(Field field, Object obj) {
+	@Contract(value = "null, _ -> fail; _, null -> fail", pure = true)
+	static @Nullable Object fieldGet(@NotNull Field field, @NotNull Object obj) {
 		try {
 			return field.get(obj);
 		} catch (IllegalArgumentException | IllegalAccessException e) {
@@ -553,7 +578,8 @@ abstract class AbstractMemoryManagerTest {
 	 * @param obj   The object.
 	 * @param value The value.
 	 */
-	static void fieldSet(Field field, Object obj, Object value) {
+	@Contract(value = "null, _, _ -> fail; _, null, _ -> fail; _, _, null -> fail", mutates = "param2")
+	static void fieldSet(@NotNull Field field, @NotNull Object obj, @NotNull Object value) {
 		try {
 			field.set(obj, value);
 		} catch (IllegalArgumentException | IllegalAccessException e) {
@@ -568,7 +594,8 @@ abstract class AbstractMemoryManagerTest {
 	 * @return The instance.
 	 */
 	@SuppressWarnings("UseOfSunClasses")
-	static @Nullable Object allocateInstance(Class<?> cls) {
+	@Contract(value = "null -> fail", pure = true)
+	static @Nullable Object allocateInstance(@NotNull Class<?> cls) {
 		val unsafeField = getDeclaredField(Unsafe.class, "theUnsafe");
 		if (unsafeField == null) return null;
 		unsafeField.setAccessible(true);

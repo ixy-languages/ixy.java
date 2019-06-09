@@ -1,5 +1,7 @@
 package de.tum.in.net.ixy.generic;
 
+import org.jetbrains.annotations.Contract;
+
 /**
  * Ixy's direct memory addresses specification.
  * <p>
@@ -16,6 +18,7 @@ public interface IxyDmaMemory {
 	 *
 	 * @return The virtual address.
 	 */
+	@Contract(pure = true)
 	long getVirtualAddress();
 
 	/**
@@ -23,6 +26,7 @@ public interface IxyDmaMemory {
 	 *
 	 * @return The physical address.
 	 */
+	@Contract(pure = true)
 	long getPhysicalAddress();
 
 }

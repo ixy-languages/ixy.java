@@ -1,5 +1,8 @@
 package de.tum.in.net.ixy.memory;
 
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+
 /**
  * Exception thrown when {@code null} is passed as a parameter.
  *
@@ -20,9 +23,13 @@ final class InvalidNullParameterException extends IllegalArgumentException {
 	 *
 	 * @param parameter The name of the parameter that is wrong.
 	 */
-	@SuppressWarnings("HardCodedStringLiteral")
-	InvalidNullParameterException(String parameter) {
+	@Contract("null -> fail")
+	@SuppressWarnings({"HardCodedStringLiteral", "DuplicateStringLiteralInspection"})
+	InvalidNullParameterException(@NotNull String parameter) {
 		super(String.format("The parameter '%s' is null", parameter));
+		if (!BuildConfig.OPTIMIZED && (parameter == null || parameter.isBlank())) {
+			throw new IllegalArgumentException("The exception message could not be constructed correctly");
+		}
 	}
 
 }

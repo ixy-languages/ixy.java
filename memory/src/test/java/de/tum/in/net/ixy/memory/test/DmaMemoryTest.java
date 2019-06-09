@@ -4,6 +4,7 @@ import de.tum.in.net.ixy.generic.IxyDmaMemory;
 import de.tum.in.net.ixy.memory.DmaMemory;
 import lombok.val;
 import org.assertj.core.api.SoftAssertions;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -25,7 +26,7 @@ import static org.assertj.core.api.Assumptions.assumeThat;
 final class DmaMemoryTest {
 
 	/** A cached instance of a pseudo-random number generator. */
-	private final Random random = new SecureRandom();
+	private final @NotNull Random random = new SecureRandom();
 
 	/** Holds a random number that will be used as virtual memory address. */
 	private long virtualAddress;

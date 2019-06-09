@@ -7,6 +7,8 @@ import de.tum.in.net.ixy.memory.SmartMemoryManager;
 import de.tum.in.net.ixy.memory.UnsafeMemoryManager;
 import lombok.val;
 import org.assertj.core.api.SoftAssertions;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.DynamicTest;
@@ -53,7 +55,7 @@ import static org.assertj.core.api.Assumptions.assumeThat;
 final class SmartMemoryManagerTest extends AbstractMemoryManagerTest {
 
 	/** A cached instance of a pseudo-random number generator. */
-	private static final Random random = new SecureRandom();
+	private static final @NotNull Random random = new SecureRandom();
 
 	// Creates a "SmartMemoryManager" instance
 	@BeforeEach
@@ -91,8 +93,9 @@ final class SmartMemoryManagerTest extends AbstractMemoryManagerTest {
 		// Creates the tests that check that the API checks the parameters
 		@TestFactory
 		@DisabledIfOptimized
+		@Contract(value = " -> new", pure = true)
 		@SuppressWarnings("JUnitTestMethodWithNoAssertions")
-		Collection<DynamicTest> exceptions() {
+		@NotNull Collection<@NotNull DynamicTest> exceptions() {
 			return commonTest_parameters(mmanager);
 		}
 
@@ -119,7 +122,7 @@ final class SmartMemoryManagerTest extends AbstractMemoryManagerTest {
 	@ParameterizedTest(name = "Memory can be allocated and freed (size={0}; huge={1}; contiguous={2})")
 	@MethodSource("allocate_free_Arguments")
 	@EnabledIfRoot
-	void allocate_free(long size, AllocationType allocationType, LayoutType layoutType) {
+	void allocate_free(long size, @NotNull AllocationType allocationType, @NotNull LayoutType layoutType) {
 		assumeThat(mmanager).isNotNull();
 		// Make sure we can extract the huge page size
 		val hpsz = mmanager.hugepageSize();
@@ -275,7 +278,7 @@ final class SmartMemoryManagerTest extends AbstractMemoryManagerTest {
 
 	@RepeatedTest(2)
 	@DisplayName("Direct memory can be copied to another region")
-	void copy(RepetitionInfo repetitionInfo) {
+	void copy(@NotNull RepetitionInfo repetitionInfo) {
 		val size = random.nextInt(Short.MAX_VALUE - Byte.MAX_VALUE) + Byte.MAX_VALUE;
 		val bytes = new byte[size];
 		random.nextBytes(bytes);
@@ -284,7 +287,7 @@ final class SmartMemoryManagerTest extends AbstractMemoryManagerTest {
 
 	@RepeatedTest(2)
 	@DisplayName("Direct memory can be copied to another region")
-	void copyVolatile(RepetitionInfo repetitionInfo) {
+	void copyVolatile(@NotNull RepetitionInfo repetitionInfo) {
 		val size = random.nextInt(Short.MAX_VALUE - Byte.MAX_VALUE) + Byte.MAX_VALUE;
 		val bytes = new byte[size];
 		random.nextBytes(bytes);
@@ -310,7 +313,6 @@ final class SmartMemoryManagerTest extends AbstractMemoryManagerTest {
 	}
 
 	@Test
-	@ResourceLock(BuildConfig.LOCK)
 	@DisplayName("The equals(Object) method works as expected")
 	void equalsTest() {
 		val clone1 = (IxyMemoryManager) allocateInstance(SmartMemoryManager.class);
@@ -372,7 +374,6 @@ final class SmartMemoryManagerTest extends AbstractMemoryManagerTest {
 	}
 
 	@Test
-	@ResourceLock(BuildConfig.LOCK)
 	@DisplayName("The hashCode() method works as expected")
 	void hashCodeTest() {
 		val clone1 = (IxyMemoryManager) allocateInstance(SmartMemoryManager.class);
@@ -438,7 +439,8 @@ final class SmartMemoryManagerTest extends AbstractMemoryManagerTest {
 	 * @param possibilities The different possible values.
 	 * @return The different combinations.
 	 */
-	private static Stream<Object[]> combinations(Object[] possibilities) {
+	@Contract(value = "null -> fail; !null -> new", pure = true)
+	private static @NotNull Stream<@NotNull Object[]> combinations(@NotNull Object[] possibilities) {
 		val len = possibilities.length;
 		var factorial = len == 0 ? 0 : 1;
 		for (var i = 2; i <= len; i += 1) {
@@ -457,7 +459,8 @@ final class SmartMemoryManagerTest extends AbstractMemoryManagerTest {
 						.toArray());
 	}
 
-	private static int combinations_rec(byte[][] combinations, int combination, int offset, byte[] remaining) {
+	@Contract(value = "null, _, _, _ -> fail; _, _, _, null -> fail; !null, _, _, !null -> _", pure = true)
+	private static int combinations_rec(@NotNull byte[][] combinations, int combination, int offset, @NotNull byte[] remaining) {
 		val len = remaining.length;
 		if (len == 2) {
 			val first = remaining[0];
@@ -490,7 +493,8 @@ final class SmartMemoryManagerTest extends AbstractMemoryManagerTest {
 	 *
 	 * @return The {@link Stream} of {@link Arguments}.
 	 */
-	private static Stream<Arguments> allocate_free_Arguments() {
+	@Contract(value = " -> new", pure = true)
+	private static @NotNull Stream<@NotNull Arguments> allocate_free_Arguments() {
 		val mmanager = JniMemoryManager.getSingleton();
 		return commonMethodSource_allocate(mmanager.pageSize(), mmanager.hugepageSize());
 	}

@@ -9,6 +9,8 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 
 import static de.tum.in.net.ixy.memory.Utility.check;
 
@@ -20,7 +22,7 @@ import static de.tum.in.net.ixy.memory.Utility.check;
 @Slf4j
 @ToString(onlyExplicitlyIncluded = true)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, doNotUseGetters = true)
-@SuppressWarnings({"DuplicateStringLiteralInspection", "HardCodedStringLiteral"})
+@SuppressWarnings({"DuplicateStringLiteralInspection", "HardCodedStringLiteral", "ConstantConditions"})
 public final class JniMemoryManager implements IxyMemoryManager {
 
 	////////////////////////////////////////////////// STATIC METHODS //////////////////////////////////////////////////
@@ -38,10 +40,10 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 *
 	 * @return A singleton instance.
 	 */
-	@Getter
 	@Setter(AccessLevel.NONE)
 	@SuppressWarnings("JavaDoc")
-	private static final IxyMemoryManager singleton = new JniMemoryManager();
+	@Getter(onMethod_ = {@NotNull, @Contract(value = "_ -> !null", pure = true)})
+	private static final @NotNull IxyMemoryManager singleton = new JniMemoryManager();
 
 	////////////////////////////////////////////////// NATIVE METHODS //////////////////////////////////////////////////
 
@@ -54,6 +56,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 *
 	 * @return The size of a memory address.
 	 */
+	@Contract(pure = true)
 	private static native int c_address_size();
 
 	/**
@@ -65,6 +68,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 *
 	 * @return The size of a memory page.
 	 */
+	@Contract(pure = true)
 	private static native int c_page_size();
 
 	/**
@@ -87,6 +91,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 * @return The size of a huge memory page.
 	 * @see #pageSize()
 	 */
+	@Contract(pure = true)
 	private static native long c_hugepage_size();
 
 	/**
@@ -106,6 +111,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 * @param huge Whether huge pages should be used.
 	 * @return The base address of the allocated memory region.
 	 */
+	@Contract(value = "_, true, null -> fail", pure = true)
 	private static native long c_allocate(long size, boolean huge, String mnt);
 
 	/**
@@ -128,6 +134,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 * @param huge    Whether huge memory pages should be used.
 	 * @return Whether the operation succeeded.
 	 */
+	@Contract(pure = true)
 	@SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
 	private static native boolean c_free(long address, long size, boolean huge);
 
@@ -139,6 +146,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 * @param src The memory address to read from.
 	 * @return The read {@code byte}.
 	 */
+	@Contract(pure = true)
 	private static native byte c_get_byte(long src);
 
 	/**
@@ -149,6 +157,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 * @param src The volatile memory address to read from.
 	 * @return The read {@code byte}.
 	 */
+	@Contract(pure = true)
 	private static native byte c_get_byte_volatile(long src);
 
 	/**
@@ -159,6 +168,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 * @param dest  The memory address to write to.
 	 * @param value The {@code byte} to write.
 	 */
+	@Contract(pure = true)
 	private static native void c_put_byte(long dest, byte value);
 
 	/**
@@ -169,6 +179,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 * @param dest  The volatile memory address to write to.
 	 * @param value The {@code byte} to write.
 	 */
+	@Contract(pure = true)
 	private static native void c_put_byte_volatile(long dest, byte value);
 
 	/**
@@ -179,6 +190,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 * @param src The memory address to read from.
 	 * @return The read {@code short}.
 	 */
+	@Contract(pure = true)
 	private static native short c_get_short(long src);
 
 	/**
@@ -189,6 +201,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 * @param src The volatile memory address to read from.
 	 * @return The read {@code short}.
 	 */
+	@Contract(pure = true)
 	private static native short c_get_short_volatile(long src);
 
 	/**
@@ -199,6 +212,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 * @param dest  The memory address to write to.
 	 * @param value The {@code short} to write.
 	 */
+	@Contract(pure = true)
 	private static native void c_put_short(long dest, short value);
 
 	/**
@@ -209,6 +223,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 * @param dest  The volatile memory address to write to.
 	 * @param value The {@code short} to write.
 	 */
+	@Contract(pure = true)
 	private static native void c_put_short_volatile(long dest, short value);
 
 	/**
@@ -219,6 +234,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 * @param src The memory address to read from.
 	 * @return The read {@code int}.
 	 */
+	@Contract(pure = true)
 	private static native int c_get_int(long src);
 
 	/**
@@ -229,6 +245,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 * @param src The volatile memory address to read from.
 	 * @return The read {@code int}.
 	 */
+	@Contract(pure = true)
 	private static native int c_get_int_volatile(long src);
 
 	/**
@@ -239,6 +256,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 * @param dest  The memory address to write to.
 	 * @param value The {@code int} to write.
 	 */
+	@Contract(pure = true)
 	private static native void c_put_int(long dest, int value);
 
 	/**
@@ -249,6 +267,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 * @param dest  The volatile memory address to write to.
 	 * @param value The {@code int} to write.
 	 */
+	@Contract(pure = true)
 	private static native void c_put_int_volatile(long dest, int value);
 
 	/**
@@ -259,6 +278,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 * @param src The memory address to read from.
 	 * @return The read {@code long}.
 	 */
+	@Contract(pure = true)
 	private static native long c_get_long(long src);
 
 	/**
@@ -269,6 +289,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 * @param src The volatile memory address to read from.
 	 * @return The read {@code long}.
 	 */
+	@Contract(pure = true)
 	private static native long c_get_long_volatile(long src);
 
 	/**
@@ -279,6 +300,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 * @param dest  The memory address to write to.
 	 * @param value The {@code long} to write.
 	 */
+	@Contract(pure = true)
 	private static native void c_put_long(long dest, long value);
 
 	/**
@@ -289,6 +311,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 * @param dest  The volatile memory address to write to.
 	 * @param value The {@code long} to write.
 	 */
+	@Contract(pure = true)
 	private static native void c_put_long_volatile(long dest, long value);
 
 	/**
@@ -301,7 +324,8 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 * @param dest   The destination primitive array to copy to.
 	 * @param offset The offset from which to start copying to.
 	 */
-	private static native void c_get(long src, int size, byte[] dest, int offset);
+	@Contract(value = "_, _, null, _ -> fail", mutates = "param3")
+	private static native void c_get(long src, int size, @NotNull byte[] dest, int offset);
 
 	/**
 	 * Copies a memory region into a primitive byte array.
@@ -313,7 +337,8 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 * @param dest   The destination primitive array to copy to.
 	 * @param offset The offset from which to start copying to.
 	 */
-	private static native void c_get_volatile(long src, int size, byte[] dest, int offset);
+	@Contract(value = "_, _, null, _ -> fail", mutates = "param3")
+	private static native void c_get_volatile(long src, int size, @NotNull byte[] dest, int offset);
 
 	/**
 	 * Copies a primitive byte array into a memory region.
@@ -325,7 +350,8 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 * @param src    The source primitive array to copy from.
 	 * @param offset The offset from which to start copying from.
 	 */
-	private static native void c_put(long dest, int size, byte[] src, int offset);
+	@Contract(value = "_, _, null, _ -> fail", pure = true)
+	private static native void c_put(long dest, int size, @NotNull byte[] src, int offset);
 
 	/**
 	 * Copies a primitive byte array into a memory region.
@@ -337,7 +363,8 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 * @param src    The source primitive array to copy from.
 	 * @param offset The offset from which to start copying from.
 	 */
-	private static native void c_put_volatile(long dest, int size, byte[] src, int offset);
+	@Contract(value = "_, _, null, _ -> fail", pure = true)
+	private static native void c_put_volatile(long dest, int size, @NotNull byte[] src, int offset);
 
 	/**
 	 * Copies a memory region into another memory region.
@@ -348,6 +375,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 * @param size The number of bytes to copy.
 	 * @param dest The destination memory address to copy to.
 	 */
+	@Contract(pure = true)
 	private static native void c_copy(long src, int size, long dest);
 
 	/**
@@ -359,6 +387,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 * @param size The number of bytes to copy.
 	 * @param dest The destination volatile memory address to copy to.
 	 */
+	@Contract(pure = true)
 	private static native void c_copy_volatile(long src, int size, long dest);
 
 	/**
@@ -371,6 +400,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 * @param address The virtual memory address.
 	 * @return The physical memory address.
 	 */
+	@Contract(pure = true)
 	private static native long c_virt2phys(long address);
 
 	//////////////////////////////////////////////// NON-STATIC METHODS ////////////////////////////////////////////////
@@ -394,25 +424,29 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	//////////////////////////////////////////////// OVERRIDDEN METHODS ////////////////////////////////////////////////
 
 	@Override
+	@Contract(pure = true)
 	public int addressSize() {
 		if (BuildConfig.DEBUG) log.debug("Computing address size using C");
 		return c_address_size();
 	}
 
 	@Override
+	@Contract(pure = true)
 	public long pageSize() {
 		if (BuildConfig.DEBUG) log.debug("Computing page size using C");
 		return c_page_size();
 	}
 
 	@Override
+	@Contract(pure = true)
 	public long hugepageSize() {
 		if (BuildConfig.DEBUG) log.debug("Computing huge page size using C");
 		return c_hugepage_size();
 	}
 
 	@Override
-	public long allocate(long size, AllocationType allocationType, LayoutType layoutType) {
+	@Contract(value = "_, null, _ -> fail; _, _, null -> fail", pure = true)
+	public long allocate(long size, @NotNull AllocationType allocationType, @NotNull LayoutType layoutType) {
 		// Stop if anything is wrong
 		if (!BuildConfig.OPTIMIZED) {
 			if (size <= 0) throw new InvalidSizeException("size");
@@ -445,7 +479,8 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
-	public IxyDmaMemory dmaAllocate(long size, AllocationType allocationType, LayoutType layoutType) {
+	@Contract(value = "_, null, _ -> fail; _, _, null -> fail; _, !null, !null -> new", pure = true)
+	public @NotNull IxyDmaMemory dmaAllocate(long size, @NotNull AllocationType allocationType, @NotNull LayoutType layoutType) {
 		if (!BuildConfig.DEBUG) log.debug("Allocating DualMemory using C");
 		val virt = allocate(size, allocationType, layoutType);
 		val phys = virt2phys(virt);
@@ -453,7 +488,8 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
-	public boolean free(long address, long size, AllocationType allocationType) {
+	@Contract(value = "_, _, null -> fail", pure = true)
+	public boolean free(long address, long size, @NotNull AllocationType allocationType) {
 		// Stop if anything is wrong
 		if (!BuildConfig.OPTIMIZED) {
 			if (address == 0) throw new InvalidMemoryAddressException("address");
@@ -485,6 +521,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public byte getByte(long address) {
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
@@ -495,6 +532,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public byte getByteVolatile(long address) {
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
@@ -505,6 +543,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public void putByte(long address, byte value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
@@ -516,6 +555,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public void putByteVolatile(long address, byte value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
@@ -527,6 +567,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public short getShort(long address) {
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
@@ -537,6 +578,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public short getShortVolatile(long address) {
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
@@ -547,6 +589,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public void putShort(long address, short value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
@@ -558,6 +601,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public void putShortVolatile(long address, short value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
@@ -569,6 +613,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public int getInt(long address) {
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
@@ -579,6 +624,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public int getIntVolatile(long address) {
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
@@ -589,6 +635,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public void putInt(long address, int value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(value);
@@ -600,6 +647,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public void putIntVolatile(long address, int value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(value);
@@ -611,6 +659,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public long getLong(long address) {
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
@@ -621,6 +670,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public long getLongVolatile(long address) {
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
@@ -631,6 +681,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public void putLong(long address, long value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Long.toHexString(value);
@@ -642,6 +693,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public void putLongVolatile(long address, long value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Long.toHexString(value);
@@ -654,9 +706,10 @@ public final class JniMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@SuppressWarnings("Duplicates")
-	public void get(long src, int size, byte[] dest, int offset) {
+	@Contract(value = "_, _, null, _ -> fail", mutates = "param3")
+	public void get(long src, int size, @NotNull byte[] dest, int offset) {
 		if (!BuildConfig.OPTIMIZED) {
-			check(src, size, dest, offset);
+			if (!check(src, size, dest, offset)) return;
 			size = Math.min(size, dest.length - offset);
 		}
 		if (BuildConfig.DEBUG) {
@@ -668,9 +721,10 @@ public final class JniMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@SuppressWarnings("Duplicates")
-	public void getVolatile(long src, int size, byte[] dest, int offset) {
+	@Contract(value = "_, _, null, _ -> fail", mutates = "param3")
+	public void getVolatile(long src, int size, @NotNull byte[] dest, int offset) {
 		if (!BuildConfig.OPTIMIZED) {
-			check(src, size, dest, offset);
+			if (!check(src, size, dest, offset)) return;
 			size = Math.min(size, dest.length - offset);
 		}
 		if (BuildConfig.DEBUG) {
@@ -681,9 +735,10 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
-	public void put(long dest, int size, byte[] src, int offset) {
+	@Contract(value = "_, _, null, _ -> fail", pure = true)
+	public void put(long dest, int size, @NotNull byte[] src, int offset) {
 		if (!BuildConfig.OPTIMIZED) {
-			check(dest, size, src, offset);
+			if (!check(dest, size, src, offset)) return;
 			size = Math.min(size, src.length);
 		}
 		if (BuildConfig.DEBUG) {
@@ -694,9 +749,10 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
-	public void putVolatile(long dest, int size, byte[] src, int offset) {
+	@Contract(value = "_, _, null, _ -> fail", pure = true)
+	public void putVolatile(long dest, int size, @NotNull byte[] src, int offset) {
 		if (!BuildConfig.OPTIMIZED) {
-			check(dest, size, src, offset);
+			if (!check(dest, size, src, offset)) return;
 			size = Math.min(size, src.length);
 		}
 		if (BuildConfig.DEBUG) {
@@ -707,28 +763,31 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public void copy(long src, int size, long dest) {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(src);
 			val xdest = Long.toHexString(dest);
 			log.debug("Copying memory region ({} B) @ 0x{} to 0x{} using C", size, xsrc, xdest);
 		}
-		if (!BuildConfig.OPTIMIZED) check(src, dest, size);
+		if (!BuildConfig.OPTIMIZED && !check(src, dest, size)) return;
 		c_copy(src, size, dest);
 	}
 
 	@Override
+	@Contract(pure = true)
 	public void copyVolatile(long src, int size, long dest) {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(src);
 			val xdest = Long.toHexString(dest);
 			log.debug("Copying memory region ({} B) @ 0x{} to 0x{} using C", size, xsrc, xdest);
 		}
-		if (!BuildConfig.OPTIMIZED) check(src, dest, size);
+		if (!BuildConfig.OPTIMIZED && !check(src, dest, size)) return;
 		c_copy_volatile(src, size, dest);
 	}
 
 	@Override
+	@Contract(pure = true)
 	public long virt2phys(long address) {
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);

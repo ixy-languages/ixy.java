@@ -5,6 +5,9 @@ import de.tum.in.net.ixy.memory.BuildConfig;
 import de.tum.in.net.ixy.memory.UnsafeMemoryManager;
 import lombok.val;
 import org.assertj.core.api.SoftAssertions;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.DynamicTest;
@@ -44,14 +47,14 @@ import static org.assertj.core.api.Assumptions.assumeThat;
  * @author Esaú García Sánchez-Torija
  */
 @DisplayName("UnsafeMemoryManager")
-@SuppressWarnings({"HardCodedStringLiteral", "DuplicateStringLiteralInspection"})
+@SuppressWarnings({"HardCodedStringLiteral", "DuplicateStringLiteralInspection", "ResultOfMethodCallIgnored"})
 final class UnsafeMemoryManagerTest extends AbstractMemoryManagerTest {
 
 	/** A cached instance of a pseudo-random number generator. */
-	private static final Random random = new SecureRandom();
+	private static final @NotNull Random random = new SecureRandom();
 
 	/** The cloned memory manager instance to test. */
-	private IxyMemoryManager mmanagerClone;
+	private @Nullable IxyMemoryManager mmanagerClone;
 
 	// Creates an "UnsafeMemoryManager" instance
 	@BeforeEach
@@ -84,13 +87,15 @@ final class UnsafeMemoryManagerTest extends AbstractMemoryManagerTest {
 	 *
 	 * @author Esaú García Sánchez-Torija
 	 */
+	@SuppressWarnings("ResultOfMethodCallIgnored")
 	@Nested
 	final class Parameters {
 
 		// Creates the tests that check that the API checks the parameters
 		@TestFactory
 		@DisabledIfOptimized
-		Collection<DynamicTest> exceptions() {
+		@Contract(value = " -> new", pure = true)
+		@NotNull Collection<@NotNull DynamicTest> exceptions() {
 			var expected = 0;
 			expected += 2 * 3 * 3 * 3; // get
 			expected += 2 * 3 * 3 * 3; // getVolatile
@@ -310,7 +315,7 @@ final class UnsafeMemoryManagerTest extends AbstractMemoryManagerTest {
 	@ParameterizedTest(name = "Memory can be allocated and freed (size={0}; huge={1}; contiguous={2})")
 	@MethodSource("allocate_free_Arguments")
 	@EnabledIfRoot
-	void allocate_free(Long size, AllocationType allocationType, LayoutType layoutType) {
+	void allocate_free(long size, @NotNull AllocationType allocationType, @NotNull LayoutType layoutType) {
 		assumeThat(mmanager).isNotNull();
 		// Huge memory pages are not supported
 		if (allocationType == AllocationType.HUGE) {
@@ -449,7 +454,7 @@ final class UnsafeMemoryManagerTest extends AbstractMemoryManagerTest {
 
 	@RepeatedTest(2)
 	@DisplayName("Direct memory can be copied to another region")
-	void copy(RepetitionInfo repetitionInfo) {
+	void copy(@NotNull RepetitionInfo repetitionInfo) {
 		val size = random.nextInt(Short.MAX_VALUE - Byte.MAX_VALUE) + Byte.MAX_VALUE;
 		val bytes = new byte[size];
 		random.nextBytes(bytes);
@@ -458,7 +463,7 @@ final class UnsafeMemoryManagerTest extends AbstractMemoryManagerTest {
 
 	@RepeatedTest(2)
 	@DisplayName("Direct memory can be copied to another region")
-	void copyVolatile(RepetitionInfo repetitionInfo) {
+	void copyVolatile(@NotNull RepetitionInfo repetitionInfo) {
 		val size = random.nextInt(Short.MAX_VALUE - Byte.MAX_VALUE) + Byte.MAX_VALUE;
 		val bytes = new byte[size];
 		random.nextBytes(bytes);
@@ -542,13 +547,14 @@ final class UnsafeMemoryManagerTest extends AbstractMemoryManagerTest {
 	}
 
 	/**
-	 * The source of arguments for {@link #allocate_free(Long, AllocationType, LayoutType)}.
+	 * The source of arguments for {@link #allocate_free(long, AllocationType, LayoutType)}.
 	 * <p>
 	 * This method will generate all the combinations that could raise exceptions or behave differently.
 	 *
 	 * @return The {@link Stream} of {@link Arguments}.
 	 */
-	private static Stream<Arguments> allocate_free_Arguments() {
+	@Contract(value = " -> new", pure = true)
+	private static @NotNull Stream<@NotNull Arguments> allocate_free_Arguments() {
 		val pageSize = UnsafeMemoryManager.getSingleton().pageSize();
 		AllocationType[] hugity = {AllocationType.STANDARD, AllocationType.HUGE};
 		LayoutType[] contigity = {LayoutType.STANDARD, LayoutType.CONTIGUOUS};

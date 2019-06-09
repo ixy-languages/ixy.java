@@ -9,6 +9,9 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import sun.misc.Unsafe;
 
 import static de.tum.in.net.ixy.memory.Utility.check;
@@ -21,7 +24,7 @@ import static de.tum.in.net.ixy.memory.Utility.check;
 @Slf4j
 @ToString(onlyExplicitlyIncluded = true)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, doNotUseGetters = true)
-@SuppressWarnings({"DuplicateStringLiteralInspection", "HardCodedStringLiteral"})
+@SuppressWarnings({"DuplicateStringLiteralInspection", "HardCodedStringLiteral", "ConstantConditions"})
 public final class UnsafeMemoryManager implements IxyMemoryManager {
 
 	/**
@@ -50,10 +53,10 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	 *
 	 * @return A singleton instance.
 	 */
-	@Getter
 	@Setter(AccessLevel.NONE)
 	@SuppressWarnings("JavaDoc")
-	private static final IxyMemoryManager singleton = new UnsafeMemoryManager();
+	@Getter(onMethod_ = {@NotNull, @Contract(value = "_ -> !null", pure = true)})
+	private static final @NotNull IxyMemoryManager singleton = new UnsafeMemoryManager();
 
 	///////////////////////////////////////////////////// MEMBERS //////////////////////////////////////////////////////
 
@@ -61,7 +64,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	@EqualsAndHashCode.Include
 	@ToString.Include(name = "unsafe")
 	@SuppressWarnings("UseOfSunClasses")
-	private Unsafe unsafe;
+	private @Nullable Unsafe unsafe;
 
 	//////////////////////////////////////////////// NON-STATIC METHODS ////////////////////////////////////////////////
 
@@ -92,6 +95,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	 * This method is only called in conditional blocks using the {@link BuildConfig#OPTIMIZED} member, so when the
 	 * library is build for production mode this method is never called as a way of speeding up the whole program.
 	 */
+	@Contract(pure = true)
 	@SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
 	private void checkUnsafe() {
 		if (unsafe == null) throw new IllegalStateException("The Unsafe object is not available");
@@ -100,6 +104,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	//////////////////////////////////////////////// OVERRIDDEN METHODS ////////////////////////////////////////////////
 
 	@Override
+	@Contract(pure = true)
 	public int addressSize() {
 		if (BuildConfig.DEBUG) log.debug("Computing address size using the Unsafe object");
 		if (!BuildConfig.OPTIMIZED) checkUnsafe();
@@ -107,6 +112,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public long pageSize() {
 		if (BuildConfig.DEBUG) log.debug("Computing page size using the Unsafe object");
 		if (!BuildConfig.OPTIMIZED) checkUnsafe();
@@ -114,7 +120,8 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
-	public long allocate(long size, AllocationType allocationType, LayoutType layoutType) {
+	@Contract(value = "_, null, _ -> fail; _, _, null -> fail", pure = true)
+	public long allocate(long size, @NotNull AllocationType allocationType, @NotNull LayoutType layoutType) {
 		// Stop if anything is wrong
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
@@ -147,7 +154,8 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
-	public boolean free(long address, long size, AllocationType allocationType) {
+	@Contract(value = "_, _, null -> fail", pure = true)
+	public boolean free(long address, long size, @NotNull AllocationType allocationType) {
 		// Stop if anything is wrong
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
@@ -179,6 +187,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public byte getByte(long address) {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(address);
@@ -192,6 +201,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public byte getByteVolatile(long address) {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(address);
@@ -205,6 +215,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public void putByte(long address, byte value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
@@ -219,6 +230,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public void putByteVolatile(long address, byte value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
@@ -233,6 +245,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public short getShort(long address) {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(address);
@@ -246,6 +259,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public short getShortVolatile(long address) {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(address);
@@ -259,6 +273,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public void putShort(long address, short value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
@@ -273,6 +288,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public void putShortVolatile(long address, short value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
@@ -287,6 +303,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public int getInt(long address) {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(address);
@@ -300,6 +317,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public int getIntVolatile(long address) {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(address);
@@ -313,6 +331,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public void putInt(long address, int value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(value);
@@ -327,6 +346,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public void putIntVolatile(long address, int value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(value);
@@ -341,6 +361,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public long getLong(long address) {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(address);
@@ -354,6 +375,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public long getLongVolatile(long address) {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(address);
@@ -367,6 +389,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public void putLong(long address, long value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Long.toHexString(value);
@@ -381,6 +404,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public void putLongVolatile(long address, long value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Long.toHexString(value);
@@ -395,7 +419,8 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
-	public void get(long src, int size, byte[] dest, int offset) {
+	@Contract(value = "_, _, null, _ -> fail", mutates = "param3")
+	public void get(long src, int size, @NotNull byte[] dest, int offset) {
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
 			if (!check(src, size, dest, offset)) return;
@@ -410,7 +435,8 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
-	public void getVolatile(long src, int size, byte[] dest, int offset) {
+	@Contract(value = "_, _, null, _ -> fail", mutates = "param3")
+	public void getVolatile(long src, int size, @NotNull byte[] dest, int offset) {
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
 			if (!check(src, size, dest, offset)) return;
@@ -427,7 +453,8 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
-	public void put(long dest, int size, byte[] src, int offset) {
+	@Contract(value = "_, _, null, _ -> fail", pure = true)
+	public void put(long dest, int size, @NotNull byte[] src, int offset) {
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
 			if (!check(dest, size, src, offset)) return;
@@ -442,7 +469,8 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
-	public void putVolatile(long dest, int size, byte[] src, int offset) {
+	@Contract(value = "_, _, null, _ -> fail", pure = true)
+	public void putVolatile(long dest, int size, @NotNull byte[] src, int offset) {
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
 			if (!check(dest, size, src, offset)) return;
@@ -459,6 +487,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public void copy(long src, int size, long dest) {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(src);
@@ -473,6 +502,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public void copyVolatile(long src, int size, long dest) {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(src);
@@ -505,6 +535,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	/** @deprecated  */
 	@Override
 	@Deprecated
+	@Contract(value = " -> fail", pure = true)
 	public long hugepageSize() {
 		if (BuildConfig.DEBUG) log.debug("Computing huge page size using the Unsafe object");
 		if (!BuildConfig.OPTIMIZED) checkUnsafe();
@@ -514,7 +545,8 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	/** @deprecated  */
 	@Override
 	@Deprecated
-	public IxyDmaMemory dmaAllocate(long size, AllocationType allocationType, LayoutType layoutType) {
+	@Contract(value = "_, _, _ -> fail", pure = true)
+	public @NotNull IxyDmaMemory dmaAllocate(long size, @NotNull AllocationType allocationType, @NotNull LayoutType layoutType) {
 		if (!BuildConfig.DEBUG) log.debug("Allocating DmaMemory using the Unsafe object");
 		val virt = allocate(size, allocationType, layoutType);
 		val phys = virt2phys(virt);
@@ -524,6 +556,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	/** @deprecated  */
 	@Override
 	@Deprecated
+	@Contract(value = "_ -> fail", pure = true)
 	public long virt2phys(long address) {
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
