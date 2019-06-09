@@ -1,29 +1,43 @@
 package de.tum.in.net.ixy.memory.test;
 
+import de.tum.in.net.ixy.generic.IxyMemoryManager;
+import de.tum.in.net.ixy.memory.BuildConfig;
 import de.tum.in.net.ixy.memory.JniMemoryManager;
 import de.tum.in.net.ixy.memory.SmartMemoryManager;
-
-import sun.misc.Unsafe;
-
-import java.lang.reflect.InvocationTargetException;
-import java.util.Random;
-import java.util.stream.LongStream;
-import java.util.stream.Stream;
-
+import de.tum.in.net.ixy.memory.UnsafeMemoryManager;
+import lombok.val;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.DynamicTest;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.api.RepetitionInfo;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestFactory;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.junit.jupiter.api.parallel.ResourceLock;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.assertj.core.api.SoftAssertions;
 
-import lombok.val;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.security.SecureRandom;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Random;
+import java.util.regex.Pattern;
+import java.util.stream.IntStream;
+import java.util.stream.LongStream;
+import java.util.stream.Stream;
 
+import static de.tum.in.net.ixy.generic.IxyMemoryManager.AllocationType;
+import static de.tum.in.net.ixy.generic.IxyMemoryManager.LayoutType;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.assertj.core.api.Assertions.fail;
@@ -36,96 +50,91 @@ import static org.assertj.core.api.Assumptions.assumeThat;
  */
 @DisplayName("SmartMemoryManager")
 @Execution(ExecutionMode.SAME_THREAD)
-final class SmartMemoryManagerTest {
+final class SmartMemoryManagerTest extends AbstractMemoryManagerTest {
 
 	/** A cached instance of a pseudo-random number generator. */
-	private static final Random random = new Random();
-
-	/** A cached instance of the {@link Unsafe} object. */
-	private static Unsafe unsafe;
-
-	// Load the Unsafe object
-	static {
-		try {
-			val theUnsafeField = Unsafe.class.getDeclaredField("theUnsafe");
-			theUnsafeField.setAccessible(true);
-			unsafe = (Unsafe) theUnsafeField.get(null);
-		} catch (final NoSuchFieldException | IllegalAccessException e) {
-//			e.printStackTrace();
-		}
-	}
-
-	/** The memory manager instance to test. */
-	private transient SmartMemoryManager mmanager;
+	private static final Random random = new SecureRandom();
 
 	// Creates a "SmartMemoryManager" instance
 	@BeforeEach
 	void setUp() {
-		mmanager = SmartMemoryManager.getInstance();
+		mmanager = SmartMemoryManager.getSingleton();
 	}
 
 	@Test
 	@DisplayName("Instantiation is not supported")
 	void constructorException() {
+		Constructor<SmartMemoryManager> constructor = null;
 		try {
-			val constructor = SmartMemoryManager.class.getDeclaredConstructor();
+			constructor = SmartMemoryManager.class.getDeclaredConstructor();
+		} catch (NoSuchMethodException | SecurityException e) {
+//			e.printStackTrace();
+		}
+		if (constructor != null) {
 			constructor.setAccessible(true);
 			val exception = catchThrowable(constructor::newInstance);
 			assertThat(exception).isInstanceOf(InvocationTargetException.class);
 			val original = ((InvocationTargetException) exception).getTargetException();
 			assertThat(original).isInstanceOf(IllegalStateException.class);
-		} catch (final NoSuchMethodException | SecurityException e) {
-//			e.printStackTrace();
+			constructor.setAccessible(false);
 		}
+	}
+
+	/**
+	 * Checks that the parameters are checked by the functions.
+	 *
+	 * @author Esaú García Sánchez-Torija
+	 */
+	@Nested
+	final class Parameters {
+
+		// Creates the tests that check that the API checks the parameters
+		@TestFactory
+		@DisabledIfOptimized
+		@SuppressWarnings("JUnitTestMethodWithNoAssertions")
+		Collection<DynamicTest> exceptions() {
+			return commonTest_parameters(mmanager);
+		}
+
 	}
 
 	@Test
 	@DisplayName("Page size can be computed")
 	void pageSize() {
-		assumeThat(mmanager).isNotNull();
-		val pagesize = mmanager.pageSize();
-		assertThat(pagesize)
-				.as("Page size").isGreaterThan(0)
-				.withFailMessage("should be a power of two").isEqualTo(pagesize & -pagesize);
+		commonTest_pageSize();
 	}
 
 	@Test
 	@DisplayName("Address size can be computed")
 	void addressSize() {
-		assumeThat(mmanager).isNotNull();
-		val addrsize = mmanager.addressSize();
-		assertThat(addrsize)
-				.as("Address size").isGreaterThan(0)
-				.withFailMessage("should be a power of two").isEqualTo(addrsize & -addrsize);
+		commonTest_addressSize();
 	}
 
 	@Test
 	@DisplayName("Huge memory page size can be computed")
 	void hugepageSize() {
-		assumeThat(mmanager).isNotNull();
-		val hpsz = mmanager.hugepageSize();
-		assertThat(hpsz)
-				.as("Huge memory page size").isGreaterThan(0)
-				.withFailMessage("should be a power of two").isEqualTo(hpsz & -hpsz);
+		commonTest_hugepageSize();
 	}
 
 	@ParameterizedTest(name = "Memory can be allocated and freed (size={0}; huge={1}; contiguous={2})")
-	@MethodSource("allocateSource")
+	@MethodSource("allocate_free_Arguments")
 	@EnabledIfRoot
-	void allocate_free(final Long size, final Boolean huge, final Boolean contiguous) {
-		assumeThat(unsafe).isNotNull();
+	void allocate_free(long size, AllocationType allocationType, LayoutType layoutType) {
 		assumeThat(mmanager).isNotNull();
-
+		// Make sure we can extract the huge page size
+		val hpsz = mmanager.hugepageSize();
+		assumeThat(hpsz).as("Hugepage size").isPositive().withFailMessage("should be a power of two").isEqualTo(hpsz & -hpsz);
 		// Allocate the memory and make sure it's valid
-		val addr = mmanager.allocate(size, huge, contiguous);
-		val end = addr + size - 1;
-		if (huge && contiguous && size > mmanager.hugepageSize()) {
+		val addr = mmanager.allocate(size, allocationType, layoutType);
+		if (allocationType == AllocationType.HUGE && layoutType == LayoutType.CONTIGUOUS && size > hpsz) {
 			assertThat(addr).as("Address").isZero();
+			// Perform an extra check to achieve better coverage
+			val notRoundSize = mmanager.allocate(hpsz, AllocationType.HUGE, LayoutType.CONTIGUOUS);
+			assertThat(notRoundSize).as("Address").isNotZero();
+			assumeThat(mmanager.free(notRoundSize, hpsz, AllocationType.HUGE)).isTrue();
 			return;
-		} else {
-			assertThat(addr).as("Address").isNotZero();
 		}
-
+		assertThat(addr).as("Address").isNotZero();
 		// Test all memory addresses for every granularity using non-overlapping parallel write and read operations
 		for (val bytes : new int[]{Byte.BYTES, Short.BYTES, Integer.BYTES, Long.BYTES}) {
 			for (var i = 0; i < bytes; i += 1) {
@@ -134,326 +143,40 @@ final class SmartMemoryManagerTest {
 				val aligned = LongStream.range(0, size - 1 - bytes)
 						.parallel()
 						.filter(x -> x % bytes == alignment)
-						.map(x -> addr + x)
-						.peek(address -> testValidAddress(addr, end, address, bytes));
-
+						.map(x -> addr + x);
 				// Compute the most significant bit (excluding the last one which defines the sign) and maximum value
 				val msb = 1 << (bytes * 8 - 1 - 1);
 				val max = (msb - 1) | msb;
 				val rand = random.nextLong() & max;
-
 				// Test the addresses with the correct data type
 				switch (bytes) {
 					case Byte.BYTES:
-						aligned.forEach(address -> testWriteByte(unsafe, address, (byte) rand));
+						aligned.peek(address -> testWrite(address, (byte) rand, false))
+								.forEach(address -> testWrite(address, (byte) rand, false));
 						break;
 					case Short.BYTES:
-						aligned.forEach(address -> testWriteShort(unsafe, address, (short) rand));
+						aligned.peek(address -> testWrite(address, (short) rand, false))
+								.forEach(address -> testWrite(address, (short) rand, false));
 						break;
 					case Integer.BYTES:
-						aligned.forEach(address -> testWriteInt(unsafe, address, (int) rand));
+						aligned.peek(address -> testWrite(address, (int) rand, false))
+								.forEach(address -> testWrite(address, (int) rand, false));
 						break;
 					case Long.BYTES:
-						aligned.forEach(address -> testWriteLong(unsafe, address, rand));
+						aligned.peek(address -> testWrite(address, rand, false))
+								.forEach(address -> testWrite(address, rand, false));
 						break;
 					default:
 						fail("the number of bytes makes no sense");
 				}
 			}
 		}
-
 		// Free the memory
-		assertThat(mmanager.free(addr, size, huge)).as("Freeing").isTrue();
-	}
-
-	@Test
-	@DisplayName("Arbitrary bytes can be written and read")
-	void getputByte() {
-		assumeThat(mmanager).isNotNull();
-
-		// Allocate the memory
-		val address = mmanager.allocate(Byte.BYTES, false, false);
-		assumeThat(address).as("Address").isNotZero();
-
-		// Write some data
-		val number = (byte) random.nextInt(Byte.MAX_VALUE + 1);
-		mmanager.putByte(address, number);
-
-		// Release the memory and verify the contents
-		val value = mmanager.getByte(address);
-		mmanager.free(address, Byte.BYTES, false);
-		assertThat(value).as("Read").isEqualTo(number);
-	}
-
-	@Test
-	@DisplayName("Arbitrary bytes can be written and read (volatile)")
-	void getputByteVolatile() {
-		assumeThat(mmanager).isNotNull();
-
-		// Allocate the memory
-		val address = mmanager.allocate(Byte.BYTES, false, false);
-		assumeThat(address).as("Address").isNotZero();
-
-		// Write some data
-		val number = (byte) random.nextInt(Byte.MAX_VALUE + 1);
-		mmanager.putByteVolatile(address, number);
-
-		// Release the memory and verify the contents
-		val value = mmanager.getByteVolatile(address);
-		mmanager.free(address, Byte.BYTES, false);
-		assertThat(value).as("Read").isEqualTo(number);
-	}
-
-	@Test
-	@DisplayName("Arbitrary shorts can be written and read")
-	void getputShort() {
-		assumeThat(mmanager).isNotNull();
-
-		// Allocate the memory
-		val address = mmanager.allocate(Short.BYTES, false, false);
-		assertThat(address).as("Address").isNotZero();
-
-		// Write some data
-		val number = (short) random.nextInt(Short.MAX_VALUE + 1);
-		mmanager.putShort(address, number);
-
-		// Release the memory and verify the contents
-		val value = mmanager.getShort(address);
-		mmanager.free(address, Short.BYTES, false);
-		assertThat(value).as("Read").isEqualTo(number);
-	}
-
-	@Test
-	@DisplayName("Arbitrary shorts can be written and read (volatile)")
-	void getputShortVolatile() {
-		assumeThat(mmanager).isNotNull();
-
-		// Allocate the memory
-		val address = mmanager.allocate(Short.BYTES, false, false);
-		assertThat(address).as("Address").isNotZero();
-
-		// Write some data
-		val number = (short) random.nextInt(Short.MAX_VALUE + 1);
-		mmanager.putShortVolatile(address, number);
-
-		// Release the memory and verify the contents
-		val value = mmanager.getShortVolatile(address);
-		mmanager.free(address, Short.BYTES, false);
-		assertThat(value).as("Read").isEqualTo(number);
-	}
-
-	@Test
-	@DisplayName("Arbitrary ints can be written and read")
-	void getputInt() {
-		assumeThat(mmanager).isNotNull();
-
-		// Allocate the memory
-		val address = mmanager.allocate(Integer.BYTES, false, false);
-		assumeThat(address).as("Address").isNotZero();
-
-		// Write some data
-		val number = random.nextInt();
-		mmanager.putInt(address, number);
-
-		// Release the memory and verify the contents
-		val value = mmanager.getInt(address);
-		mmanager.free(address, Integer.BYTES, false);
-		assertThat(value).as("Read").isEqualTo(number);
-	}
-
-	@Test
-	@DisplayName("Arbitrary ints can be written and read (volatile)")
-	void getputIntVolatile() {
-		assumeThat(mmanager).isNotNull();
-
-		// Allocate the memory
-		val address = mmanager.allocate(Integer.BYTES, false, false);
-		assumeThat(address).as("Address").isNotZero();
-
-		// Write some data
-		val number = random.nextInt();
-		mmanager.putIntVolatile(address, number);
-
-		// Release the memory and verify the contents
-		val value = mmanager.getIntVolatile(address);
-		mmanager.free(address, Integer.BYTES, false);
-		assertThat(value).as("Read").isEqualTo(number);
-	}
-
-	@Test
-	@DisplayName("Arbitrary longs can be written and read")
-	void getputLong() {
-		assumeThat(mmanager).isNotNull();
-
-		// Allocate the memory
-		val address = mmanager.allocate(Long.BYTES, false, false);
-		assumeThat(address).as("Address").isNotZero();
-
-		// Write some data
-		val number = random.nextLong();
-		mmanager.putLong(address, number);
-
-		// Release the memory and verify the contents
-		val value = mmanager.getLong(address);
-		mmanager.free(address, Long.BYTES, false);
-		assertThat(value).as("Read").isEqualTo(number);
-	}
-
-	@Test
-	@DisplayName("Arbitrary longs can be written and read (volatile)")
-	void getputLongVolatile() {
-		assumeThat(mmanager).isNotNull();
-
-		// Allocate the memory
-		val address = mmanager.allocate(Long.BYTES, false, false);
-		assumeThat(address).as("Address").isNotZero();
-
-		// Write some data
-		val number = random.nextLong();
-		mmanager.putLongVolatile(address, number);
-
-		// Verify it's correct and release the memory
-		val value = mmanager.getLongVolatile(address);
-		mmanager.free(address, Long.BYTES, false);
-		assertThat(value).as("Read").isEqualTo(number);
-	}
-
-	@Test
-	@DisplayName("Direct memory can be copied from/to the JVM heap")
-	void getput() {
-		assumeThat(mmanager).isNotNull();
-
-		// Define the amount of data to write randomly
-		val size = random.nextInt(Short.MAX_VALUE - Byte.MAX_VALUE) + Byte.MAX_VALUE;
-
-		// Allocate the memory
-		val address = mmanager.allocate(size, false, false);
-		assumeThat(address).as("Address").isNotZero();
-
-		// Generate and write some random data
-		val bytes = new byte[size];
-		random.nextBytes(bytes);
-		mmanager.put(address, size, bytes, 0);
-
-		// Recover the data from memory
-		val copy = new byte[size];
-		mmanager.get(address, size, copy, 0);
-
-		// Release the memory and verify the contents
-		mmanager.free(address, size, false);
-		assertThat(copy).as("Read/Written data").isEqualTo(bytes);
-	}
-
-	@Test
-	@DisplayName("Direct memory can be copied from/to the JVM heap (volatile)")
-	void getputVolatile() {
-		assumeThat(mmanager).isNotNull();
-
-		// Define the amount of data to write randomly
-		val size = random.nextInt(Short.MAX_VALUE - Byte.MAX_VALUE) + Byte.MAX_VALUE;
-
-		// Allocate the memory
-		val address = mmanager.allocate(size, false, false);
-		assumeThat(address).as("Address").isNotZero();
-
-		// Generate and write some random data
-		val bytes = new byte[size];
-		random.nextBytes(bytes);
-		mmanager.putVolatile(address, size, bytes, 0);
-
-		// Recover the data from memory
-		val copy = new byte[size];
-		mmanager.getVolatile(address, size, copy, 0);
-
-		// Release the memory and verify the contents
-		mmanager.free(address, size, false);
-		assertThat(copy).as("Read/Written data").isEqualTo(bytes);
-	}
-
-	@Test
-	@DisplayName("Direct memory can be copied to another region")
-	void copy() {
-		assumeThat(mmanager).isNotNull();
-
-		// Define the amount of data to write randomly
-		val size = random.nextInt(Short.MAX_VALUE - Byte.MAX_VALUE) + Byte.MAX_VALUE;
-
-		// Allocate the memory
-		val src = mmanager.allocate(size, false, false);
-		val dest = mmanager.allocate(size, false, false);
-		assumeThat(src).as("Address").isNotZero();
-		assumeThat(dest).as("Address").isNotZero();
-
-		// Generate and write some random data
-		val bytes = new byte[size];
-		random.nextBytes(bytes);
-		mmanager.put(src, size, bytes, 0);
-
-		// Copy the data to another memory region and recover it from memory
-		val copy = new byte[size];
-		mmanager.copy(src, size, dest);
-		mmanager.get(dest, size, copy, 0);
-
-		// Release the memory and verify the contents
-		mmanager.free(src, size, false);
-		mmanager.free(dest, size, false);
-		assertThat(copy).as("Copied data").isEqualTo(bytes);
-	}
-
-	@Test
-	@DisplayName("Direct memory can be copied to another region (volatile)")
-	void copyVolatile() {
-		assumeThat(mmanager).isNotNull();
-
-		// Define the amount of data to write randomly
-		val size = random.nextInt(Short.MAX_VALUE - Byte.MAX_VALUE) + Byte.MAX_VALUE;
-
-		// Allocate the memory
-		val src = mmanager.allocate(size, false, false);
-		val dest = mmanager.allocate(size, false, false);
-		assumeThat(src).as("Address").isNotZero();
-		assumeThat(dest).as("Address").isNotZero();
-
-		// Generate and write some random data
-		val bytes = new byte[size];
-		random.nextBytes(bytes);
-		mmanager.put(src, size, bytes, 0);
-
-		// Copy the data to another memory region and recover it from memory
-		val copy = new byte[size];
-		mmanager.copyVolatile(src, size, dest);
-		mmanager.get(dest, size, copy, 0);
-
-		// Release the memory and verify the contents
-		mmanager.free(src, size, false);
-		mmanager.free(dest, size, false);
-		assertThat(copy).as("Copied data").isEqualTo(bytes);
-	}
-
-	@Test
-	@EnabledOnOs(OS.LINUX)
-	@DisplayName("Virtual addresses can be translated to physical addresses")
-	void virt2phys() {
-		assumeThat(mmanager).isNotNull();
-
-		// Allocate the memory
-		val virt = mmanager.allocate(1, false, false);
-		assumeThat(virt).as("Address").isNotZero();
-
-		// Translate it, get the page size and compute the mask
-		val phys = mmanager.virt2phys(virt);
-		val pagesize = mmanager.pageSize();
-		val mask = pagesize - 1;
-
-		// Free up the memory and verify the memory addresses
-		mmanager.free(virt, 1, false);
-		val softly = new SoftAssertions();
-		softly.assertThat(phys).as("Physical address").isNotZero();
-		softly.assertThat(pagesize)
-				.as("Page size").isGreaterThan(0)
-				.withFailMessage("should be a power of two").isEqualTo(pagesize & -pagesize);
-		softly.assertThat(phys & mask).as("Offset").isEqualTo(virt & mask);
-		softly.assertAll();
+		if (allocationType == AllocationType.HUGE) {
+			assertThat(mmanager.free(addr + 1, size, AllocationType.HUGE)).as("Freeing").isTrue();
+		} else {
+			assertThat(mmanager.free(addr, size, allocationType)).as("Freeing").isTrue();
+		}
 	}
 
 	@Test
@@ -461,122 +184,315 @@ final class SmartMemoryManagerTest {
 	@DisplayName("DmaMemory can be allocated")
 	void dmaAllocate() {
 		assumeThat(mmanager).isNotNull();
-
 		// Allocate some memory
-		val dma = mmanager.dmaAllocate(1, false, false);
+		val dma = mmanager.dmaAllocate(1, AllocationType.STANDARD, LayoutType.STANDARD);
 		assumeThat(dma).isNotNull();
-
 		// Get the page size and compute the mask
 		val pagesize = mmanager.pageSize();
 		val mask = pagesize - 1;
-
 		// Free up the memory and verify the memory addresses
-		mmanager.free(dma.getVirtualAddress(), 1, false);
+		mmanager.free(dma.getVirtualAddress(), 1, AllocationType.STANDARD);
 		val softly = new SoftAssertions();
 		softly.assertThat(dma.getPhysicalAddress()).as("Physical address").isNotZero();
-		softly.assertThat(pagesize)
-				.as("Page size").isGreaterThan(0)
-				.withFailMessage("should be a power of two").isEqualTo(pagesize & -pagesize);
+		softly.assertThat(pagesize).as("Page size").isPositive().withFailMessage("should be a power of two").isEqualTo(pagesize & -pagesize);
 		softly.assertThat(dma.getPhysicalAddress() & mask).as("Offset").isEqualTo(dma.getVirtualAddress() & mask);
 		softly.assertAll();
 	}
 
+	@Test
+	@DisplayName("Arbitrary bytes can be written and read")
+	void getputByte() {
+		val number = (byte) random.nextInt(Byte.MAX_VALUE + 1);
+		commonTest_getputByte(number, false);
+	}
+
+	@Test
+	@DisplayName("Arbitrary bytes can be written and read (volatile)")
+	void getputByteVolatile() {
+		val number = (byte) random.nextInt(Byte.MAX_VALUE + 1);
+		commonTest_getputByte(number, true);
+	}
+
+	@Test
+	@DisplayName("Arbitrary shorts can be written and read")
+	void getputShort() {
+		val number = (short) random.nextInt(Short.MAX_VALUE + 1);
+		commonTest_getputShort(number, false);
+	}
+
+	@Test
+	@DisplayName("Arbitrary shorts can be written and read (volatile)")
+	void getputShortVolatile() {
+		val number = (short) random.nextInt(Short.MAX_VALUE + 1);
+		commonTest_getputShort(number, true);
+	}
+
+	@Test
+	@DisplayName("Arbitrary ints can be written and read")
+	void getputInt() {
+		val number = random.nextInt();
+		commonTest_getputInt(number, false);
+	}
+
+	@Test
+	@DisplayName("Arbitrary ints can be written and read (volatile)")
+	void getputIntVolatile() {
+		val number = random.nextInt();
+		commonTest_getputInt(number, true);
+	}
+
+	@Test
+	@DisplayName("Arbitrary long can be written and read")
+	void getputLong() {
+		val number = random.nextLong();
+		commonTest_getputLong(number, false);
+	}
+
+	@Test
+	@DisplayName("Arbitrary long can be written and read (volatile)")
+	void getputLongVolatile() {
+		val number = random.nextLong();
+		commonTest_getputLong(number, true);
+	}
+
+	@Test
+	@DisplayName("Direct memory can be copied from|to the JVM heap")
+	void getput() {
+		val size = random.nextInt(Short.MAX_VALUE - Byte.MAX_VALUE) + Byte.MAX_VALUE;
+		val bytes = new byte[size];
+		random.nextBytes(bytes);
+		commonTest_getput(bytes);
+	}
+
+	@Test
+	@DisplayName("Direct memory can be copied from|to the JVM heap (volatile)")
+	void getputVolatile() {
+		val size = random.nextInt(Short.MAX_VALUE - Byte.MAX_VALUE) + Byte.MAX_VALUE;
+		val bytes = new byte[size];
+		random.nextBytes(bytes);
+		commonTest_getputVolatile(bytes);
+	}
+
+	@RepeatedTest(2)
+	@DisplayName("Direct memory can be copied to another region")
+	void copy(RepetitionInfo repetitionInfo) {
+		val size = random.nextInt(Short.MAX_VALUE - Byte.MAX_VALUE) + Byte.MAX_VALUE;
+		val bytes = new byte[size];
+		random.nextBytes(bytes);
+		commonTest_copy(bytes, (repetitionInfo.getCurrentRepetition() & 1) == 0);
+	}
+
+	@RepeatedTest(2)
+	@DisplayName("Direct memory can be copied to another region")
+	void copyVolatile(RepetitionInfo repetitionInfo) {
+		val size = random.nextInt(Short.MAX_VALUE - Byte.MAX_VALUE) + Byte.MAX_VALUE;
+		val bytes = new byte[size];
+		random.nextBytes(bytes);
+		commonTest_copyVolatile(bytes, (repetitionInfo.getCurrentRepetition() & 1) == 0);
+	}
+
+	@Test
+	@EnabledOnOs(OS.LINUX)
+	@DisplayName("Virtual addresses can be translated to physical addresses")
+	void virt2phys() {
+		val virt = assumeAllocate(1);
+		// Translate it, get the page size and compute the mask
+		val phys = mmanager.virt2phys(virt);
+		val pagesize = mmanager.pageSize();
+		val mask = pagesize - 1;
+		// Free up the memory and verify the memory addresses
+		mmanager.free(virt, 1, AllocationType.STANDARD);
+		val softly = new SoftAssertions();
+		softly.assertThat(phys).as("Physical address").isNotZero();
+		softly.assertThat(pagesize).as("Page size").isPositive().withFailMessage("should be a power of two").isEqualTo(pagesize & -pagesize);
+		softly.assertThat(phys & mask).as("Offset").isEqualTo(virt & mask);
+		softly.assertAll();
+	}
+
+	@Test
+	@ResourceLock(BuildConfig.LOCK)
+	@DisplayName("The equals(Object) method works as expected")
+	void equalsTest() {
+		val clone1 = (IxyMemoryManager) allocateInstance(SmartMemoryManager.class);
+		val clone2 = (IxyMemoryManager) allocateInstance(SmartMemoryManager.class);
+		assumeThat(mmanager).isNotNull();
+		assumeThat(clone1).isNotNull();
+		assumeThat(clone2).isNotNull();
+		// Assert as many different cases as possible
+		val softly = new SoftAssertions();
+		softly.assertThat(mmanager).isNotEqualTo(null);
+		softly.assertThat(clone1).isNotEqualTo(null);
+		softly.assertThat(mmanager).isNotEqualTo(softly);
+		softly.assertThat(clone1).isNotEqualTo(softly);
+		softly.assertThat(mmanager).isEqualTo(mmanager);
+		softly.assertThat(clone1).isNotEqualTo(mmanager);
+		softly.assertThat(mmanager).isNotEqualTo(clone1);
+		softly.assertThat(clone1).isEqualTo(clone1);
+		softly.assertThat(mmanager).isNotEqualTo(clone2);
+		softly.assertThat(clone1).isEqualTo(clone2);
+		// Do nasty things to get 100% coverage
+		Field[] fields = {
+				getDeclaredField(SmartMemoryManager.class, "unsafe"),
+				getDeclaredField(SmartMemoryManager.class, "jni")
+		};
+		val len = fields.length;
+		combinations(fields).sequential().forEach(params -> {
+			for (var i = 0; i < len; i += 1) {
+				val field = (Field) params[i];
+				field.setAccessible(true);
+				fieldSet(field, clone1, allocateInstance(field.getDeclaringClass()));
+				softly.assertThat(mmanager).isNotEqualTo(clone1);
+				softly.assertThat(clone2).isNotEqualTo(clone1);
+				softly.assertThat(mmanager).isNotEqualTo(clone2);
+				softly.assertThat(clone1).isNotEqualTo(clone2);
+				softly.assertThat(clone1).isNotEqualTo(mmanager);
+				softly.assertThat(clone1).isNotEqualTo(clone2);
+				fieldSet(field, clone1, fieldGet(field, mmanager));
+				softly.assertThat(mmanager).isNotEqualTo(clone2);
+				softly.assertThat(clone1).isNotEqualTo(clone2);
+				softly.assertThat(clone2).isNotEqualTo(mmanager);
+				softly.assertThat(clone2).isNotEqualTo(clone1);
+				if (i == len - 1) {
+					softly.assertThat(mmanager).isEqualTo(clone1);
+					softly.assertThat(clone1).isEqualTo(mmanager);
+				} else {
+					softly.assertThat(mmanager).isNotEqualTo(clone1);
+					softly.assertThat(clone1).isNotEqualTo(mmanager);
+				}
+				field.setAccessible(false);
+			}
+			for (var i = 0; i < len; i += 1) {
+				val field = (Field) params[i];
+				field.setAccessible(true);
+				fieldSet(field, clone1, null);
+				field.setAccessible(false);
+			}
+		});
+		softly.assertAll();
+	}
+
+	@Test
+	@ResourceLock(BuildConfig.LOCK)
+	@DisplayName("The hashCode() method works as expected")
+	void hashCodeTest() {
+		val clone1 = (IxyMemoryManager) allocateInstance(SmartMemoryManager.class);
+		val clone2 = (IxyMemoryManager) allocateInstance(SmartMemoryManager.class);
+		assumeThat(mmanager).isNotNull();
+		assumeThat(clone1).isNotNull();
+		assumeThat(clone2).isNotNull();
+		// Assert as many different cases as possible
+		val softly = new SoftAssertions();
+		softly.assertThat(clone1.hashCode()).as("Hash code").isNotEqualTo(mmanager.hashCode());
+		softly.assertThat(clone2.hashCode()).as("Hash code").isEqualTo(clone1.hashCode());
+		// Do nasty things to get 100% coverage
+		Field[] fields = {
+				getDeclaredField(SmartMemoryManager.class, "unsafe"),
+				getDeclaredField(SmartMemoryManager.class, "jni")
+		};
+		val len = fields.length;
+		combinations(fields).sequential().forEach(params -> {
+			for (var i = 0; i < len; i += 1) {
+				val field = (Field) params[i];
+				field.setAccessible(true);
+				fieldSet(field, clone1, allocateInstance(field.getDeclaringClass()));
+				softly.assertThat(clone1.hashCode()).as("Hash code").isNotEqualTo(mmanager.hashCode());
+				softly.assertThat(clone2.hashCode()).as("Hash code").isNotEqualTo(clone1.hashCode());
+				softly.assertThat(mmanager.hashCode()).as("Hash code").isNotEqualTo(clone2.hashCode());
+				fieldSet(field, clone1, fieldGet(field, mmanager));
+				softly.assertThat(clone2.hashCode()).as("Hash code").isNotEqualTo(mmanager.hashCode());
+				softly.assertThat(clone2.hashCode()).as("Hash code").isNotEqualTo(clone1.hashCode());
+				if (i == len - 1) {
+					softly.assertThat(clone1.hashCode()).as("Hash code").isEqualTo(mmanager.hashCode());
+				} else {
+					softly.assertThat(clone1.hashCode()).as("Hash code").isNotEqualTo(mmanager.hashCode());
+				}
+				field.setAccessible(false);
+			}
+			for (var i = 0; i < len; i += 1) {
+				val field = (Field) params[i];
+				field.setAccessible(true);
+				fieldSet(field, clone1, null);
+				field.setAccessible(false);
+			}
+		});
+		softly.assertAll();
+	}
+
+	@Test
+	@SuppressWarnings("HardcodedFileSeparator")
+	@DisplayName("The string representation is correct")
+	void toStringTest() {
+		assumeThat(mmanager).isNotNull();
+		val genericPattern = "^%s\\(\\w*unsafe\\w*=%s\\(.*\\), \\w*jni\\w*=%s\\(.*\\)\\)$";
+		val unsafeSimpleName = UnsafeMemoryManager.class.getSimpleName();
+		val jniSimpleName = JniMemoryManager.class.getSimpleName();
+		val smartSimpleName = SmartMemoryManager.class.getSimpleName();
+		val specificPattern = String.format(genericPattern, smartSimpleName, unsafeSimpleName, jniSimpleName);
+		val pattern = Pattern.compile(specificPattern);
+		assertThat(mmanager.toString()).as("String representation").matches(pattern);
+	}
+
 	/**
-	 * Asserts that an arbitrary address is within the specified bounds.
+	 * Creates an array with all the combinations of an array.
 	 *
-	 * @param start   The start of the memory region.
-	 * @param end     The end of the memory region.
-	 * @param address The address to manipulate.
-	 * @param bytes   The number of bytes to manipulate.
+	 * @param possibilities The different possible values.
+	 * @return The different combinations.
 	 */
-	private static void testValidAddress(final long start, final long end, final long address, final int bytes) {
-		for (var i = 0; i < bytes; i += 1) {
-			assertThat(address + i)
-					.as("Address")
-					.withFailMessage("should be inside memory region")
-					.isBetween(start, end);
+	private static Stream<Object[]> combinations(Object[] possibilities) {
+		val len = possibilities.length;
+		var factorial = len == 0 ? 0 : 1;
+		for (var i = 2; i <= len; i += 1) {
+			factorial *= i;
 		}
+		val combinations = new byte[factorial][len];
+		val indexes = new byte[len];
+		for (var i = 0; i < len; i += 1) {
+			indexes[i] = (byte) i;
+		}
+		combinations_rec(combinations, 0, 0, indexes);
+		return Arrays.stream(combinations)
+				.parallel()
+				.map(params -> IntStream.range(0, len)
+						.mapToObj(i -> possibilities[params[i]])
+						.toArray());
+	}
+
+	private static int combinations_rec(byte[][] combinations, int combination, int offset, byte[] remaining) {
+		val len = remaining.length;
+		if (len == 2) {
+			val first = remaining[0];
+			val second = remaining[1];
+			combinations[combination][offset] = first;
+			combinations[combination][offset + 1] = second;
+			combinations[combination + 1][offset] = second;
+			combinations[combination + 1][offset + 1] = first;
+			return 2;
+		}
+		var sum = 0;
+		for (var i = 0; i < len; i += 1) {
+			val pick = remaining[i];
+			val remainingRec = new byte[len - 1];
+			System.arraycopy(remaining, 0, remainingRec, 0, i);
+			System.arraycopy(remaining, i + 1, remainingRec, i, len - 1 - i);
+			var combs = combinations_rec(combinations, combination, offset + 1, remainingRec);
+			sum += combs;
+			while (combs-- > 0) {
+				combinations[combination++][offset] = pick;
+			}
+		}
+		return sum;
 	}
 
 	/**
-	 * Asserts that an arbitrary address can be written and read.
-	 * <p>
-	 * This method assumes that the {@code unsafe} parameter is not null and tries to manipulate the {@code address}
-	 * using {@code byte}s.
-	 *
-	 * @param unsafe  The unsafe object that allows manipulating arbitrary memory addresses.
-	 * @param address The address to manipulate.
-	 * @param value   The value to use.
-	 */
-	private static void testWriteByte(final Unsafe unsafe, final long address, final byte value) {
-		unsafe.putByte(address, value);
-		assertThat(unsafe.getByte(address)).isEqualTo(value);
-	}
-
-	/**
-	 * Asserts that an arbitrary address can be written and read.
-	 * <p>
-	 * This method assumes that the {@code unsafe} parameter is not null and tries to manipulate the {@code address}
-	 * using {@code short}s.
-	 *
-	 * @param unsafe  The unsafe object that allows manipulating arbitrary memory addresses.
-	 * @param address The address to manipulate.
-	 * @param value   The value to use.
-	 */
-	private static void testWriteShort(final Unsafe unsafe, final long address, final short value) {
-		unsafe.putShort(address, value);
-		assertThat(unsafe.getShort(address)).isEqualTo(value);
-	}
-
-	/**
-	 * Asserts that an arbitrary address can be written and read.
-	 * <p>
-	 * This method assumes that the {@code unsafe} parameter is not null and tries to manipulate the {@code address}
-	 * using {@code int}s.
-	 *
-	 * @param unsafe  The unsafe object that allows manipulating arbitrary memory addresses.
-	 * @param address The address to manipulate.
-	 * @param value   The value to use.
-	 */
-	private static void testWriteInt(final Unsafe unsafe, final long address, final int value) {
-		unsafe.putInt(address, value);
-		assertThat(unsafe.getInt(address)).isEqualTo(value);
-	}
-
-	/**
-	 * Asserts that an arbitrary address can be written and read.
-	 * <p>
-	 * This method assumes that the {@code unsafe} parameter is not null and tries to manipulate the {@code address}
-	 * using {@code long}s.
-	 *
-	 * @param unsafe  The unsafe object that allows manipulating arbitrary memory addresses.
-	 * @param address The address to manipulate.
-	 * @param value   The value to use.
-	 */
-	private static void testWriteLong(final Unsafe unsafe, final long address, final long value) {
-		unsafe.putLong(address, value);
-		assertThat(unsafe.getLong(address)).isEqualTo(value);
-	}
-
-	/**
-	 * The source of arguments for {@link #allocate_free(Long, Boolean, Boolean)}.
+	 * The source of arguments for {@link #allocate_free(long, AllocationType, LayoutType)}.
 	 * <p>
 	 * This method will generate all the combinations that could raise exceptions or behave differently.
 	 *
 	 * @return The {@link Stream} of {@link Arguments}.
 	 */
-	private static Stream<Arguments> allocateSource() {
-		val mmanager = JniMemoryManager.getInstance();
-		val hugity = new boolean[]{false, true};
-		val contiguousity = new boolean[]{false, true};
-		Stream.Builder<Arguments> builder = Stream.builder();
-		for (val huge : hugity) {
-			for (val contiguous : contiguousity) {
-				val size = huge && contiguous ? mmanager.hugepageSize() + Long.BYTES : mmanager.pageSize() * 2;
-				builder.add(Arguments.of(size, huge, contiguous));
-			}
-		}
-		return builder.build();
+	private static Stream<Arguments> allocate_free_Arguments() {
+		val mmanager = JniMemoryManager.getSingleton();
+		return commonMethodSource_allocate(mmanager.pageSize(), mmanager.hugepageSize());
 	}
 
 }

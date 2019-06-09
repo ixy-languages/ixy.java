@@ -15,14 +15,4 @@ final class InvalidBufferException extends IllegalArgumentException {
 		super("A parameter is an invalid buffer");
 	}
 
-	/**
-	 * Builds the error message given the parameter name which contains the invalid buffer.
-	 *
-	 * @param parameter The name of the parameter that is wrong.
-	 */
-	@SuppressWarnings("HardCodedStringLiteral")
-	InvalidBufferException(String parameter) {
-		super(String.format("The parameter '%s' is an invalid buffer", parameter));
-	}
-
 }

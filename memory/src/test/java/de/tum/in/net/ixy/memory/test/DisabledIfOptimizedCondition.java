@@ -16,6 +16,7 @@ import static org.junit.platform.commons.util.AnnotationUtils.findAnnotation;
  *
  * @author Esaú García Sánchez-Torija
  */
+@SuppressWarnings("CyclicClassDependency")
 final class DisabledIfOptimizedCondition implements ExecutionCondition {
 
 	/** Cached evaluation result used when the annotation {@code @DisabledIfOptimized} is not present. */

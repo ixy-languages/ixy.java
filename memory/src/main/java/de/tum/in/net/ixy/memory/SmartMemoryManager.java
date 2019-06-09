@@ -2,33 +2,38 @@ package de.tum.in.net.ixy.memory;
 
 import de.tum.in.net.ixy.generic.IxyDmaMemory;
 import de.tum.in.net.ixy.generic.IxyMemoryManager;
+import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Locale;
-
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
-import lombok.val;
+import java.util.Objects;
 
 /**
- * Implementation of memory manager backed by both {@link UnsafeMemoryManager} and {@link JniMemoryManager}.
- * <p>
- * This implementation performs checks on the parameters based on the value of {@link BuildConfig#OPTIMIZED}.
- * The backend chose for delegation depends on the value of {@link BuildConfig#UNSAFE} or the compatibility of the
- * operation.
+ * A simple implementation of Ixy's memory manager specification using JNI.
  *
  * @author Esaú García Sánchez-Torija
  */
 @Slf4j
+@ToString(onlyExplicitlyIncluded = true)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, doNotUseGetters = true)
+@SuppressWarnings({"DuplicateStringLiteralInspection", "HardCodedStringLiteral"})
 public final class SmartMemoryManager implements IxyMemoryManager {
 
 	/////////////////////////////////////////////////// RETURN CODES ///////////////////////////////////////////////////
@@ -36,10 +41,38 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 	/** The return code used when no huge memory page technology is supported by the CPU. */
 	private static final int HUGE_PAGE_NOT_SUPPORTED = -1;
 
+	//////////////////////////////////////////////////// CONSTANTS /////////////////////////////////////////////////////
+
+	/** Space character. */
+	private static final char CHAR_SPACE = ' ';
+
+	/** Colon character. */
+	private static final char CHAR_COLON = ':';
+
+	/** Kilobyte factor. */
+	private static final int KB = 1024;
+
+	/** Megabyte factor. */
+	private static final int MB = 1024 * KB;
+
+	/** Gigabyte factor. */
+	private static final int GB = 1024 * MB;
+
+	//////////////////////////////////////////////////// FILE PATHS ////////////////////////////////////////////////////
+
+	/** The path to the mounted (filesystem) table. */
+	private static final Path MTAB_PATH = Paths.get(File.separator, "etc", "mtab");
+
+	/** The path to the memory info file. */
+	private static final Path MEMINFO_PATH = Paths.get(File.separator, "proc", "meminfo");
+
+	/** The page map file. */
+	private static final Path PAGEMAP_PATH = Paths.get(File.separator, "proc", "self", "pagemap");
+
 	////////////////////////////////////////////////// STATIC METHODS //////////////////////////////////////////////////
 
 	/**
-	 * Cached instance to use as singleton.
+	 * Singleton instance.
 	 * -------------- GETTER --------------
 	 * Returns a singleton instance.
 	 *
@@ -47,42 +80,60 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 	 */
 	@Getter
 	@Setter(AccessLevel.NONE)
-	private static final SmartMemoryManager instance = new SmartMemoryManager();
+	@SuppressWarnings("JavaDoc")
+	private static final IxyMemoryManager singleton = new SmartMemoryManager();
+
+	/**
+	 * Creates a buffered reader given a {@code file}.
+	 *
+	 * @param file The file to read.
+	 * @return The buffered reader.
+	 * @throws FileNotFoundException If the {@code file} does not exist.
+	 */
+	private static BufferedReader bufferedReader(File file) throws FileNotFoundException {
+		val fileInputStream = new FileInputStream(file);
+		val inputFilterStream = new InputStreamReader(fileInputStream, StandardCharsets.UTF_8);
+		return new BufferedReader(inputFilterStream);
+	}
 
 	///////////////////////////////////////////////////// MEMBERS //////////////////////////////////////////////////////
 
-	/** The singleton instance of the JNI-based memory manager. */
-	private transient UnsafeMemoryManager unsafe = UnsafeMemoryManager.getInstance();
+	/** The singleton instance of the Unsafe-based memory manager. */
+	@EqualsAndHashCode.Include
+	@ToString.Include(name = "unsafe", rank = 2)
+	private final IxyMemoryManager unsafe = UnsafeMemoryManager.getSingleton();
 
 	/** The singleton instance of the JNI-based memory manager. */
-	private transient JniMemoryManager jni = JniMemoryManager.getInstance();
+	@EqualsAndHashCode.Include
+	@ToString.Include(name = "jni", rank = 1)
+	private final IxyMemoryManager jni = JniMemoryManager.getSingleton();
 
 	//////////////////////////////////////////////// NON-STATIC METHODS ////////////////////////////////////////////////
 
 	/** Private constructor that throws an exception if the instance is already instantiated. */
 	private SmartMemoryManager() {
 		if (BuildConfig.DEBUG) log.debug("Creating a smart memory manager");
-		if (instance != null) throw new IllegalStateException("An instance cannot be created twice. Use getInstance() instead.");
+		if (singleton != null) {
+			throw new IllegalStateException("An instance cannot be created twice. Use getSingleton() instead.");
+		}
 	}
 
 	//////////////////////////////////////////////// OVERRIDDEN METHODS ////////////////////////////////////////////////
 
-	/** {@inheritDoc} */
 	@Override
 	public int addressSize() {
 		return BuildConfig.UNSAFE ? unsafe.addressSize() : jni.addressSize();
 	}
 
-	/** {@inheritDoc} */
 	@Override
 	public long pageSize() {
 		return BuildConfig.UNSAFE ? unsafe.pageSize() : jni.pageSize();
 	}
 
-	/** {@inheritDoc} */
 	@Override
+	@SuppressWarnings("AccessOfSystemProperties")
 	public long hugepageSize() {
-		if (BuildConfig.DEBUG) log.trace("Smart huge memory page size computation");
+		if (BuildConfig.DEBUG) log.trace("Smart hugepage size computation");
 
 		// If we are on a non-Linux OS or forcing the C implementation, call the JNI method
 		if (!BuildConfig.UNSAFE || !System.getProperty("os.name").toLowerCase(Locale.getDefault()).contains("lin")) {
@@ -90,50 +141,56 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 		}
 
 		// Try parsing the file /etc/mtab
-		if (BuildConfig.DEBUG) log.trace("Parsing file /etc/mtab");
-		try (val mtab = new BufferedReader(new InputStreamReader(new FileInputStream("/etc/mtab"), StandardCharsets.UTF_8))) {
+		if (BuildConfig.DEBUG) log.trace("Parsing file {}", MTAB_PATH);
+		try (val mtab = bufferedReader(MTAB_PATH.toFile())) {
 			var line = mtab.readLine();
-			for (; line != null; line = mtab.readLine()) {
-				var _space = 0;
-				var space = line.indexOf(' ', _space);
-				var word = line.substring(_space, space);
-				if (!word.equals("hugetlbfs")) continue; // Not the file system we want
-				_space = space + 1;
-				space = line.indexOf(' ', _space);
-				word = line.substring(_space, space);
-				if (!word.equals(BuildConfig.HUGE_MNT)) continue; // Not the mount point we want
-				_space = space + 1;
-				space = line.indexOf(' ', _space);
-				word = line.substring(_space, space);
-				if (word.equals("hugetlbfs")) break;
+			while (line != null) {
+				var firstSpace = 0;
+				var secondSpace = line.indexOf(CHAR_SPACE, firstSpace);
+				var word = line.substring(firstSpace, secondSpace);
+				if (Objects.equals(word, "hugetlbfs")) {
+					firstSpace = secondSpace + 1;
+					secondSpace = line.indexOf(CHAR_SPACE, firstSpace);
+					word = line.substring(firstSpace, secondSpace);
+					if (Objects.equals(word, BuildConfig.HUGE_MNT)) {
+						firstSpace = secondSpace + 1;
+						secondSpace = line.indexOf(CHAR_SPACE, firstSpace);
+						word = line.substring(firstSpace, secondSpace);
+						if (Objects.equals(word, "hugetlbfs")) break;
+					}
+				}
+				line = mtab.readLine();
 			}
 			if (line == null) return HUGE_PAGE_NOT_SUPPORTED;
-		} catch (final IOException e) {
-			log.error("The /etc/mtab cannot be found, read or closed", e);
+		} catch (FileNotFoundException e) {
+			log.error("The {} cannot be found", MTAB_PATH, e);
+			return HUGE_PAGE_NOT_SUPPORTED;
+		} catch (IOException e) {
+			log.error("The {} cannot be read or closed", MTAB_PATH, e);
 			return HUGE_PAGE_NOT_SUPPORTED;
 		}
 
 		// Try parsing the file /proc/meminfo
-		if (BuildConfig.DEBUG) log.trace("Parsing file /proc/meminfo");
-		try (val meminfo = new BufferedReader(new InputStreamReader(new FileInputStream("/proc/meminfo"), StandardCharsets.UTF_8))) {
+		if (BuildConfig.DEBUG) log.trace("Parsing file {}", MEMINFO_PATH);
+		try (val meminfo = bufferedReader(MEMINFO_PATH.toFile())) {
 			for (var line = meminfo.readLine(); line != null; line = meminfo.readLine()) {
-				var _space = 0;
-				var space = line.indexOf(':', _space);
-				var word = line.substring(_space, space);
-				if (word.equals("Hugepagesize")) {
-					line = line.substring(space + 1).trim();
-					space = line.indexOf(' ');
-					var bytes = Long.parseLong(line.substring(0, space));
-					val units = line.substring(space + 1).trim();
+				var firstSpace = 0;
+				var secondSpace = line.indexOf(CHAR_COLON, firstSpace);
+				var word = line.substring(firstSpace, secondSpace);
+				if (Objects.equals(word, "Hugepagesize")) {
+					line = line.substring(secondSpace + 1).trim();
+					secondSpace = line.indexOf(CHAR_SPACE);
+					var bytes = Long.parseLong(line.substring(0, secondSpace));
+					val units = line.substring(secondSpace + 1).trim();
 					switch (units) {
 						case "GB":
-							bytes *= 1024*1024*1024;
+							bytes *= GB;
 							break;
 						case "MB":
-							bytes *= 1024*1024;
+							bytes *= MB;
 							break;
 						case "kB":
-							bytes *= 1024;
+							bytes *= KB;
 							break;
 						case "B":
 							break;
@@ -143,163 +200,155 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 					return bytes;
 				}
 			}
-		} catch (final IOException e) {
-			log.error("The /proc/meminfo cannot be found, read or closed", e);
+		} catch (FileNotFoundException e) {
+			log.error("The {} cannot be found", MEMINFO_PATH, e);
+		} catch (IOException e) {
+			log.error("The {} cannot be read or closed", MEMINFO_PATH, e);
 		}
 		return 0;
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public long allocate(final long size, final boolean huge, final boolean contiguous) {
-		if (huge) {
-			return jni.allocate(size, huge, contiguous);
+	public long allocate(long size, AllocationType allocationType, LayoutType layoutType) {
+		if (allocationType == AllocationType.HUGE) {
+			return jni.allocate(size, AllocationType.HUGE, layoutType);
 		} else {
-			return BuildConfig.UNSAFE ? unsafe.allocate(size, huge, contiguous) : jni.allocate(size, huge, contiguous);
+			return BuildConfig.UNSAFE
+					? unsafe.allocate(size, allocationType, layoutType)
+					: jni.allocate(size, allocationType, layoutType);
 		}
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public boolean free(final long src, final long size, final boolean huge) {
-		if (huge) {
-			return jni.free(src, size, huge);
+	public IxyDmaMemory dmaAllocate(long size, AllocationType allocationType, LayoutType layoutType) {
+		return jni.dmaAllocate(size, allocationType, layoutType);
+	}
+
+	@Override
+	public boolean free(long address, long size, AllocationType allocationType) {
+		if (allocationType == AllocationType.HUGE) {
+			return jni.free(address, size, AllocationType.HUGE);
 		} else {
-			return BuildConfig.UNSAFE ? unsafe.free(src, size, huge) : jni.free(src, size, huge);
+			return BuildConfig.UNSAFE
+					? unsafe.free(address, size, allocationType)
+					: jni.free(address, size, allocationType);
 		}
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public byte getByte(final long src) {
-		return BuildConfig.UNSAFE ? unsafe.getByte(src) : jni.getByte(src);
+	public byte getByte(long address) {
+		return BuildConfig.UNSAFE ? unsafe.getByte(address) : jni.getByte(address);
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public byte getByteVolatile(final long src) {
-		return BuildConfig.UNSAFE ? unsafe.getByteVolatile(src) : jni.getByteVolatile(src);
+	public byte getByteVolatile(long address) {
+		return BuildConfig.UNSAFE ? unsafe.getByteVolatile(address) : jni.getByteVolatile(address);
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public void putByte(final long dest, final byte value) {
+	public void putByte(long address, byte value) {
 		if (BuildConfig.UNSAFE) {
-			unsafe.putByte(dest, value);
+			unsafe.putByte(address, value);
 		} else {
-			jni.putByte(dest, value);
+			jni.putByte(address, value);
 		}
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public void putByteVolatile(final long dest, final byte value) {
+	public void putByteVolatile(long address, byte value) {
 		if (BuildConfig.UNSAFE) {
-			unsafe.putByteVolatile(dest, value);
+			unsafe.putByteVolatile(address, value);
 		} else {
-			jni.putByteVolatile(dest, value);
+			jni.putByteVolatile(address, value);
 		}
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public short getShort(final long src) {
-		return BuildConfig.UNSAFE ? unsafe.getShort(src) : jni.getShort(src);
+	public short getShort(long address) {
+		return BuildConfig.UNSAFE ? unsafe.getShort(address) : jni.getShort(address);
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public short getShortVolatile(final long src) {
-		return BuildConfig.UNSAFE ? unsafe.getShortVolatile(src) : jni.getShortVolatile(src);
+	public short getShortVolatile(long address) {
+		return BuildConfig.UNSAFE ? unsafe.getShortVolatile(address) : jni.getShortVolatile(address);
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public void putShort(final long dest, final short value) {
+	public void putShort(long address, short value) {
 		if (BuildConfig.UNSAFE) {
-			unsafe.putShort(dest, value);
+			unsafe.putShort(address, value);
 		} else {
-			jni.putShort(dest, value);
+			jni.putShort(address, value);
 		}
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public void putShortVolatile(final long dest, final short value) {
+	public void putShortVolatile(long address, short value) {
 		if (BuildConfig.UNSAFE) {
-			unsafe.putShortVolatile(dest, value);
+			unsafe.putShortVolatile(address, value);
 		} else {
-			jni.putShortVolatile(dest, value);
+			jni.putShortVolatile(address, value);
 		}
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public int getInt(final long src) {
-		return BuildConfig.UNSAFE ? unsafe.getInt(src) : jni.getInt(src);
+	public int getInt(long address) {
+		return BuildConfig.UNSAFE ? unsafe.getInt(address) : jni.getInt(address);
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public int getIntVolatile(final long src) {
-		return BuildConfig.UNSAFE ? unsafe.getIntVolatile(src) : jni.getIntVolatile(src);
+	public int getIntVolatile(long address) {
+		return BuildConfig.UNSAFE ? unsafe.getIntVolatile(address) : jni.getIntVolatile(address);
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public void putInt(final long dest, final int value) {
+	public void putInt(long address, int value) {
 		if (BuildConfig.UNSAFE) {
-			unsafe.putInt(dest, value);
+			unsafe.putInt(address, value);
 		} else {
-			jni.putInt(dest, value);
+			jni.putInt(address, value);
 		}
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public void putIntVolatile(final long dest, final int value) {
+	public void putIntVolatile(long address, int value) {
 		if (BuildConfig.UNSAFE) {
-			unsafe.putIntVolatile(dest, value);
+			unsafe.putIntVolatile(address, value);
 		} else {
-			jni.putIntVolatile(dest, value);
+			jni.putIntVolatile(address, value);
 		}
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public long getLong(final long src) {
-		return BuildConfig.UNSAFE ? unsafe.getLong(src) : jni.getLong(src);
+	public long getLong(long address) {
+		return BuildConfig.UNSAFE ? unsafe.getLong(address) : jni.getLong(address);
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public long getLongVolatile(final long src) {
-		return BuildConfig.UNSAFE ? unsafe.getLongVolatile(src) : jni.getLongVolatile(src);
+	public long getLongVolatile(long address) {
+		return BuildConfig.UNSAFE ? unsafe.getLongVolatile(address) : jni.getLongVolatile(address);
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public void putLong(final long dest, final long value) {
+	public void putLong(long address, long value) {
 		if (BuildConfig.UNSAFE) {
-			unsafe.putLong(dest, value);
+			unsafe.putLong(address, value);
 		} else {
-			jni.putLong(dest, value);
+			jni.putLong(address, value);
 		}
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public void putLongVolatile(final long dest, final long value) {
+	public void putLongVolatile(long address, long value) {
 		if (BuildConfig.UNSAFE) {
-			unsafe.putLongVolatile(dest, value);
+			unsafe.putLongVolatile(address, value);
 		} else {
-			jni.putLongVolatile(dest, value);
+			jni.putLongVolatile(address, value);
 		}
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public void get(final long src, final int size, final byte[] dest, final int offset) {
+	public void get(long src, int size, byte[] dest, int offset) {
 		if (BuildConfig.UNSAFE) {
 			unsafe.get(src, size, dest, offset);
 		} else {
@@ -307,15 +356,17 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 		}
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public void getVolatile(final long src, final int size, final byte[] dest, final int offset) {
-		jni.getVolatile(src, size, dest, offset);
+	public void getVolatile(long src, int size, byte[] dest, int offset) {
+		if (BuildConfig.UNSAFE) {
+			unsafe.getVolatile(src, size, dest, offset);
+		} else {
+			jni.getVolatile(src, size, dest, offset);
+		}
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public void put(final long dest, final int size, final byte[] src, final int offset) {
+	public void put(long dest, int size, byte[] src, int offset) {
 		if (BuildConfig.UNSAFE) {
 			unsafe.put(dest, size, src, offset);
 		} else {
@@ -323,15 +374,17 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 		}
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public void putVolatile(final long dest, final int size, final byte[] src, final int offset) {
-		jni.putVolatile(dest, size, src, offset);
+	public void putVolatile(long dest, int size, byte[] src, int offset) {
+		if (BuildConfig.UNSAFE) {
+			unsafe.putVolatile(dest, size, src, offset);
+		} else {
+			jni.putVolatile(dest, size, src, offset);
+		}
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public void copy(final long src, final int size, final long dest) {
+	public void copy(long src, int size, long dest) {
 		if (BuildConfig.UNSAFE) {
 			unsafe.copy(src, size, dest);
 		} else {
@@ -339,15 +392,18 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 		}
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public void copyVolatile(final long src, final int size, final long dest) {
-		jni.copyVolatile(src, size, dest);
+	public void copyVolatile(long src, int size, long dest) {
+		if (BuildConfig.UNSAFE) {
+			unsafe.copyVolatile(src, size, dest);
+		} else {
+			jni.copyVolatile(src, size, dest);
+		}
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public long virt2phys(final long address) {
+	@SuppressWarnings("AccessOfSystemProperties")
+	public long virt2phys(long address) {
 		if (BuildConfig.DEBUG) log.trace("Smart memory translation of address 0x{}", Long.toHexString(address));
 
 		// If we are on a non-Linux OS this won't work
@@ -358,17 +414,20 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 		val adsz = addressSize();
 
 		// Compute the offset, the base address and the page number
-		val mask   = pgsz - 1;
+		val mask = pgsz - 1;
 		val offset = address & mask;
-		val base   = address - offset;
-		val page   = base / pgsz * adsz;
+		val base = address - offset;
+		val page = base / pgsz * adsz;
 
 		// Try parsing the file /proc/self/pagemap
-		if (BuildConfig.DEBUG) log.trace("Parsing file /proc/self/pagemap");
+		if (BuildConfig.DEBUG) log.trace("Parsing file {}", PAGEMAP_PATH);
 		var phys = 0L;
-		try (val pagemap = new RandomAccessFile("/proc/self/pagemap", "r")) {
+		try (
+				val pagemap = new RandomAccessFile(PAGEMAP_PATH.toFile(), "r");
+				val channel = pagemap.getChannel().position(page)
+		) {
 			val buffer = ByteBuffer.allocate(adsz).order(ByteOrder.nativeOrder());
-			pagemap.getChannel().position(page).read(buffer);
+			channel.read(buffer);
 			switch (adsz) {
 				case Byte.BYTES:
 					phys = buffer.flip().get();
@@ -387,16 +446,12 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 			}
 			phys *= pgsz;
 			phys += offset;
-		} catch (final IOException e) {
-			log.error("The /proc/self/pagemap cannot be found, read, closed or we read past its size", e);
+		} catch (FileNotFoundException e) {
+			log.error("The {} cannot be found", PAGEMAP_PATH, e);
+		} catch (IOException e) {
+			log.error("The {} cannot be read, closed or we read past its size", PAGEMAP_PATH, e);
 		}
 		return phys;
-	}
-
-	/** {@inheritDoc} */
-	@Override
-	public IxyDmaMemory dmaAllocate(long size, boolean huge, boolean contiguous) {
-		return jni.dmaAllocate(size, huge, contiguous);
 	}
 
 }

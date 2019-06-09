@@ -74,7 +74,9 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	 */
 	private UnsafeMemoryManager() {
 		if (BuildConfig.DEBUG) log.debug("Creating an Unsafe-backed memory manager");
-		if (singleton != null) throw new IllegalStateException("An instance cannot be created twice. Use getSingleton() instead.");
+		if (singleton != null) {
+			throw new IllegalStateException("An instance cannot be created twice. Use getSingleton() instead.");
+		}
 		try {
 			val theUnsafeField = Unsafe.class.getDeclaredField("theUnsafe");
 			theUnsafeField.setAccessible(true);
@@ -116,9 +118,9 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		// Stop if anything is wrong
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (size <= 0L)             throw new InvalidSizeException("size");
+			if (size <= 0L) throw new InvalidSizeException("size");
 			if (allocationType == null) throw new InvalidNullParameterException("allocationType");
-			if (layoutType == null)     throw new InvalidNullParameterException("layoutType");
+			if (layoutType == null) throw new InvalidNullParameterException("layoutType");
 		}
 
 		// Hugepage-based allocation is not supported
@@ -149,8 +151,8 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		// Stop if anything is wrong
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (address == 0L)          throw new InvalidMemoryAddressException("address");
-			if (size <= 0L)             throw new InvalidSizeException("size");
+			if (address == 0L) throw new InvalidMemoryAddressException("address");
+			if (size <= 0L) throw new InvalidSizeException("size");
 			if (allocationType == null) throw new InvalidNullParameterException("allocationType");
 		}
 
@@ -500,7 +502,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 
 	/////////////////////////////////////////////// UNSUPPORTED METHODS ////////////////////////////////////////////////
 
-	/** @deprecated */
+	/** @deprecated  */
 	@Override
 	@Deprecated
 	public long hugepageSize() {
@@ -509,7 +511,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		throw new UnsupportedUnsafeOperationException();
 	}
 
-	/** @deprecated */
+	/** @deprecated  */
 	@Override
 	@Deprecated
 	public IxyDmaMemory dmaAllocate(long size, AllocationType allocationType, LayoutType layoutType) {
@@ -519,7 +521,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		return DmaMemory.of(virt, phys);
 	}
 
-	/** @deprecated */
+	/** @deprecated  */
 	@Override
 	@Deprecated
 	public long virt2phys(long address) {

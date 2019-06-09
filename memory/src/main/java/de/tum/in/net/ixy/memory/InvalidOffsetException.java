@@ -15,14 +15,4 @@ final class InvalidOffsetException extends IllegalArgumentException {
 		super("A parameter is an invalid offset");
 	}
 
-	/**
-	 * Builds the error message given the parameter name which contains the invalid offset.
-	 *
-	 * @param parameter The name of the parameter that is wrong.
-	 */
-	@SuppressWarnings("HardCodedStringLiteral")
-	InvalidOffsetException(String parameter) {
-		super(String.format("The parameter '%s' is an invalid offset", parameter));
-	}
-
 }

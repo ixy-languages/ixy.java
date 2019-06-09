@@ -5,12 +5,8 @@ package de.tum.in.net.ixy.memory;
  *
  * @author Esaú García Sánchez-Torija
  */
-final class Utility {
-
-	/** Prevents the class from being used to instantiate objects. */
-	private Utility() {
-		throw new UnsupportedOperationException("Cannot instantiate utility class");
-	}
+enum Utility {
+	;
 
 	/**
 	 * Grouped checks done to an address, a size, a buffer and an offset.
