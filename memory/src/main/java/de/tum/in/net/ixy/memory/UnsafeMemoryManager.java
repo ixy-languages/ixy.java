@@ -22,7 +22,7 @@ import static de.tum.in.net.ixy.memory.Utility.check;
  * @author Esaú García Sánchez-Torija
  */
 @Slf4j
-@ToString(onlyExplicitlyIncluded = true)
+@ToString(onlyExplicitlyIncluded = true, doNotUseGetters = true)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, doNotUseGetters = true)
 @SuppressWarnings({"DuplicateStringLiteralInspection", "HardCodedStringLiteral", "ConstantConditions"})
 public final class UnsafeMemoryManager implements IxyMemoryManager {

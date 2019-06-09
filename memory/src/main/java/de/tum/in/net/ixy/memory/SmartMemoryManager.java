@@ -34,7 +34,7 @@ import java.util.Objects;
  * @author Esaú García Sánchez-Torija
  */
 @Slf4j
-@ToString(onlyExplicitlyIncluded = true)
+@ToString(onlyExplicitlyIncluded = true, doNotUseGetters = true)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, doNotUseGetters = true)
 @SuppressWarnings({"DuplicateStringLiteralInspection", "HardCodedStringLiteral"})
 public final class SmartMemoryManager implements IxyMemoryManager {
