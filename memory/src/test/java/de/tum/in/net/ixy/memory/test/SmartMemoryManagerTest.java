@@ -1,10 +1,7 @@
 package de.tum.in.net.ixy.memory.test;
 
-import de.tum.in.net.ixy.generic.IxyMemoryManager;
-import de.tum.in.net.ixy.memory.BuildConfig;
 import de.tum.in.net.ixy.memory.JniMemoryManager;
 import de.tum.in.net.ixy.memory.SmartMemoryManager;
-import de.tum.in.net.ixy.memory.UnsafeMemoryManager;
 import lombok.val;
 import org.assertj.core.api.SoftAssertions;
 import org.jetbrains.annotations.Contract;
@@ -21,20 +18,15 @@ import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.junit.jupiter.api.parallel.ResourceLock;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.security.SecureRandom;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Random;
-import java.util.regex.Pattern;
-import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
@@ -154,20 +146,16 @@ final class SmartMemoryManagerTest extends AbstractMemoryManagerTest {
 				// Test the addresses with the correct data type
 				switch (bytes) {
 					case Byte.BYTES:
-						aligned.peek(address -> testWrite(address, (byte) rand, false))
-								.forEach(address -> testWrite(address, (byte) rand, false));
+						aligned.peek(address -> testWrite(address, (byte) rand, false)).forEach(address -> testWrite(address, (byte) rand, false));
 						break;
 					case Short.BYTES:
-						aligned.peek(address -> testWrite(address, (short) rand, false))
-								.forEach(address -> testWrite(address, (short) rand, false));
+						aligned.peek(address -> testWrite(address, (short) rand, false)).forEach(address -> testWrite(address, (short) rand, false));
 						break;
 					case Integer.BYTES:
-						aligned.peek(address -> testWrite(address, (int) rand, false))
-								.forEach(address -> testWrite(address, (int) rand, false));
+						aligned.peek(address -> testWrite(address, (int) rand, false)).forEach(address -> testWrite(address, (int) rand, false));
 						break;
 					case Long.BYTES:
-						aligned.peek(address -> testWrite(address, rand, false))
-								.forEach(address -> testWrite(address, rand, false));
+						aligned.peek(address -> testWrite(address, rand, false)).forEach(address -> testWrite(address, rand, false));
 						break;
 					default:
 						fail("the number of bytes makes no sense");
@@ -194,8 +182,8 @@ final class SmartMemoryManagerTest extends AbstractMemoryManagerTest {
 		val pagesize = mmanager.pageSize();
 		val mask = pagesize - 1;
 		// Free up the memory and verify the memory addresses
-		mmanager.free(dma.getVirtualAddress(), 1, AllocationType.STANDARD);
 		val softly = new SoftAssertions();
+		softly.assertThat(mmanager.free(dma.getVirtualAddress(), 1, AllocationType.STANDARD)).as("Freeing").isTrue();
 		softly.assertThat(dma.getPhysicalAddress()).as("Physical address").isNotZero();
 		softly.assertThat(pagesize).as("Page size").isPositive().withFailMessage("should be a power of two").isEqualTo(pagesize & -pagesize);
 		softly.assertThat(dma.getPhysicalAddress() & mask).as("Offset").isEqualTo(dma.getVirtualAddress() & mask);
@@ -304,186 +292,12 @@ final class SmartMemoryManagerTest extends AbstractMemoryManagerTest {
 		val pagesize = mmanager.pageSize();
 		val mask = pagesize - 1;
 		// Free up the memory and verify the memory addresses
-		mmanager.free(virt, 1, AllocationType.STANDARD);
 		val softly = new SoftAssertions();
+		softly.assertThat(mmanager.free(virt, 1, AllocationType.STANDARD)).as("Freeing").isTrue();
 		softly.assertThat(phys).as("Physical address").isNotZero();
 		softly.assertThat(pagesize).as("Page size").isPositive().withFailMessage("should be a power of two").isEqualTo(pagesize & -pagesize);
 		softly.assertThat(phys & mask).as("Offset").isEqualTo(virt & mask);
 		softly.assertAll();
-	}
-
-	@Test
-	@DisplayName("The equals(Object) method works as expected")
-	void equalsTest() {
-		val clone1 = (IxyMemoryManager) allocateInstance(SmartMemoryManager.class);
-		val clone2 = (IxyMemoryManager) allocateInstance(SmartMemoryManager.class);
-		assumeThat(mmanager).isNotNull();
-		assumeThat(clone1).isNotNull();
-		assumeThat(clone2).isNotNull();
-		// Assert as many different cases as possible
-		val softly = new SoftAssertions();
-		softly.assertThat(mmanager).isNotEqualTo(null);
-		softly.assertThat(clone1).isNotEqualTo(null);
-		softly.assertThat(mmanager).isNotEqualTo(softly);
-		softly.assertThat(clone1).isNotEqualTo(softly);
-		softly.assertThat(mmanager).isEqualTo(mmanager);
-		softly.assertThat(clone1).isNotEqualTo(mmanager);
-		softly.assertThat(mmanager).isNotEqualTo(clone1);
-		softly.assertThat(clone1).isEqualTo(clone1);
-		softly.assertThat(mmanager).isNotEqualTo(clone2);
-		softly.assertThat(clone1).isEqualTo(clone2);
-		// Do nasty things to get 100% coverage
-		Field[] fields = {
-				getDeclaredField(SmartMemoryManager.class, "unsafe"),
-				getDeclaredField(SmartMemoryManager.class, "jni")
-		};
-		val len = fields.length;
-		combinations(fields).sequential().forEach(params -> {
-			for (var i = 0; i < len; i += 1) {
-				val field = (Field) params[i];
-				field.setAccessible(true);
-				fieldSet(field, clone1, allocateInstance(field.getDeclaringClass()));
-				softly.assertThat(mmanager).isNotEqualTo(clone1);
-				softly.assertThat(clone2).isNotEqualTo(clone1);
-				softly.assertThat(mmanager).isNotEqualTo(clone2);
-				softly.assertThat(clone1).isNotEqualTo(clone2);
-				softly.assertThat(clone1).isNotEqualTo(mmanager);
-				softly.assertThat(clone1).isNotEqualTo(clone2);
-				fieldSet(field, clone1, fieldGet(field, mmanager));
-				softly.assertThat(mmanager).isNotEqualTo(clone2);
-				softly.assertThat(clone1).isNotEqualTo(clone2);
-				softly.assertThat(clone2).isNotEqualTo(mmanager);
-				softly.assertThat(clone2).isNotEqualTo(clone1);
-				if (i == len - 1) {
-					softly.assertThat(mmanager).isEqualTo(clone1);
-					softly.assertThat(clone1).isEqualTo(mmanager);
-				} else {
-					softly.assertThat(mmanager).isNotEqualTo(clone1);
-					softly.assertThat(clone1).isNotEqualTo(mmanager);
-				}
-				field.setAccessible(false);
-			}
-			for (var i = 0; i < len; i += 1) {
-				val field = (Field) params[i];
-				field.setAccessible(true);
-				fieldSet(field, clone1, null);
-				field.setAccessible(false);
-			}
-		});
-		softly.assertAll();
-	}
-
-	@Test
-	@DisplayName("The hashCode() method works as expected")
-	void hashCodeTest() {
-		val clone1 = (IxyMemoryManager) allocateInstance(SmartMemoryManager.class);
-		val clone2 = (IxyMemoryManager) allocateInstance(SmartMemoryManager.class);
-		assumeThat(mmanager).isNotNull();
-		assumeThat(clone1).isNotNull();
-		assumeThat(clone2).isNotNull();
-		// Assert as many different cases as possible
-		val softly = new SoftAssertions();
-		softly.assertThat(clone1.hashCode()).as("Hash code").isNotEqualTo(mmanager.hashCode());
-		softly.assertThat(clone2.hashCode()).as("Hash code").isEqualTo(clone1.hashCode());
-		// Do nasty things to get 100% coverage
-		Field[] fields = {
-				getDeclaredField(SmartMemoryManager.class, "unsafe"),
-				getDeclaredField(SmartMemoryManager.class, "jni")
-		};
-		val len = fields.length;
-		combinations(fields).sequential().forEach(params -> {
-			for (var i = 0; i < len; i += 1) {
-				val field = (Field) params[i];
-				field.setAccessible(true);
-				fieldSet(field, clone1, allocateInstance(field.getDeclaringClass()));
-				softly.assertThat(clone1.hashCode()).as("Hash code").isNotEqualTo(mmanager.hashCode());
-				softly.assertThat(clone2.hashCode()).as("Hash code").isNotEqualTo(clone1.hashCode());
-				softly.assertThat(mmanager.hashCode()).as("Hash code").isNotEqualTo(clone2.hashCode());
-				fieldSet(field, clone1, fieldGet(field, mmanager));
-				softly.assertThat(clone2.hashCode()).as("Hash code").isNotEqualTo(mmanager.hashCode());
-				softly.assertThat(clone2.hashCode()).as("Hash code").isNotEqualTo(clone1.hashCode());
-				if (i == len - 1) {
-					softly.assertThat(clone1.hashCode()).as("Hash code").isEqualTo(mmanager.hashCode());
-				} else {
-					softly.assertThat(clone1.hashCode()).as("Hash code").isNotEqualTo(mmanager.hashCode());
-				}
-				field.setAccessible(false);
-			}
-			for (var i = 0; i < len; i += 1) {
-				val field = (Field) params[i];
-				field.setAccessible(true);
-				fieldSet(field, clone1, null);
-				field.setAccessible(false);
-			}
-		});
-		softly.assertAll();
-	}
-
-	@Test
-	@SuppressWarnings("HardcodedFileSeparator")
-	@DisplayName("The string representation is correct")
-	void toStringTest() {
-		assumeThat(mmanager).isNotNull();
-		val genericPattern = "^%s\\(\\w*unsafe\\w*=%s\\(.*\\), \\w*jni\\w*=%s\\(.*\\)\\)$";
-		val unsafeSimpleName = UnsafeMemoryManager.class.getSimpleName();
-		val jniSimpleName = JniMemoryManager.class.getSimpleName();
-		val smartSimpleName = SmartMemoryManager.class.getSimpleName();
-		val specificPattern = String.format(genericPattern, smartSimpleName, unsafeSimpleName, jniSimpleName);
-		val pattern = Pattern.compile(specificPattern);
-		assertThat(mmanager.toString()).as("String representation").matches(pattern);
-	}
-
-	/**
-	 * Creates an array with all the combinations of an array.
-	 *
-	 * @param possibilities The different possible values.
-	 * @return The different combinations.
-	 */
-	@Contract(value = "null -> fail; !null -> new", pure = true)
-	private static @NotNull Stream<@NotNull Object[]> combinations(@NotNull Object[] possibilities) {
-		val len = possibilities.length;
-		var factorial = len == 0 ? 0 : 1;
-		for (var i = 2; i <= len; i += 1) {
-			factorial *= i;
-		}
-		val combinations = new byte[factorial][len];
-		val indexes = new byte[len];
-		for (var i = 0; i < len; i += 1) {
-			indexes[i] = (byte) i;
-		}
-		combinations_rec(combinations, 0, 0, indexes);
-		return Arrays.stream(combinations)
-				.parallel()
-				.map(params -> IntStream.range(0, len)
-						.mapToObj(i -> possibilities[params[i]])
-						.toArray());
-	}
-
-	@Contract(value = "null, _, _, _ -> fail; _, _, _, null -> fail; !null, _, _, !null -> _", pure = true)
-	private static int combinations_rec(@NotNull byte[][] combinations, int combination, int offset, @NotNull byte[] remaining) {
-		val len = remaining.length;
-		if (len == 2) {
-			val first = remaining[0];
-			val second = remaining[1];
-			combinations[combination][offset] = first;
-			combinations[combination][offset + 1] = second;
-			combinations[combination + 1][offset] = second;
-			combinations[combination + 1][offset + 1] = first;
-			return 2;
-		}
-		var sum = 0;
-		for (var i = 0; i < len; i += 1) {
-			val pick = remaining[i];
-			val remainingRec = new byte[len - 1];
-			System.arraycopy(remaining, 0, remainingRec, 0, i);
-			System.arraycopy(remaining, i + 1, remainingRec, i, len - 1 - i);
-			var combs = combinations_rec(combinations, combination, offset + 1, remainingRec);
-			sum += combs;
-			while (combs-- > 0) {
-				combinations[combination++][offset] = pick;
-			}
-		}
-		return sum;
 	}
 
 	/**
