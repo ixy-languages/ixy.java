@@ -229,7 +229,7 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@Contract(value = "_, null, _ -> fail; _, _, null -> fail; _, !null, !null -> new", pure = true)
-	public IxyDmaMemory dmaAllocate(long size, @NotNull AllocationType allocationType, @NotNull LayoutType layoutType) {
+	public @NotNull IxyDmaMemory dmaAllocate(long size, @NotNull AllocationType allocationType, @NotNull LayoutType layoutType) {
 		return jni.dmaAllocate(size, allocationType, layoutType);
 	}
 
