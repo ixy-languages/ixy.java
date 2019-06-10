@@ -18,30 +18,19 @@ import org.jetbrains.annotations.NotNull;
  */
 @ToString(onlyExplicitlyIncluded = true, doNotUseGetters = true)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, doNotUseGetters = true)
-@SuppressWarnings({"HardCodedStringLiteral", "ClassWithoutNoArgConstructor"})
-@RequiredArgsConstructor(staticName = "of", access = AccessLevel.PUBLIC, onConstructor_ = {@NotNull, @Contract(value = "_, _ -> new", pure = true)})
+@RequiredArgsConstructor(
+	staticName = "of",
+	access = AccessLevel.PUBLIC,
+	onConstructor_ = {@NotNull, @Contract(value = "_, _ -> new", pure = true)}
+)
 public final class DmaMemory implements IxyDmaMemory {
 
-	/**
-	 * -------------- GETTER --------------
-	 * Returns virtual memory address.
-	 *
-	 * @return The virtual memory address.
-	 */
 	@EqualsAndHashCode.Include
-	@SuppressWarnings("JavaDoc")
 	@Getter(onMethod_ = {@Contract(pure = true)})
 	@ToString.Include(name = "virtual", rank = 2)
 	private final long virtualAddress;
 
-	/**
-	 * -------------- GETTER --------------
-	 * Returns the physical memory address.
-	 *
-	 * @return The physical memory address.
-	 */
 	@EqualsAndHashCode.Include
-	@SuppressWarnings("JavaDoc")
 	@Getter(onMethod_ = {@Contract(pure = true)})
 	@ToString.Include(name = "physical", rank = 1)
 	private final long physicalAddress;
@@ -56,6 +45,19 @@ public final class DmaMemory implements IxyDmaMemory {
 	public static @NotNull IxyDmaMemory of(@NotNull IxyDmaMemory dmaMemory) {
 		if (!BuildConfig.OPTIMIZED && dmaMemory == null) throw new InvalidNullParameterException("dmaMemory");
 		return of(dmaMemory.getVirtualAddress(), dmaMemory.getPhysicalAddress());
+	}
+
+	/**
+	 * Creates a copy of another Ixy's direct memory address specification implementation.
+	 *
+	 * @param dmaMemory The direct memory address specification to copy.
+	 * @return A copy of the {@code dmaMemory}.
+	 */
+	@SuppressWarnings("MethodParameterOfConcreteClass")
+	@Contract(value = "null -> fail; _ -> new", pure = true)
+	public static @NotNull IxyDmaMemory of(@NotNull DmaMemory dmaMemory) {
+		if (!BuildConfig.OPTIMIZED && dmaMemory == null) throw new InvalidNullParameterException("dmaMemory");
+		return of(dmaMemory.virtualAddress, dmaMemory.physicalAddress);
 	}
 
 }
