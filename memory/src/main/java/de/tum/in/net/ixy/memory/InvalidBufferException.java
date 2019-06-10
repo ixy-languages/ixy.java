@@ -8,15 +8,10 @@ import org.jetbrains.annotations.NotNull;
  *
  * @author Esaú García Sánchez-Torija
  */
-final class InvalidBufferException extends IllegalArgumentException {
+public final class InvalidBufferException extends IllegalArgumentException {
 
 	/** Serial used for serialization purposes. */
 	private static final long serialVersionUID = -8823678074225048611L;
-
-	/** Builds the error message. */
-	InvalidBufferException() {
-		super("A parameter is an invalid buffer");
-	}
 
 	/**
 	 * Builds the error message given the parameter name which contains the invalid buffer.
@@ -24,8 +19,7 @@ final class InvalidBufferException extends IllegalArgumentException {
 	 * @param parameter The name of the parameter that is wrong.
 	 */
 	@Contract("null -> fail")
-	@SuppressWarnings({"HardCodedStringLiteral", "DuplicateStringLiteralInspection"})
-	InvalidBufferException(@NotNull String parameter) {
+	public InvalidBufferException(@NotNull String parameter) {
 		super(String.format("The parameter '%s' is an invalid size", parameter));
 		if (!BuildConfig.OPTIMIZED && (parameter == null || parameter.isBlank())) {
 			throw new IllegalArgumentException("The exception message could not be constructed correctly");
