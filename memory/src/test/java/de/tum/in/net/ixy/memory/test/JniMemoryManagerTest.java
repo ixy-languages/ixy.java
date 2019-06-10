@@ -1,13 +1,11 @@
 package de.tum.in.net.ixy.memory.test;
 
 import de.tum.in.net.ixy.generic.IxyMemoryManager;
-import de.tum.in.net.ixy.memory.BuildConfig;
 import de.tum.in.net.ixy.memory.JniMemoryManager;
 import lombok.val;
 import org.assertj.core.api.SoftAssertions;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.DynamicTest;
@@ -20,18 +18,15 @@ import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
-import org.junit.jupiter.api.parallel.ResourceLock;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.security.SecureRandom;
 import java.util.Collection;
 import java.util.Random;
-import java.util.regex.Pattern;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
@@ -54,22 +49,10 @@ final class JniMemoryManagerTest extends AbstractMemoryManagerTest {
 	/** A cached instance of a pseudo-random number generator. */
 	private static final @NotNull Random random = new SecureRandom();
 
-	/** The cloned memory manager instance to test. */
-	private @Nullable IxyMemoryManager mmanagerClone;
-
 	// Creates a "JniMemoryManager" instance
 	@BeforeEach
 	void setUp() {
 		mmanager = JniMemoryManager.getSingleton();
-		mmanagerClone = (IxyMemoryManager) allocateInstance(JniMemoryManager.class);
-		if (mmanagerClone != null) {
-			val hugepageSizeField = getDeclaredField(JniMemoryManager.class, "HUGE_PAGE_SIZE");
-			if (hugepageSizeField != null) {
-				hugepageSizeField.setAccessible(true);
-				fieldSet(hugepageSizeField, mmanagerClone, 0);
-				hugepageSizeField.setAccessible(false);
-			}
-		}
 	}
 
 	@Test
@@ -132,7 +115,18 @@ final class JniMemoryManagerTest extends AbstractMemoryManagerTest {
 	@MethodSource("allocate_free_Arguments")
 	@EnabledIfRoot
 	void allocate_free(long size, @NotNull AllocationType allocationType, @NotNull LayoutType layoutType) {
+		// Create a clone of the memory manager without calling the constructor
+		val mmanagerClone = (IxyMemoryManager) allocateInstance(mmanager.getClass());
+		// Make sure the managers are available
 		assumeThat(mmanager).isNotNull();
+		assumeThat(mmanagerClone).isNotNull();
+		// Make the cloned memory manager have a wrong value on the field HUGE_PAGE_SIZE
+		val hugepageSizeField = getDeclaredField(mmanager.getClass(), "HUGE_PAGE_SIZE");
+		if (hugepageSizeField != null) {
+			hugepageSizeField.setAccessible(true);
+			fieldSet(hugepageSizeField, mmanagerClone, 0);
+			hugepageSizeField.setAccessible(false);
+		}
 		// Make sure we can extract the huge page size
 		val hpsz = mmanager.hugepageSize();
 		assumeThat(hpsz).as("Huge memory page size").isPositive().withFailMessage("should be a power of two").isEqualTo(hpsz & -hpsz);
@@ -167,20 +161,16 @@ final class JniMemoryManagerTest extends AbstractMemoryManagerTest {
 				// Test the addresses with the correct data type
 				switch (bytes) {
 					case Byte.BYTES:
-						aligned.peek(address -> testWrite(address, (byte) rand, false))
-								.forEach(address -> testWrite(address, (byte) rand, false));
+						aligned.peek(address -> testWrite(address, (byte) rand, false)).forEach(address -> testWrite(address, (byte) rand, false));
 						break;
 					case Short.BYTES:
-						aligned.peek(address -> testWrite(address, (short) rand, false))
-								.forEach(address -> testWrite(address, (short) rand, false));
+						aligned.peek(address -> testWrite(address, (short) rand, false)).forEach(address -> testWrite(address, (short) rand, false));
 						break;
 					case Integer.BYTES:
-						aligned.peek(address -> testWrite(address, (int) rand, false))
-								.forEach(address -> testWrite(address, (int) rand, false));
+						aligned.peek(address -> testWrite(address, (int) rand, false)).forEach(address -> testWrite(address, (int) rand, false));
 						break;
 					case Long.BYTES:
-						aligned.peek(address -> testWrite(address, rand, false))
-								.forEach(address -> testWrite(address, rand, false));
+						aligned.peek(address -> testWrite(address, rand, false)).forEach(address -> testWrite(address, rand, false));
 						break;
 					default:
 						fail("the number of bytes makes no sense");
@@ -207,8 +197,8 @@ final class JniMemoryManagerTest extends AbstractMemoryManagerTest {
 		val pagesize = mmanager.pageSize();
 		val mask = pagesize - 1;
 		// Free up the memory and verify the memory addresses
-		mmanager.free(dma.getVirtualAddress(), 1, AllocationType.STANDARD);
 		val softly = new SoftAssertions();
+		softly.assertThat(mmanager.free(dma.getVirtualAddress(), 1, AllocationType.STANDARD)).as("Freeing").isTrue();
 		softly.assertThat(dma.getPhysicalAddress()).as("Physical address").isNotZero();
 		softly.assertThat(pagesize).as("Page size").isPositive().withFailMessage("should be a power of two").isEqualTo(pagesize & -pagesize);
 		softly.assertThat(dma.getPhysicalAddress() & mask).as("Offset").isEqualTo(dma.getVirtualAddress() & mask);
@@ -317,68 +307,12 @@ final class JniMemoryManagerTest extends AbstractMemoryManagerTest {
 		val pagesize = mmanager.pageSize();
 		val mask = pagesize - 1;
 		// Free up the memory and verify the memory addresses
-		mmanager.free(virt, 1, AllocationType.STANDARD);
 		val softly = new SoftAssertions();
+		softly.assertThat(mmanager.free(virt, 1, AllocationType.STANDARD)).as("Freeing").isTrue();
 		softly.assertThat(phys).as("Physical address").isNotZero();
 		softly.assertThat(pagesize).as("Page size").isPositive().withFailMessage("should be a power of two").isEqualTo(pagesize & -pagesize);
 		softly.assertThat(phys & mask).as("Offset").isEqualTo(virt & mask);
 		softly.assertAll();
-	}
-
-	@Test
-	@ResourceLock(BuildConfig.LOCK)
-	@DisplayName("The equals(Object) method works as expected")
-	void equalsTest() {
-		assumeThat(mmanager).isNotNull();
-		// Assert as many different cases as possible
-		val softly = new SoftAssertions();
-		softly.assertThat(mmanager).isNotEqualTo(null);
-		softly.assertThat(mmanagerClone).isNotEqualTo(null);
-		softly.assertThat(mmanager).isNotEqualTo(softly);
-		softly.assertThat(mmanagerClone).isNotEqualTo(softly);
-		softly.assertThat(mmanager).isEqualTo(mmanager);
-		softly.assertThat(mmanagerClone).isEqualTo(mmanagerClone);
-		softly.assertThat(mmanager).isNotEqualTo(mmanagerClone);
-		softly.assertThat(mmanagerClone).isNotEqualTo(mmanager);
-		// Do nasty things to get 100% coverage
-		Field hugepageSizeField = getDeclaredField(JniMemoryManager.class, "HUGE_PAGE_SIZE");
-		if (hugepageSizeField != null) {
-			hugepageSizeField.setAccessible(true);
-			val hugepageSize = fieldGet(hugepageSizeField, mmanager);
-			fieldSet(hugepageSizeField, mmanagerClone, hugepageSize);
-			softly.assertThat(mmanager).isEqualTo(mmanagerClone);
-			softly.assertThat(mmanagerClone).isEqualTo(mmanager);
-			fieldSet(hugepageSizeField, mmanagerClone, 0);
-			hugepageSizeField.setAccessible(false);
-		}
-		softly.assertAll();
-	}
-
-	@Test
-	@ResourceLock(BuildConfig.LOCK)
-	@DisplayName("The hashCode() method works as expected")
-	void hashCodeTest() {
-		assumeThat(mmanager).isNotNull();
-		// Get the hashes
-		val hash1 = mmanager.hashCode();
-		val hash2 = mmanagerClone.hashCode();
-		// Assert the values
-		val softly = new SoftAssertions();
-		softly.assertThat(mmanager.hashCode()).as("Hash code").isEqualTo(hash1);
-		softly.assertThat(mmanagerClone.hashCode()).as("Hash code").isEqualTo(hash2);
-		softly.assertThat(hash1).as("Hash code").isNotEqualTo(hash2);
-		softly.assertAll();
-	}
-
-	@Test
-	@SuppressWarnings("HardcodedFileSeparator")
-	@DisplayName("The string representation is correct")
-	void toStringTest() {
-		assumeThat(mmanager).isNotNull();
-		val genericPattern = "^%s\\(\\w*page\\w*=[1-9][0-9]*\\)$";
-		val specificPattern = String.format(genericPattern, JniMemoryManager.class.getSimpleName());
-		val pattern = Pattern.compile(specificPattern);
-		assertThat(mmanager.toString()).as("String representation").matches(pattern);
 	}
 
 	/**
