@@ -42,7 +42,7 @@ import static org.assertj.core.api.Assumptions.assumeThat;
  * @author Esaú García Sánchez-Torija
  */
 @DisplayName("UnsafeMemoryManager")
-final class UnsafeMemoryManagerTest extends AbstractMemoryManagerTest {
+final class UnsafeMemoryManagerTest extends AbstractMemoryTest {
 
 	/** A cached instance of a pseudo-random number generator. */
 	private static final @NotNull Random random = new SecureRandom();

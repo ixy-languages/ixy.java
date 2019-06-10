@@ -44,7 +44,7 @@ import static org.assertj.core.api.Assumptions.assumeThat;
  */
 @DisplayName("JniMemoryManager")
 @Execution(ExecutionMode.SAME_THREAD)
-final class JniMemoryManagerTest extends AbstractMemoryManagerTest {
+final class JniMemoryManagerTest extends AbstractMemoryTest {
 
 	/** A cached instance of a pseudo-random number generator. */
 	private static final @NotNull Random random = new SecureRandom();

@@ -26,8 +26,7 @@ import static org.assertj.core.api.Assumptions.assumeThat;
  *
  * @author Esaú García Sánchez-Torija
  */
-@SuppressWarnings("ResultOfMethodCallIgnored")
-abstract class AbstractMemoryManagerTest {
+abstract class AbstractMemoryTest {
 
 	/** The memory manager to test. */
 	IxyMemoryManager mmanager;
