@@ -48,7 +48,7 @@ pmd {
 ext {
 	DEBUG     = rootProject.ext.has("DEBUG")     ? project.DEBUG     : false
 	UNSAFE    = rootProject.ext.has("UNSAFE")    ? project.UNSAFE    : true
-	OPTIMIZED = rootProject.ext.has("OPTIMIZED") ? project.OPTIMIZED : false
+	OPTIMIZED = rootProject.ext.has("OPTIMIZED") ? project.OPTIMIZED : true
 	HUGE_MNT  = rootProject.ext.has("HUGE_MNT")  ? project.HUGE_MNT  : "/mnt/huge"
 }
 
@@ -108,13 +108,16 @@ buildConfig {
 	buildConfigField 'boolean', 'UNSAFE',    "${project.UNSAFE}"
 	buildConfigField 'boolean', 'OPTIMIZED', "${project.OPTIMIZED}"
 	buildConfigField 'String',  'HUGE_MNT',  "\"${project.HUGE_MNT}\""
+	buildConfigField 'String',  'LOCK',      "\"UNSAFE\""
 }
 
 // Define the dependencies and the minimum scope needed for them to work
 dependencies {
-	compile project(':ixy.generic')
-	compile group: 'org.slf4j', name: 'slf4j-api', version: '1.8.0-beta4'
+	api project(':ixy.generic')
+	implementation group: 'org.slf4j',     name: 'slf4j-api',   version: '1.7.26'
+	compileOnly    group: 'org.jetbrains', name: 'annotations', version: '17.0.0'
 
+	testCompileOnly    group: 'org.jetbrains',     name: 'annotations',           version: '17.0.0'
 	testCompile        group: 'org.junit.jupiter', name: 'junit-jupiter-params',  version: '5.5.0-M1'
 	testRuntimeOnly    group: 'org.junit.jupiter', name: 'junit-jupiter-engine',  version: '5.5.0-M1'
 	testImplementation group: 'org.assertj',       name: 'assertj-core',          version: '3.12.2'
@@ -123,15 +126,18 @@ dependencies {
 
 	// Add Logback based on if the DEBUG flag is enabled
 	if (project.DEBUG)
-		testCompile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
+		testRuntime group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
 	else
-		testCompile group: 'org.slf4j', name: 'slf4j-nop', version: '1.8.0-beta4'
+		testRuntime group: 'org.slf4j', name: 'slf4j-nop', version: '1.7.26'
 }
 
 // Disable the "@Generated" annotation used by the BuildConfig generated class
 tasks.withType(com.github.gmazzo.gradle.plugins.tasks.BuildConfigTask) {
 	addGeneratedAnnotation = false
 }
+
+// Disable Lombok's @Generated annotation
+lombok.config['lombok.addLombokGeneratedAnnotation'] = "${false}"
 
 // Disable the warning about the Unsafe proprietary API during compilation
 tasks.withType(JavaCompile) {
@@ -142,7 +148,7 @@ tasks.withType(JavaCompile) {
 tasks.withType(Javadoc) {
 	options.links << 'https://docs.oracle.com/en/java/javase/12/docs/api/'
 	options.addBooleanOption('html5', true)
-//	options.jFlags += '-XDignore.symbol.file'
+	options.noQualifiers "all"
 }
 
 // Export the SpotBugs reports in HTML format only
@@ -160,8 +166,11 @@ test {
 	// Add the native library path
 	systemProperty "java.library.path", file("${buildDir}/libs/ixy/shared").absolutePath
 
+	// Configure Logback
+	if (project.DEBUG) systemProperty 'logback.configurationFile', 'logback-test.xml'
+
 	// Enable JUnit 5 and execute all tests always
-	useJUnitPlatform { failFast = false }
+	useJUnitPlatform { failFast = true }
 
 	// Use all processor cores to test
 	maxParallelForks = Runtime.runtime.availableProcessors()
@@ -186,7 +195,7 @@ test {
 		showPassed                 true
 		showSkipped                true
 		showFailed                 true
-		showStandardStreams        true
+		showStandardStreams        false
 		showPassedStandardStreams  true
 		showSkippedStandardStreams true
 		showFailedStandardStreams  true
