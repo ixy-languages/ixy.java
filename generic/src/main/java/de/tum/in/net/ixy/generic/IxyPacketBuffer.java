@@ -1,15 +1,22 @@
 package de.tum.in.net.ixy.generic;
 
+import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NonNull;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 import lombok.val;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Minimum functionality a packet should expose.
  *
  * @author Esaú García Sánchez-Torija
  */
+@SuppressWarnings({"HardCodedStringLiteral", "DuplicateStringLiteralInspection"})
 public interface IxyPacketBuffer {
 
 	/**
@@ -19,6 +26,9 @@ public interface IxyPacketBuffer {
 	 *
 	 * @author Esaú García Sánchez-Torija
 	 */
+	@NoArgsConstructor(access = AccessLevel.PROTECTED)
+	@ToString(onlyExplicitlyIncluded = true, doNotUseGetters = true)
+	@EqualsAndHashCode(onlyExplicitlyIncluded = true, doNotUseGetters = true)
 	abstract class Builder {
 
 		/**
@@ -32,9 +42,10 @@ public interface IxyPacketBuffer {
 		 *
 		 * @param virtualAddress The virtual address of the packet.
 		 */
-		@Getter
 		@Setter
-		protected long virtualAddress;
+		@SuppressWarnings("JavaDoc")
+		@Getter(value = AccessLevel.PROTECTED, onMethod_ = {@Contract(pure = true)})
+		private long virtualAddress;
 
 		/**
 		 * The physical address of the packet.
@@ -51,9 +62,10 @@ public interface IxyPacketBuffer {
 		 *
 		 * @param virtualAddress The physical address of the packet.
 		 */
-		@Getter
 		@Setter
-		protected Long physicalAddress = null;
+		@SuppressWarnings("JavaDoc")
+		@Getter(value = AccessLevel.PROTECTED, onMethod_ = {@Contract(pure = true)})
+		private @Nullable Long physicalAddress;
 
 		/**
 		 * The memory pool id of the packet.
@@ -70,9 +82,10 @@ public interface IxyPacketBuffer {
 		 *
 		 * @param memoryPoolId The memory pool id of the packet.
 		 */
-		@Getter
 		@Setter
-		protected Integer memoryPoolId = null;
+		@SuppressWarnings("JavaDoc")
+		@Getter(value = AccessLevel.PROTECTED, onMethod_ = {@Contract(pure = true)})
+		private @Nullable Integer memoryPoolId;
 
 		/**
 		 * The size of the packet.
@@ -89,9 +102,10 @@ public interface IxyPacketBuffer {
 		 *
 		 * @param size The size of the packet.
 		 */
-		@Getter
 		@Setter
-		protected Integer size = null;
+		@SuppressWarnings("JavaDoc")
+		@Getter(value = AccessLevel.PROTECTED, onMethod_ = {@Contract(pure = true)})
+		private @Nullable Integer size;
 
 		/**
 		 * Builds the packet with the properties of the builder.
@@ -101,8 +115,8 @@ public interface IxyPacketBuffer {
 		 *
 		 * @return The new packet.
 		 */
-		@NonNull
-		public abstract IxyPacketBuffer build();
+		@Contract(value = " -> new", pure = true)
+		public abstract @NotNull IxyPacketBuffer build();
 
 	}
 
@@ -114,6 +128,7 @@ public interface IxyPacketBuffer {
 	 *
 	 * @return The virtual address.
 	 */
+	@Contract(pure = true)
 	long getVirtualAddress();
 
 	/**
@@ -124,6 +139,7 @@ public interface IxyPacketBuffer {
 	 *
 	 * @return The physical memory address.
 	 */
+	@Contract(pure = true)
 	long getPhysicalAddress();
 
 	/**
@@ -133,6 +149,7 @@ public interface IxyPacketBuffer {
 	 *
 	 * @return The memory pool id.
 	 */
+	@Contract(pure = true)
 	int getMemoryPoolId();
 
 	/**
@@ -140,6 +157,7 @@ public interface IxyPacketBuffer {
 	 *
 	 * @return The size of the packet.
 	 */
+	@Contract(pure = true)
 	int getSize();
 
 	/**
@@ -149,7 +167,8 @@ public interface IxyPacketBuffer {
 	 *
 	 * @param size The size of the packet.
 	 */
-	void setSize(final int size);
+	@Contract(pure = true)
+	void setSize(int size);
 
 	/**
 	 * Reads a {@code byte} from the packet data.
@@ -157,7 +176,8 @@ public interface IxyPacketBuffer {
 	 * @param offset The offset to start reading from.
 	 * @return The read {@code byte}.
 	 */
-	byte getByte(final int offset);
+	@Contract(pure = true)
+	byte getByte(int offset);
 
 	/**
 	 * Reads a {@code byte} from the packet data using volatile memory addresses.
@@ -165,7 +185,8 @@ public interface IxyPacketBuffer {
 	 * @param offset The offset to start reading from.
 	 * @return The read {@code byte}.
 	 */
-	byte getByteVolatile(final int offset);
+	@Contract(pure = true)
+	byte getByteVolatile(int offset);
 	
 	/**
 	 * Writes a {@code byte} to the packet data.
@@ -173,7 +194,8 @@ public interface IxyPacketBuffer {
 	 * @param offset The offset to start writing to.
 	 * @param value  The {@code byte} to write.
 	 */
-	void putByte(final int offset, final byte value);
+	@Contract(pure = true)
+	void putByte(int offset, byte value);
 
 	/**
 	 * Writes a {@code byte} to the packet data using volatile memory addresses.
@@ -181,7 +203,8 @@ public interface IxyPacketBuffer {
 	 * @param offset The offset to start writing to.
 	 * @param value  The {@code byte} to write.
 	 */
-	void putByteVolatile(final int offset, final byte value);
+	@Contract(pure = true)
+	void putByteVolatile(int offset, byte value);
 
 	/**
 	 * Reads a {@code short} from the packet data.
@@ -189,7 +212,8 @@ public interface IxyPacketBuffer {
 	 * @param offset The offset to start reading from.
 	 * @return The read {@code short}.
 	 */
-	short getShort(final int offset);
+	@Contract(pure = true)
+	short getShort(int offset);
 
 	/**
 	 * Reads a {@code short} from the packet data using volatile memory addresses.
@@ -197,7 +221,8 @@ public interface IxyPacketBuffer {
 	 * @param offset The offset to start reading from.
 	 * @return The read {@code short}.
 	 */
-	short getShortVolatile(final int offset);
+	@Contract(pure = true)
+	short getShortVolatile(int offset);
 
 	/**
 	 * Writes a {@code short} to the packet data.
@@ -205,7 +230,8 @@ public interface IxyPacketBuffer {
 	 * @param offset The offset to start writing to.
 	 * @param value  The {@code short} to write.
 	 */
-	void putShort(final int offset, final short value);
+	@Contract(pure = true)
+	void putShort(int offset, short value);
 
 	/**
 	 * Writes a {@code short} to the packet data using volatile memory addresses.
@@ -213,7 +239,8 @@ public interface IxyPacketBuffer {
 	 * @param offset The offset to start writing to.
 	 * @param value  The {@code short} to write.
 	 */
-	void putShortVolatile(final int offset, final short value);
+	@Contract(pure = true)
+	void putShortVolatile(int offset, short value);
 	
 	/**
 	 * Reads a {@code int} from the packet data.
@@ -221,7 +248,8 @@ public interface IxyPacketBuffer {
 	 * @param offset The offset to start reading from.
 	 * @return The read {@code int}.
 	 */
-	int getInt(final int offset);
+	@Contract(pure = true)
+	int getInt(int offset);
 
 	/**
 	 * Reads a {@code int} from the packet data using volatile memory addresses.
@@ -229,7 +257,8 @@ public interface IxyPacketBuffer {
 	 * @param offset The offset to start reading from.
 	 * @return The read {@code int}.
 	 */
-	int getIntVolatile(final int offset);
+	@Contract(pure = true)
+	int getIntVolatile(int offset);
 
 	/**
 	 * Writes a {@code int} to the packet data.
@@ -237,7 +266,8 @@ public interface IxyPacketBuffer {
 	 * @param offset The offset to start writing to.
 	 * @param value  The {@code int} to write.
 	 */
-	void putInt(final int offset, final int value);
+	@Contract(pure = true)
+	void putInt(int offset, int value);
 
 	/**
 	 * Writes a {@code int} to the packet data using volatile memory addresses.
@@ -245,7 +275,8 @@ public interface IxyPacketBuffer {
 	 * @param offset The offset to start writing to.
 	 * @param value  The {@code int} to write.
 	 */
-	void putIntVolatile(final int offset, final int value);
+	@Contract(pure = true)
+	void putIntVolatile(int offset, int value);
 
 	/**
 	 * Reads a {@code long} from the packet data.
@@ -253,7 +284,8 @@ public interface IxyPacketBuffer {
 	 * @param offset The offset to start reading from.
 	 * @return The read {@code long}.
 	 */
-	long getLong(final int offset);
+	@Contract(pure = true)
+	long getLong(int offset);
 
 	/**
 	 * Reads a {@code long} from the packet data using volatile memory addresses.
@@ -261,7 +293,8 @@ public interface IxyPacketBuffer {
 	 * @param offset The offset to start reading from.
 	 * @return The read {@code long}.
 	 */
-	long getLongVolatile(final int offset);
+	@Contract(pure = true)
+	long getLongVolatile(int offset);
 
 	/**
 	 * Writes a {@code long} to the packet data.
@@ -269,7 +302,8 @@ public interface IxyPacketBuffer {
 	 * @param offset The offset to start writing to.
 	 * @param value  The {@code long} to write.
 	 */
-	void putLong(final int offset, final long value);
+	@Contract(pure = true)
+	void putLong(int offset, long value);
 
 	/**
 	 * Writes a {@code long} to the packet data using volatile memory addresses.
@@ -277,7 +311,8 @@ public interface IxyPacketBuffer {
 	 * @param offset The offset to start writing to.
 	 * @param value  The {@code long} to write.
 	 */
-	void putLongVolatile(final int offset, final long value);
+	@Contract(pure = true)
+	void putLongVolatile(int offset, long value);
 
 	/**
 	 * Copies a segment of the packet.
@@ -288,7 +323,8 @@ public interface IxyPacketBuffer {
 	 * @param length The amount of data to copy.
 	 * @param buffer The buffer to copy the data to.
 	 */
-	void get(final int offset, final int length, final byte[] buffer);
+	@Contract(value = "_, _, null -> fail", mutates = "param3")
+	void get(int offset, int length, @NotNull byte[] buffer);
 
 	/**
 	 * Copies a segment of the packet.
@@ -299,7 +335,8 @@ public interface IxyPacketBuffer {
 	 * @param length The amount of data to copy.
 	 * @return A copy the packet segment.
 	 */
-	default byte[] get(final int offset, final int length) {
+	@Contract(pure = true)
+	default @NotNull byte[] get(int offset, int length) {
 		val buffer = new byte[length];
 		get(offset, length, buffer);
 		return buffer;
@@ -314,7 +351,8 @@ public interface IxyPacketBuffer {
 	 * @param length The amount of data to copy.
 	 * @param buffer The buffer to copy the data to.
 	 */
-	void getVolatile(final int offset, final int length, final byte[] buffer);
+	@Contract(value = "_, _, null -> fail", mutates = "param3")
+	void getVolatile(int offset, int length, @NotNull byte[] buffer);
 
 	/**
 	 * Copies a segment of the packet using volatile memory addresses.
@@ -325,7 +363,8 @@ public interface IxyPacketBuffer {
 	 * @param length The amount of data to copy.
 	 * @return A copy the packet segment.
 	 */
-	default byte[] getVolatile(final int offset, final int length) {
+	@Contract(pure = true)
+	default @NotNull byte[] getVolatile(int offset, int length) {
 		val buffer = new byte[length];
 		getVolatile(offset, length, buffer);
 		return buffer;
@@ -340,7 +379,8 @@ public interface IxyPacketBuffer {
 	 * @param length The amount of data to copy.
 	 * @param buffer The buffer to copy the data to.
 	 */
-	void put(final int offset, final int length, final byte[] buffer);
+	@Contract(value = "_, _, null -> fail", pure = true)
+	void put(int offset, int length, @NotNull byte[] buffer);
 
 	/**
 	 * Writes a segment of the packet using volatile memory addresses.
@@ -351,6 +391,7 @@ public interface IxyPacketBuffer {
 	 * @param length The amount of data to copy.
 	 * @param buffer The buffer to copy the data to.
 	 */
-	void putVolatile(final int offset, final int length, final byte[] buffer);
+	@Contract(value = "_, _, null -> fail", pure = true)
+	void putVolatile(int offset, int length, @NotNull byte[] buffer);
 
 }
