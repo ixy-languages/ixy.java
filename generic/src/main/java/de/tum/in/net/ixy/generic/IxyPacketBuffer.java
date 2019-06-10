@@ -1,124 +1,15 @@
 package de.tum.in.net.ixy.generic;
 
-import lombok.AccessLevel;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
 import lombok.val;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 /**
  * Ixy's packet specification.
  *
  * @author Esaú García Sánchez-Torija
  */
-@SuppressWarnings({"HardCodedStringLiteral", "DuplicateStringLiteralInspection"})
 public interface IxyPacketBuffer {
-
-	/**
-	 * Packet builder pattern.
-	 * <p>
-	 * This pattern is very useful when several instances need to be created with similar properties.
-	 *
-	 * @author Esaú García Sánchez-Torija
-	 */
-	@NoArgsConstructor(access = AccessLevel.PROTECTED)
-	@ToString(onlyExplicitlyIncluded = true, doNotUseGetters = true)
-	@EqualsAndHashCode(onlyExplicitlyIncluded = true, doNotUseGetters = true)
-	abstract class Builder {
-
-		/**
-		 * The virtual address of the packet.
-		 * ----------------- GETTER -----------------
-		 * Returns the virtual address of the packet.
-		 *
-		 * @return The virtual address of the packet.
-		 * ----------------- SETTER -----------------
-		 * Sets the virtual address of the packet.
-		 *
-		 * @param virtualAddress The virtual address of the packet.
-		 */
-		@Setter
-		@SuppressWarnings("JavaDoc")
-		@Getter(value = AccessLevel.PROTECTED, onMethod_ = {@Contract(pure = true)})
-		private long virtualAddress;
-
-		/**
-		 * The physical address of the packet.
-		 * ------------------ GETTER ------------------
-		 * Returns the physical address of the packet.
-		 * <p>
-		 * The value {@code null} is used to prevent performing memory access when building the packet.
-		 *
-		 * @return The physical address of the packet.
-		 * ---------------- SETTER ----------------
-		 * Sets the physical address of the packet.
-		 * <p>
-		 * The value {@code null} is used to prevent performing memory access when building the packet.
-		 *
-		 * @param virtualAddress The physical address of the packet.
-		 */
-		@Setter
-		@SuppressWarnings("JavaDoc")
-		@Getter(value = AccessLevel.PROTECTED, onMethod_ = {@Contract(pure = true)})
-		private @Nullable Long physicalAddress;
-
-		/**
-		 * The memory pool id of the packet.
-		 * ------------------ GETTER ------------------
-		 * Returns the memory pool id of the packet.
-		 * <p>
-		 * The value {@code null} is used to prevent performing memory access when building the packet.
-		 *
-		 * @return The memory pool id of the packet.
-		 * ---------------- SETTER ----------------
-		 * Sets the memory pool id of the packet.
-		 * <p>
-		 * The value {@code null} is used to prevent performing memory access when building the packet.
-		 *
-		 * @param memoryPoolId The memory pool id of the packet.
-		 */
-		@Setter
-		@SuppressWarnings("JavaDoc")
-		@Getter(value = AccessLevel.PROTECTED, onMethod_ = {@Contract(pure = true)})
-		private @Nullable Integer memoryPoolId;
-
-		/**
-		 * The size of the packet.
-		 * ------------------ GETTER ------------------
-		 * Returns the size of the packet.
-		 * <p>
-		 * The value {@code null} is used to prevent performing memory access when building the packet.
-		 *
-		 * @return The size of the packet.
-		 * ---------------- SETTER ----------------
-		 * Sets the size of the packet.
-		 * <p>
-		 * The value {@code null} is used to prevent performing memory access when building the packet.
-		 *
-		 * @param size The size of the packet.
-		 */
-		@Setter
-		@SuppressWarnings("JavaDoc")
-		@Getter(value = AccessLevel.PROTECTED, onMethod_ = {@Contract(pure = true)})
-		private @Nullable Integer size;
-
-		/**
-		 * Builds the packet with the properties of the builder.
-		 * <p>
-		 * If a property is {@code null}, it is recommended to not set it, as it may have been set on purpose to prevent
-		 * memory access.
-		 *
-		 * @return The new packet.
-		 */
-		@Contract(value = " -> new", pure = true)
-		public abstract @NotNull IxyPacketBuffer build();
-
-	}
 
 	/**
 	 * Returns the virtual address in which this packet buffer is allocated.

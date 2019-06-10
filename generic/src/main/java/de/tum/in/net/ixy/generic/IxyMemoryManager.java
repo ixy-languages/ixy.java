@@ -12,7 +12,6 @@ import org.jetbrains.annotations.NotNull;
  *
  * @author Esaú García Sánchez-Torija
  */
-@SuppressWarnings({"HardCodedStringLiteral", "DuplicateStringLiteralInspection"})
 public interface IxyMemoryManager {
 
 	/**
@@ -80,7 +79,7 @@ public interface IxyMemoryManager {
 	long hugepageSize();
 
 	/**
-	 * Allocates {@code size} bytes.
+	 * Allocates raw bytes from the heap.
 	 * <p>
 	 * Several flags are provided to customise the behaviour of the allocation.
 	 * When the parameter {@code allocationType} is set to {@link AllocationType#STANDARD}, normal memory allocation
@@ -94,19 +93,19 @@ public interface IxyMemoryManager {
 	 * Operative systems offer the possibility to lock memory pages, preventing the memory region from being swapped,
 	 * which this method will use.
 	 * If the operative system cannot guarantee the physical contiguity of the allocated huge memory pages, if the
-	 * {@code size} to allocate is bigger than the size of a memory page, this method will fail and return the invalid
+	 * {@code bytes} to allocate is bigger than the size of a memory page, this method will fail and return the invalid
 	 * memory address {@code 0}.
 	 *
-	 * @param size           The number of bytes.
+	 * @param bytes          The number of bytes.
 	 * @param allocationType The memory allocation type.
 	 * @param layoutType     The memory layout type.
 	 * @return The base address of the allocated memory region.
 	 */
 	@Contract(value = "_, null, _ -> fail; _, _, null -> fail; _, !null, !null -> _", pure = true)
-	long allocate(long size, @NotNull AllocationType allocationType, @NotNull LayoutType layoutType);
+	long allocate(long bytes, @NotNull AllocationType allocationType, @NotNull LayoutType layoutType);
 
 	/**
-	 * Allocates {@code size} bytes.
+	 * Allocates raw bytes from the heap.
 	 * <p>
 	 * Several flags are provided to customise the behaviour of the allocation in the same way as in {@link
 	 * #allocate(long, AllocationType, LayoutType)}.
@@ -114,13 +113,13 @@ public interface IxyMemoryManager {
 	 * The main difference with {@link #allocate(long, AllocationType, LayoutType)} is that this method will return an
 	 * instance of {@link IxyDmaMemory} which contains a copy of the physical address.
 	 *
-	 * @param size           The number of bytes.
+	 * @param bytes          The number of bytes.
 	 * @param allocationType The memory allocation type.
 	 * @param layoutType     The memory layout type.
 	 * @return The {@link IxyDmaMemory} instance.
 	 */
 	@Contract(value = "_, null, _ -> fail; _, _, null -> fail; _, !null, !null -> new", pure = true)
-	@NotNull IxyDmaMemory dmaAllocate(long size, @NotNull AllocationType allocationType, @NotNull LayoutType layoutType);
+	@NotNull IxyDmaMemory dmaAllocate(long bytes, @NotNull AllocationType allocationType, @NotNull LayoutType layoutType);
 
 	/**
 	 * Frees a previously allocated memory region.
@@ -131,19 +130,19 @@ public interface IxyMemoryManager {
 	 * Conversely, when the parameter {@code allocationType} is set to {@link AllocationType#HUGE}, hugepage-based
 	 * memory freeing will take place, usually implemented with platform-dependent system calls.
 	 * <p>
-	 * The parameter {@code size} might be used in some platforms; consistency is important, as the behaviour is
+	 * The parameter {@code bytes} might be used in some platforms; consistency is important, as the behaviour is
 	 * undefined if the size used with {@link #allocate(long, AllocationType, LayoutType)} and this method's do not
 	 * match.
 	 * <p>
 	 * If the memory address is {@code 0}, the behaviour is undefined.
 	 *
 	 * @param address        The base address of the memory region.
-	 * @param size           The size of the memory region.
+	 * @param bytes          The size of the memory region.
 	 * @param allocationType The memory allocation type.
 	 * @return Whether the operation succeeded.
 	 */
 	@Contract(value = "_, _, null -> fail", pure = true)
-	boolean free(long address, long size, @NotNull AllocationType allocationType);
+	boolean free(long address, long bytes, @NotNull AllocationType allocationType);
 
 	/**
 	 * Reads a {@code byte} from an arbitrary memory address.
@@ -327,12 +326,12 @@ public interface IxyMemoryManager {
 	 * If the memory addresses are {@code 0}, the behaviour is undefined.
 	 *
 	 * @param src    The source memory address to copy from.
-	 * @param size   The number of bytes to copy.
+	 * @param bytes  The number of bytes to copy.
 	 * @param dest   The destination primitive array to copy to.
 	 * @param offset The offset from which to start copying to.
 	 */
 	@Contract(value = "_, _, null, _ -> fail", mutates = "param3")
-	void get(long src, int size, @NotNull byte[] dest, int offset);
+	void get(long src, int bytes, @NotNull byte[] dest, int offset);
 
 	/**
 	 * Copies an arbitrary volatile memory region into the JVM heap using a primitive byte array.
@@ -340,12 +339,12 @@ public interface IxyMemoryManager {
 	 * If the memory address is {@code 0}, the behaviour is undefined.
 	 *
 	 * @param src    The source memory address to copy from.
-	 * @param size   The number of bytes to copy.
+	 * @param bytes  The number of bytes to copy.
 	 * @param dest   The destination primitive array to copy to.
 	 * @param offset The offset from which to start copying to.
 	 */
 	@Contract(value = "_, _, null, _ -> fail", mutates = "param3")
-	void getVolatile(long src, int size, @NotNull byte[] dest, int offset);
+	void getVolatile(long src, int bytes, @NotNull byte[] dest, int offset);
 
 	/**
 	 * Copies a primitive byte array from the JVM heap into an arbitrary memory region.
@@ -353,12 +352,12 @@ public interface IxyMemoryManager {
 	 * If the memory address is {@code 0}, the behaviour is undefined.
 	 *
 	 * @param dest   The destination primitive array to copy to.
-	 * @param size   The number of bytes to copy.
+	 * @param bytes  The number of bytes to copy.
 	 * @param src    The source memory address to copy from.
 	 * @param offset The offset from which to start copying to.
 	 */
 	@Contract(value = "_, _, null, _ -> fail", pure = true)
-	void put(long dest, int size, @NotNull byte[] src, int offset);
+	void put(long dest, int bytes, @NotNull byte[] src, int offset);
 
 	/**
 	 * Copies a primitive byte array from the JVM heap into an arbitrary volatile memory region.
@@ -366,36 +365,36 @@ public interface IxyMemoryManager {
 	 * If the memory address is {@code 0}, the behaviour is undefined.
 	 *
 	 * @param dest   The destination primitive array to copy to.
-	 * @param size   The number of bytes to copy.
+	 * @param bytes  The number of bytes to copy.
 	 * @param src    The source memory address to copy from.
 	 * @param offset The offset from which to start copying to.
 	 */
 	@Contract(value = "_, _, null, _ -> fail", pure = true)
-	void putVolatile(long dest, int size, @NotNull byte[] src, int offset);
+	void putVolatile(long dest, int bytes, @NotNull byte[] src, int offset);
 
 	/**
 	 * Copies an arbitrary memory region into another arbitrary memory region.
 	 * <p>
 	 * If the memory addresses are {@code 0}, the behaviour is undefined.
 	 *
-	 * @param src  The source memory address to copy from.
-	 * @param size The number of bytes to copy.
-	 * @param dest The destination memory address to copy to.
+	 * @param src   The source memory address to copy from.
+	 * @param bytes The number of bytes to copy.
+	 * @param dest  The destination memory address to copy to.
 	 */
 	@Contract(pure = true)
-	void copy(long src, int size, long dest);
+	void copy(long src, int bytes, long dest);
 
 	/**
 	 * Copies an arbitrary volatile memory region into another arbitrary volatile memory region.
 	 * <p>
 	 * If the memory addresses are {@code 0}, the behaviour is undefined.
 	 *
-	 * @param src  The source memory address to copy from.
-	 * @param size The number of bytes to copy.
-	 * @param dest The destination memory address to copy to.
+	 * @param src   The source memory address to copy from.
+	 * @param bytes The number of bytes to copy.
+	 * @param dest  The destination memory address to copy to.
 	 */
 	@Contract(pure = true)
-	void copyVolatile(long src, int size, long dest);
+	void copyVolatile(long src, int bytes, long dest);
 
 	/**
 	 * Translates a virtual memory address to its physical counterpart.

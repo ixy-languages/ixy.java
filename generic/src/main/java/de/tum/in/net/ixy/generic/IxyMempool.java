@@ -9,7 +9,6 @@ import org.jetbrains.annotations.Nullable;
  *
  * @author Esaú García Sánchez-Torija
  */
-@SuppressWarnings("HardCodedStringLiteral")
 public interface IxyMempool {
 
 	/**
@@ -53,14 +52,6 @@ public interface IxyMempool {
 	 */
 	@Contract(pure = true)
 	int getPacketSize();
-
-	/**
-	 * Allocates all the packets inside the memory pool.
-	 * <p>
-	 * This method will override the physical memory address of every packet to be created and will set the size to the
-	 * value of {@link #getSize()}.
-	 */
-	void allocate();
 
 	/**
 	 * Returns a free packet.
