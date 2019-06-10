@@ -5,7 +5,6 @@ import de.tum.in.net.ixy.generic.IxyMemoryManager;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -83,7 +82,7 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 	 */
 	@Setter(AccessLevel.NONE)
 	@SuppressWarnings("JavaDoc")
-	@Getter(onMethod_ = {@NotNull, @Contract(pure = true)})
+	@Getter(onMethod_ = {@Contract(pure = true)})
 	private static final @NotNull IxyMemoryManager singleton = new SmartMemoryManager();
 
 	/**

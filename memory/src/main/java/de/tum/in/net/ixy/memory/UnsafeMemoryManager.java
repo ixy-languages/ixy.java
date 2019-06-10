@@ -55,7 +55,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	 */
 	@Setter(AccessLevel.NONE)
 	@SuppressWarnings("JavaDoc")
-	@Getter(onMethod_ = {@NotNull, @Contract(value = "_ -> !null", pure = true)})
+	@Getter(onMethod_ = {@Contract(value = "_ -> !null", pure = true)})
 	private static final @NotNull IxyMemoryManager singleton = new UnsafeMemoryManager();
 
 	///////////////////////////////////////////////////// MEMBERS //////////////////////////////////////////////////////
