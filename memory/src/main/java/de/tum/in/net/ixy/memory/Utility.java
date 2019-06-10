@@ -17,21 +17,20 @@ enum Utility {
 	 * If one the parameters is not formatted correctly, an {@link IllegalArgumentException} will be thrown.
 	 *
 	 * @param address The memory address.
-	 * @param size    The size.
+	 * @param bytes   The number of bytes.
 	 * @param buffer  The buffer.
 	 * @param offset  The offset.
-	 * @return Whether the operation should continue.
+	 * @return Whether the operation should stop.
 	 * @see UnsafeMemoryManager
 	 * @see JniMemoryManager
 	 */
-	@SuppressWarnings("HardCodedStringLiteral")
 	@Contract(value = "_, _, null, _ -> fail", pure = true)
-	static boolean check(long address, int size, @Nullable byte[] buffer, int offset) {
-		if (address == 0) throw new InvalidMemoryAddressException();
-		if (size < 0) throw new InvalidSizeException();
-		if (buffer == null) throw new InvalidBufferException();
-		if (offset < 0 || offset >= buffer.length) throw new InvalidOffsetException();
-		return (size > 0);
+	static boolean check(long address, int bytes, @Nullable byte[] buffer, int offset) {
+		if (address == 0) throw new InvalidMemoryAddressException("address");
+		if (bytes < 0) throw new InvalidSizeException("bytes");
+		if (buffer == null) throw new InvalidBufferException("buffer");
+		if (offset < 0 || offset >= buffer.length) throw new InvalidOffsetException("offset");
+		return (bytes == 0);
 	}
 
 	/**
@@ -41,16 +40,17 @@ enum Utility {
 	 *
 	 * @param addr1 The memory address.
 	 * @param addr2 The memory address.
-	 * @param size  The size.
-	 * @return Whether the operation should continue.
+	 * @param bytes The number of bytes.
+	 * @return Whether the operation should stop.
 	 * @see UnsafeMemoryManager
 	 * @see JniMemoryManager
 	 */
 	@Contract(pure = true)
-	static boolean check(long addr1, long addr2, int size) {
-		if (addr1 == 0 || addr2 == 0) throw new InvalidMemoryAddressException();
-		if (size < 0) throw new InvalidSizeException();
-		return (size > 0 && addr1 != addr2);
+	static boolean check(long addr1, long addr2, int bytes) {
+		if (addr1 == 0) throw new InvalidMemoryAddressException("addr1");
+		if (addr2 == 0) throw new InvalidMemoryAddressException("addr2");
+		if (bytes < 0) throw new InvalidSizeException("bytes");
+		return (bytes == 0 || addr1 == addr2);
 	}
 
 }

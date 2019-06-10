@@ -35,7 +35,6 @@ import java.util.Objects;
 @Slf4j
 @ToString(onlyExplicitlyIncluded = true, doNotUseGetters = true)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, doNotUseGetters = true)
-@SuppressWarnings({"DuplicateStringLiteralInspection", "HardCodedStringLiteral"})
 public final class SmartMemoryManager implements IxyMemoryManager {
 
 	/////////////////////////////////////////////////// RETURN CODES ///////////////////////////////////////////////////
@@ -99,7 +98,7 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 		return new BufferedReader(inputFilterStream);
 	}
 
-	///////////////////////////////////////////////////// MEMBERS //////////////////////////////////////////////////////
+	///////////////////////////////////////////////// MEMBER VARIABLES /////////////////////////////////////////////////
 
 	/** The singleton instance of the Unsafe-based memory manager. */
 	@EqualsAndHashCode.Include
@@ -111,7 +110,7 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 	@ToString.Include(name = "jni", rank = 1)
 	private final @NotNull IxyMemoryManager jni = JniMemoryManager.getSingleton();
 
-	//////////////////////////////////////////////// NON-STATIC METHODS ////////////////////////////////////////////////
+	////////////////////////////////////////////////// MEMBER METHODS //////////////////////////////////////////////////
 
 	/** Private constructor that throws an exception if the instance is already instantiated. */
 	@SuppressWarnings("ConstantConditions")
@@ -138,7 +137,6 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@Contract(pure = true)
-	@SuppressWarnings("AccessOfSystemProperties")
 	public long hugepageSize() {
 		if (BuildConfig.DEBUG) log.trace("Smart hugepage size computation");
 
@@ -217,31 +215,31 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@Contract(value = "_, null, _ -> fail; _, _, null -> fail", pure = true)
-	public long allocate(long size, @NotNull AllocationType allocationType, @NotNull LayoutType layoutType) {
+	public long allocate(long bytes, @NotNull AllocationType allocationType, @NotNull LayoutType layoutType) {
 		if (allocationType == AllocationType.HUGE) {
-			return jni.allocate(size, AllocationType.HUGE, layoutType);
+			return jni.allocate(bytes, AllocationType.HUGE, layoutType);
 		} else {
 			return BuildConfig.UNSAFE
-					? unsafe.allocate(size, allocationType, layoutType)
-					: jni.allocate(size, allocationType, layoutType);
+					? unsafe.allocate(bytes, allocationType, layoutType)
+					: jni.allocate(bytes, allocationType, layoutType);
 		}
 	}
 
 	@Override
 	@Contract(value = "_, null, _ -> fail; _, _, null -> fail; _, !null, !null -> new", pure = true)
-	public @NotNull IxyDmaMemory dmaAllocate(long size, @NotNull AllocationType allocationType, @NotNull LayoutType layoutType) {
-		return jni.dmaAllocate(size, allocationType, layoutType);
+	public @NotNull IxyDmaMemory dmaAllocate(long bytes, @NotNull AllocationType allocationType, @NotNull LayoutType layoutType) {
+		return jni.dmaAllocate(bytes, allocationType, layoutType);
 	}
 
 	@Override
 	@Contract(value = "_, _, null -> fail", pure = true)
-	public boolean free(long address, long size, @NotNull AllocationType allocationType) {
+	public boolean free(long address, long bytes, @NotNull AllocationType allocationType) {
 		if (allocationType == AllocationType.HUGE) {
-			return jni.free(address, size, AllocationType.HUGE);
+			return jni.free(address, bytes, AllocationType.HUGE);
 		} else {
 			return BuildConfig.UNSAFE
-					? unsafe.free(address, size, allocationType)
-					: jni.free(address, size, allocationType);
+					? unsafe.free(address, bytes, allocationType)
+					: jni.free(address, bytes, allocationType);
 		}
 	}
 
@@ -375,61 +373,61 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@Contract(value = "_, _, null, _ -> fail", mutates = "param3")
-	public void get(long src, int size, @NotNull byte[] dest, int offset) {
+	public void get(long src, int bytes, @NotNull byte[] dest, int offset) {
 		if (BuildConfig.UNSAFE) {
-			unsafe.get(src, size, dest, offset);
+			unsafe.get(src, bytes, dest, offset);
 		} else {
-			jni.get(src, size, dest, offset);
+			jni.get(src, bytes, dest, offset);
 		}
 	}
 
 	@Override
 	@Contract(value = "_, _, null, _ -> fail", mutates = "param3")
-	public void getVolatile(long src, int size, @NotNull byte[] dest, int offset) {
+	public void getVolatile(long src, int bytes, @NotNull byte[] dest, int offset) {
 		if (BuildConfig.UNSAFE) {
-			unsafe.getVolatile(src, size, dest, offset);
+			unsafe.getVolatile(src, bytes, dest, offset);
 		} else {
-			jni.getVolatile(src, size, dest, offset);
+			jni.getVolatile(src, bytes, dest, offset);
 		}
 	}
 
 	@Override
 	@Contract(value = "_, _, null, _ -> fail", pure = true)
-	public void put(long dest, int size, @NotNull byte[] src, int offset) {
+	public void put(long dest, int bytes, @NotNull byte[] src, int offset) {
 		if (BuildConfig.UNSAFE) {
-			unsafe.put(dest, size, src, offset);
+			unsafe.put(dest, bytes, src, offset);
 		} else {
-			jni.put(dest, size, src, offset);
+			jni.put(dest, bytes, src, offset);
 		}
 	}
 
 	@Override
 	@Contract(value = "_, _, null, _ -> fail", pure = true)
-	public void putVolatile(long dest, int size, @NotNull byte[] src, int offset) {
+	public void putVolatile(long dest, int bytes, @NotNull byte[] src, int offset) {
 		if (BuildConfig.UNSAFE) {
-			unsafe.putVolatile(dest, size, src, offset);
+			unsafe.putVolatile(dest, bytes, src, offset);
 		} else {
-			jni.putVolatile(dest, size, src, offset);
+			jni.putVolatile(dest, bytes, src, offset);
 		}
 	}
 
 	@Override
 	@Contract(pure = true)
-	public void copy(long src, int size, long dest) {
+	public void copy(long src, int bytes, long dest) {
 		if (BuildConfig.UNSAFE) {
-			unsafe.copy(src, size, dest);
+			unsafe.copy(src, bytes, dest);
 		} else {
-			jni.copy(src, size, dest);
+			jni.copy(src, bytes, dest);
 		}
 	}
 
 	@Override
 	@Contract(pure = true)
-	public void copyVolatile(long src, int size, long dest) {
+	public void copyVolatile(long src, int bytes, long dest) {
 		if (BuildConfig.UNSAFE) {
-			unsafe.copyVolatile(src, size, dest);
+			unsafe.copyVolatile(src, bytes, dest);
 		} else {
-			jni.copyVolatile(src, size, dest);
+			jni.copyVolatile(src, bytes, dest);
 		}
 	}
 

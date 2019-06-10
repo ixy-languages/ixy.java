@@ -22,10 +22,12 @@ import static de.tum.in.net.ixy.memory.Utility.check;
  * @author Esaú García Sánchez-Torija
  */
 @Slf4j
+@SuppressWarnings("ConstantConditions")
 @ToString(onlyExplicitlyIncluded = true, doNotUseGetters = true)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, doNotUseGetters = true)
-@SuppressWarnings({"DuplicateStringLiteralInspection", "HardCodedStringLiteral", "ConstantConditions"})
 public final class UnsafeMemoryManager implements IxyMemoryManager {
+
+	//////////////////////////////////////////////////// EXCEPTIONS ////////////////////////////////////////////////////
 
 	/**
 	 * Exception thrown when an operation cis not supported by the {@link Unsafe} object.
@@ -58,7 +60,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	@Getter(onMethod_ = {@Contract(value = "_ -> !null", pure = true)})
 	private static final @NotNull IxyMemoryManager singleton = new UnsafeMemoryManager();
 
-	///////////////////////////////////////////////////// MEMBERS //////////////////////////////////////////////////////
+	///////////////////////////////////////////////// MEMBER VARIABLES /////////////////////////////////////////////////
 
 	/** The unsafe object that will do all the operations. */
 	@EqualsAndHashCode.Include
@@ -66,7 +68,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	@SuppressWarnings("UseOfSunClasses")
 	private @Nullable Unsafe unsafe;
 
-	//////////////////////////////////////////////// NON-STATIC METHODS ////////////////////////////////////////////////
+	////////////////////////////////////////////////// MEMBER METHODS //////////////////////////////////////////////////
 
 	/**
 	 * Once-callable private constructor.
@@ -77,15 +79,16 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	 */
 	private UnsafeMemoryManager() {
 		if (BuildConfig.DEBUG) log.debug("Creating an Unsafe-backed memory manager");
-		if (singleton != null) {
+		if (singleton == null) {
+			try {
+				val theUnsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+				theUnsafeField.setAccessible(true);
+				unsafe = (Unsafe) theUnsafeField.get(null);
+			} catch (NoSuchFieldException | IllegalAccessException e) {
+				log.error("Error getting Unsafe object", e);
+			}
+		} else {
 			throw new IllegalStateException("An instance cannot be created twice. Use getSingleton() instead.");
-		}
-		try {
-			val theUnsafeField = Unsafe.class.getDeclaredField("theUnsafe");
-			theUnsafeField.setAccessible(true);
-			unsafe = (Unsafe) theUnsafeField.get(null);
-		} catch (NoSuchFieldException | IllegalAccessException e) {
-			log.error("Error getting Unsafe object", e);
 		}
 	}
 
@@ -96,9 +99,10 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	 * library is build for production mode this method is never called as a way of speeding up the whole program.
 	 */
 	@Contract(pure = true)
-	@SuppressWarnings("NonBooleanMethodNameMayNotStartWithQuestion")
 	private void checkUnsafe() {
-		if (unsafe == null) throw new IllegalStateException("The Unsafe object is not available");
+		if (unsafe == null) {
+			throw new IllegalStateException("The Unsafe object is not available");
+		}
 	}
 
 	//////////////////////////////////////////////// OVERRIDDEN METHODS ////////////////////////////////////////////////
@@ -121,31 +125,29 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@Contract(value = "_, null, _ -> fail; _, _, null -> fail", pure = true)
-	public long allocate(long size, @NotNull AllocationType allocationType, @NotNull LayoutType layoutType) {
+	public long allocate(long bytes, @NotNull AllocationType allocationType, @NotNull LayoutType layoutType) {
 		// Stop if anything is wrong
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (size <= 0L) throw new InvalidSizeException("size");
+			if (bytes <= 0L) throw new InvalidSizeException("bytes");
 			if (allocationType == null) throw new InvalidNullParameterException("allocationType");
 			if (layoutType == null) throw new InvalidNullParameterException("layoutType");
 		}
-
 		// Hugepage-based allocation is not supported
 		val type = layoutType == LayoutType.CONTIGUOUS ? "contiguous" : "non-contiguous";
 		if (allocationType == AllocationType.HUGE) {
 			if (BuildConfig.DEBUG) {
-				log.debug("Allocating {} {} hugepage-backed bytes using the Unsafe object", size, type);
+				log.debug("Allocating {} {} hugepage-backed bytes using the Unsafe object", bytes, type);
 			}
 			throw new UnsupportedUnsafeOperationException();
 		}
-
 		// Allocate the memory
-		if (BuildConfig.DEBUG) log.debug("Allocating {} {} bytes using the Unsafe object", size, type);
+		if (BuildConfig.DEBUG) log.debug("Allocating {} {} bytes using the Unsafe object", bytes, type);
 		if (BuildConfig.OPTIMIZED) {
-			return unsafe.allocateMemory(size);
+			return unsafe.allocateMemory(bytes);
 		} else {
 			try {
-				return unsafe.allocateMemory(size);
+				return unsafe.allocateMemory(bytes);
 			} catch (RuntimeException | OutOfMemoryError e) {
 				if (BuildConfig.DEBUG) log.error("Could not allocate memory", e);
 				return 0L;
@@ -155,24 +157,22 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@Contract(value = "_, _, null -> fail", pure = true)
-	public boolean free(long address, long size, @NotNull AllocationType allocationType) {
+	public boolean free(long address, long bytes, @NotNull AllocationType allocationType) {
 		// Stop if anything is wrong
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
 			if (address == 0L) throw new InvalidMemoryAddressException("address");
-			if (size <= 0L) throw new InvalidSizeException("size");
+			if (bytes <= 0L) throw new InvalidSizeException("size");
 			if (allocationType == null) throw new InvalidNullParameterException("allocationType");
 		}
-
 		// Hugepage-based freeing is not supported
 		val xsrc = Long.toHexString(address);
 		if (allocationType == AllocationType.HUGE) {
-			if (BuildConfig.DEBUG) log.debug("Freeing {} {} hugepage-backed bytes using the Unsafe object", size, xsrc);
+			if (BuildConfig.DEBUG) log.debug("Freeing {} {} hugepage-backed bytes using the Unsafe object", bytes, xsrc);
 			throw new UnsupportedUnsafeOperationException();
 		}
-
 		// Free the memory
-		if (BuildConfig.DEBUG) log.debug("Freeing {} bytes @ 0x{} using the Unsafe object", size, xsrc);
+		if (BuildConfig.DEBUG) log.debug("Freeing {} bytes @ 0x{} using the Unsafe object", bytes, xsrc);
 		if (BuildConfig.OPTIMIZED) {
 			unsafe.freeMemory(address);
 		} else {
@@ -195,7 +195,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (address == 0L) throw new InvalidMemoryAddressException();
+			if (address == 0L) throw new InvalidMemoryAddressException("address");
 		}
 		return unsafe.getByte(address);
 	}
@@ -209,7 +209,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (address == 0L) throw new InvalidMemoryAddressException();
+			if (address == 0L) throw new InvalidMemoryAddressException("address");
 		}
 		return unsafe.getByteVolatile(null, address);
 	}
@@ -224,7 +224,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (address == 0L) throw new InvalidMemoryAddressException();
+			if (address == 0L) throw new InvalidMemoryAddressException("address");
 		}
 		unsafe.putByte(address, value);
 	}
@@ -239,7 +239,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (address == 0L) throw new InvalidMemoryAddressException();
+			if (address == 0L) throw new InvalidMemoryAddressException("address");
 		}
 		unsafe.putByteVolatile(null, address, value);
 	}
@@ -253,7 +253,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (address == 0L) throw new InvalidMemoryAddressException();
+			if (address == 0L) throw new InvalidMemoryAddressException("address");
 		}
 		return unsafe.getShort(address);
 	}
@@ -267,7 +267,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (address == 0L) throw new InvalidMemoryAddressException();
+			if (address == 0L) throw new InvalidMemoryAddressException("address");
 		}
 		return unsafe.getShortVolatile(null, address);
 	}
@@ -282,7 +282,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (address == 0L) throw new InvalidMemoryAddressException();
+			if (address == 0L) throw new InvalidMemoryAddressException("address");
 		}
 		unsafe.putShort(address, value);
 	}
@@ -297,7 +297,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (address == 0L) throw new InvalidMemoryAddressException();
+			if (address == 0L) throw new InvalidMemoryAddressException("address");
 		}
 		unsafe.putShortVolatile(null, address, value);
 	}
@@ -311,7 +311,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (address == 0L) throw new InvalidMemoryAddressException();
+			if (address == 0L) throw new InvalidMemoryAddressException("address");
 		}
 		return unsafe.getInt(address);
 	}
@@ -325,7 +325,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (address == 0L) throw new InvalidMemoryAddressException();
+			if (address == 0L) throw new InvalidMemoryAddressException("address");
 		}
 		return unsafe.getIntVolatile(null, address);
 	}
@@ -340,7 +340,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (address == 0L) throw new InvalidMemoryAddressException();
+			if (address == 0L) throw new InvalidMemoryAddressException("address");
 		}
 		unsafe.putInt(address, value);
 	}
@@ -355,7 +355,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (address == 0L) throw new InvalidMemoryAddressException();
+			if (address == 0L) throw new InvalidMemoryAddressException("address");
 		}
 		unsafe.putIntVolatile(null, address, value);
 	}
@@ -369,7 +369,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (address == 0L) throw new InvalidMemoryAddressException();
+			if (address == 0L) throw new InvalidMemoryAddressException("address");
 		}
 		return unsafe.getLong(address);
 	}
@@ -383,7 +383,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (address == 0L) throw new InvalidMemoryAddressException();
+			if (address == 0L) throw new InvalidMemoryAddressException("address");
 		}
 		return unsafe.getLongVolatile(null, address);
 	}
@@ -398,7 +398,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (address == 0L) throw new InvalidMemoryAddressException();
+			if (address == 0L) throw new InvalidMemoryAddressException("address");
 		}
 		unsafe.putLong(address, value);
 	}
@@ -413,117 +413,117 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (address == 0L) throw new InvalidMemoryAddressException();
+			if (address == 0L) throw new InvalidMemoryAddressException("address");
 		}
 		unsafe.putLongVolatile(null, address, value);
 	}
 
 	@Override
 	@Contract(value = "_, _, null, _ -> fail", mutates = "param3")
-	public void get(long src, int size, @NotNull byte[] dest, int offset) {
+	public void get(long src, int bytes, @NotNull byte[] dest, int offset) {
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (!check(src, size, dest, offset)) return;
-			size = Math.min(size, dest.length - offset);
+			if (check(src, bytes, dest, offset)) return;
+			bytes = Math.min(bytes, dest.length - offset);
 		}
 		if (BuildConfig.DEBUG) {
 			val xoffset = Long.toHexString(offset);
 			val xsrc = Long.toHexString(src);
-			log.debug("Reading memory region ({} B) @ 0x{} with offset {} using the Unsafe object", size, xsrc, xoffset);
+			log.debug("Reading memory region ({} B) @ 0x{} with offset {} using the Unsafe object", bytes, xsrc, xoffset);
 		}
-		unsafe.copyMemory(null, src, dest, Unsafe.ARRAY_BYTE_BASE_OFFSET + offset, size);
+		unsafe.copyMemory(null, src, dest, Unsafe.ARRAY_BYTE_BASE_OFFSET + offset, bytes);
 	}
 
 	@Override
 	@Contract(value = "_, _, null, _ -> fail", mutates = "param3")
-	public void getVolatile(long src, int size, @NotNull byte[] dest, int offset) {
+	public void getVolatile(long src, int bytes, @NotNull byte[] dest, int offset) {
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (!check(src, size, dest, offset)) return;
-			size = Math.min(size, dest.length - offset);
+			if (check(src, bytes, dest, offset)) return;
+			bytes = Math.min(bytes, dest.length - offset);
 		}
 		if (BuildConfig.DEBUG) {
 			val xoffset = Long.toHexString(offset);
 			val xsrc = Long.toHexString(src);
-			log.debug("Reading volatile memory region ({} B) @ 0x{} with offset {} using the Unsafe object", size, xsrc, xoffset);
+			log.debug("Reading volatile memory region ({} B) @ 0x{} with offset {} using the Unsafe object", bytes, xsrc, xoffset);
 		}
-		while (size-- > 0) {
+		while (bytes-- > 0) {
 			dest[offset++] = unsafe.getByteVolatile(null, src++);
 		}
 	}
 
 	@Override
 	@Contract(value = "_, _, null, _ -> fail", pure = true)
-	public void put(long dest, int size, @NotNull byte[] src, int offset) {
+	public void put(long dest, int bytes, @NotNull byte[] src, int offset) {
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (!check(dest, size, src, offset)) return;
-			size = Math.min(size, src.length);
+			if (check(dest, bytes, src, offset)) return;
+			bytes = Math.min(bytes, src.length);
 		}
 		if (BuildConfig.DEBUG) {
 			val xoffset = Long.toHexString(offset);
 			val xdest = Long.toHexString(dest);
-			log.debug("Writing buffer ({} B) @ 0x{} with offset {} using the Unsafe object", size, xdest, xoffset);
+			log.debug("Writing buffer ({} B) @ 0x{} with offset {} using the Unsafe object", bytes, xdest, xoffset);
 		}
-		unsafe.copyMemory(src, Unsafe.ARRAY_BYTE_BASE_OFFSET + offset, null, dest, size);
+		unsafe.copyMemory(src, Unsafe.ARRAY_BYTE_BASE_OFFSET + offset, null, dest, bytes);
 	}
 
 	@Override
 	@Contract(value = "_, _, null, _ -> fail", pure = true)
-	public void putVolatile(long dest, int size, @NotNull byte[] src, int offset) {
+	public void putVolatile(long dest, int bytes, @NotNull byte[] src, int offset) {
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (!check(dest, size, src, offset)) return;
-			size = Math.min(size, src.length);
+			if (check(dest, bytes, src, offset)) return;
+			bytes = Math.min(bytes, src.length);
 		}
 		if (BuildConfig.DEBUG) {
 			val xoffset = Long.toHexString(offset);
 			val xdest = Long.toHexString(dest);
-			log.debug("Writing volatile buffer ({} B) @ 0x{} with offset {} using the Unsafe object", size, xdest, xoffset);
+			log.debug("Writing volatile buffer ({} B) @ 0x{} with offset {} using the Unsafe object", bytes, xdest, xoffset);
 		}
-		while (size-- > 0) {
+		while (bytes-- > 0) {
 			unsafe.putByteVolatile(null, dest++, src[offset++]);
 		}
 	}
 
 	@Override
 	@Contract(pure = true)
-	public void copy(long src, int size, long dest) {
+	public void copy(long src, int bytes, long dest) {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(src);
 			val xdest = Long.toHexString(dest);
-			log.debug("Copying memory region ({} B) @ 0x{} to 0x{} using the Unsafe object", size, xsrc, xdest);
+			log.debug("Copying memory region ({} B) @ 0x{} to 0x{} using the Unsafe object", bytes, xsrc, xdest);
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (!check(src, dest, size)) return;
+			if (check(src, dest, bytes)) return;
 		}
-		unsafe.copyMemory(src, dest, size);
+		unsafe.copyMemory(src, dest, bytes);
 	}
 
 	@Override
 	@Contract(pure = true)
-	public void copyVolatile(long src, int size, long dest) {
+	public void copyVolatile(long src, int bytes, long dest) {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(src);
 			val xdest = Long.toHexString(dest);
-			log.debug("Copying volatile memory region ({} B) @ 0x{} to 0x{} using the Unsafe object", size, xsrc, xdest);
+			log.debug("Copying volatile memory region ({} B) @ 0x{} to 0x{} using the Unsafe object", bytes, xsrc, xdest);
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
-			if (!check(src, dest, size)) return;
+			if (check(src, dest, bytes)) return;
 		}
 
 		// Change how the loop operates based on the address order
 		if (src < dest) {
-			src += size - 1L;
-			dest += size - 1L;
-			while (size-- > 0) {
+			src += bytes - 1L;
+			dest += bytes - 1L;
+			while (bytes-- > 0) {
 				val value = unsafe.getByteVolatile(null, src--);
 				unsafe.putByteVolatile(null, dest--, value);
 			}
 		} else {
-			while (size-- > 0) {
+			while (bytes-- > 0) {
 				val value = unsafe.getByteVolatile(null, src++);
 				unsafe.putByteVolatile(null, dest++, value);
 			}
@@ -546,9 +546,9 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	@Override
 	@Deprecated
 	@Contract(value = "_, _, _ -> fail", pure = true)
-	public @NotNull IxyDmaMemory dmaAllocate(long size, @NotNull AllocationType allocationType, @NotNull LayoutType layoutType) {
+	public @NotNull IxyDmaMemory dmaAllocate(long bytes, @NotNull AllocationType allocationType, @NotNull LayoutType layoutType) {
 		if (!BuildConfig.DEBUG) log.debug("Allocating DmaMemory using the Unsafe object");
-		val virt = allocate(size, allocationType, layoutType);
+		val virt = allocate(bytes, allocationType, layoutType);
 		val phys = virt2phys(virt);
 		return DmaMemory.of(virt, phys);
 	}

@@ -20,18 +20,12 @@ import static de.tum.in.net.ixy.memory.Utility.check;
  * @author Esaú García Sánchez-Torija
  */
 @Slf4j
+@SuppressWarnings("ConstantConditions")
 @ToString(onlyExplicitlyIncluded = true, doNotUseGetters = true)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, doNotUseGetters = true)
-@SuppressWarnings({"DuplicateStringLiteralInspection", "HardCodedStringLiteral", "ConstantConditions"})
 public final class JniMemoryManager implements IxyMemoryManager {
 
 	////////////////////////////////////////////////// STATIC METHODS //////////////////////////////////////////////////
-
-	/** Cached huge page size. */
-	@EqualsAndHashCode.Include
-	@ToString.Include(name = "hugepage")
-	@SuppressWarnings("NonConstantFieldWithUpperCaseName")
-	private final long HUGE_PAGE_SIZE;
 
 	/**
 	 * Singleton instance.
@@ -95,7 +89,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	private static native long c_hugepage_size();
 
 	/**
-	 * Allocates {@code size} bytes.
+	 * Allocates raw bytes from the heap.
 	 * <p>
 	 * Several flags are provided to customise the behaviour of the allocation.
 	 * When the parameter {@code huge} is set to {@code true}, normal memory allocation will take place, usually
@@ -105,14 +99,15 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 * to allocate the huge memory page in {@code Linux}.
 	 * <p>
 	 * This method is only implemented for {@code Linux} and {@code Windows}.
-	 * Calling this method with another operative system will use a dummy implementation that will always return {@code 0}.
+	 * Calling this method with another operative system will use a dummy implementation that will always return {@code
+	 * 0}.
 	 *
-	 * @param size The number of bytes.
-	 * @param huge Whether huge pages should be used.
+	 * @param bytes The number of bytes.
+	 * @param huge  Whether huge pages should be used.
 	 * @return The base address of the allocated memory region.
 	 */
 	@Contract(value = "_, true, null -> fail", pure = true)
-	private static native long c_allocate(long size, boolean huge, String mnt);
+	private static native long c_allocate(long bytes, boolean huge, String mnt);
 
 	/**
 	 * Frees a previously allocated memory region.
@@ -123,20 +118,19 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 * Conversely, when the parameter {@code huge} is set to {@link AllocationType#HUGE}, hugepage-based memory freeing
 	 * will take place, usually implemented with platform-dependent system calls.
 	 * <p>
-	 * The parameter {@code size} might be used in some platforms; consistency is important, as the behaviour is
+	 * The parameter {@code bytes} might be used in some platforms; consistency is important, as the behaviour is
 	 * undefined if the size used with {@link #allocate(long, AllocationType, LayoutType)} and this method's do not
 	 * match.
 	 * <p>
 	 * If the memory address is {@code 0}, the behaviour is undefined.
 	 *
 	 * @param address The base address of the memory region.
-	 * @param size    The size of the memory region.
+	 * @param bytes   The size of the memory region.
 	 * @param huge    Whether huge memory pages should be used.
 	 * @return Whether the operation succeeded.
 	 */
 	@Contract(pure = true)
-	@SuppressWarnings("BooleanMethodNameMustStartWithQuestion")
-	private static native boolean c_free(long address, long size, boolean huge);
+	private static native boolean c_free(long address, long bytes, boolean huge);
 
 	/**
 	 * Reads a {@code byte} from an arbitrary memory address.
@@ -320,12 +314,12 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 * If the memory address is {@code 0}, the behaviour is undefined.
 	 *
 	 * @param src    The source memory address to copy from.
-	 * @param size   The number of bytes to copy.
+	 * @param bytes  The number of bytes to copy.
 	 * @param dest   The destination primitive array to copy to.
 	 * @param offset The offset from which to start copying to.
 	 */
 	@Contract(value = "_, _, null, _ -> fail", mutates = "param3")
-	private static native void c_get(long src, int size, @NotNull byte[] dest, int offset);
+	private static native void c_get(long src, int bytes, @NotNull byte[] dest, int offset);
 
 	/**
 	 * Copies a memory region into a primitive byte array.
@@ -333,12 +327,12 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 * If the memory address is {@code 0}, the behaviour is undefined.
 	 *
 	 * @param src    The source volatile memory address to copy from.
-	 * @param size   The number of bytes to copy.
+	 * @param bytes  The number of bytes to copy.
 	 * @param dest   The destination primitive array to copy to.
 	 * @param offset The offset from which to start copying to.
 	 */
 	@Contract(value = "_, _, null, _ -> fail", mutates = "param3")
-	private static native void c_get_volatile(long src, int size, @NotNull byte[] dest, int offset);
+	private static native void c_get_volatile(long src, int bytes, @NotNull byte[] dest, int offset);
 
 	/**
 	 * Copies a primitive byte array into a memory region.
@@ -346,12 +340,12 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 * If the memory address is {@code 0}, the behaviour is undefined.
 	 *
 	 * @param dest   The destination memory address to copy to.
-	 * @param size   The number of bytes to copy.
+	 * @param bytes  The number of bytes to copy.
 	 * @param src    The source primitive array to copy from.
 	 * @param offset The offset from which to start copying from.
 	 */
 	@Contract(value = "_, _, null, _ -> fail", pure = true)
-	private static native void c_put(long dest, int size, @NotNull byte[] src, int offset);
+	private static native void c_put(long dest, int bytes, @NotNull byte[] src, int offset);
 
 	/**
 	 * Copies a primitive byte array into a memory region.
@@ -359,36 +353,36 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 * If the memory address is {@code 0}, the behaviour is undefined.
 	 *
 	 * @param dest   The destination volatile memory address to copy to.
-	 * @param size   The number of bytes to copy.
+	 * @param bytes  The number of bytes to copy.
 	 * @param src    The source primitive array to copy from.
 	 * @param offset The offset from which to start copying from.
 	 */
 	@Contract(value = "_, _, null, _ -> fail", pure = true)
-	private static native void c_put_volatile(long dest, int size, @NotNull byte[] src, int offset);
+	private static native void c_put_volatile(long dest, int bytes, @NotNull byte[] src, int offset);
 
 	/**
 	 * Copies a memory region into another memory region.
 	 * <p>
 	 * If the memory address is {@code 0}, the behaviour is undefined.
 	 *
-	 * @param src  The source memory address to copy from.
-	 * @param size The number of bytes to copy.
-	 * @param dest The destination memory address to copy to.
+	 * @param src   The source memory address to copy from.
+	 * @param bytes The number of bytes to copy.
+	 * @param dest  The destination memory address to copy to.
 	 */
 	@Contract(pure = true)
-	private static native void c_copy(long src, int size, long dest);
+	private static native void c_copy(long src, int bytes, long dest);
 
 	/**
 	 * Copies a memory region into another memory region using volatile memory addresses.
 	 * <p>
 	 * If the memory address is {@code 0}, the behaviour is undefined.
 	 *
-	 * @param src  The source volatile memory address to copy from.
-	 * @param size The number of bytes to copy.
-	 * @param dest The destination volatile memory address to copy to.
+	 * @param src   The source volatile memory address to copy from.
+	 * @param bytes The number of bytes to copy.
+	 * @param dest  The destination volatile memory address to copy to.
 	 */
 	@Contract(pure = true)
-	private static native void c_copy_volatile(long src, int size, long dest);
+	private static native void c_copy_volatile(long src, int bytes, long dest);
 
 	/**
 	 * Translates a virtual memory address to its physical counterpart.
@@ -403,7 +397,12 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	@Contract(pure = true)
 	private static native long c_virt2phys(long address);
 
-	//////////////////////////////////////////////// NON-STATIC METHODS ////////////////////////////////////////////////
+	////////////////////////////////////////////////// MEMBER METHODS //////////////////////////////////////////////////
+
+	/** Cached huge page size. */
+	@EqualsAndHashCode.Include
+	@ToString.Include(name = "hugepage")
+	private final long HUGE_PAGE_SIZE;
 
 	/**
 	 * Once-callable private constructor.
@@ -414,11 +413,12 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 */
 	private JniMemoryManager() {
 		if (BuildConfig.DEBUG) log.debug("Creating a JNI-backed memory manager");
-		if (singleton != null) {
+		if (singleton == null) {
+			System.loadLibrary("ixy");
+			HUGE_PAGE_SIZE = c_hugepage_size();
+		} else {
 			throw new IllegalStateException("An instance cannot be created twice. Use getSingleton() instead.");
 		}
-		System.loadLibrary("ixy");
-		HUGE_PAGE_SIZE = c_hugepage_size();
 	}
 
 	//////////////////////////////////////////////// OVERRIDDEN METHODS ////////////////////////////////////////////////
@@ -445,11 +445,12 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@SuppressWarnings("Contract")
 	@Contract(value = "_, null, _ -> fail; _, _, null -> fail", pure = true)
-	public long allocate(long size, @NotNull AllocationType allocationType, @NotNull LayoutType layoutType) {
+	public long allocate(long bytes, @NotNull AllocationType allocationType, @NotNull LayoutType layoutType) {
 		// Stop if anything is wrong
 		if (!BuildConfig.OPTIMIZED) {
-			if (size <= 0) throw new InvalidSizeException("size");
+			if (bytes <= 0) throw new InvalidSizeException("bytes");
 			if (allocationType == null) throw new InvalidNullParameterException("allocationType");
 			if (layoutType == null) throw new InvalidNullParameterException("layoutType");
 		}
@@ -458,7 +459,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		val type = layoutType == LayoutType.CONTIGUOUS ? "contiguous" : "non-contiguous";
 		if (allocationType == AllocationType.HUGE) {
 			if (BuildConfig.DEBUG) {
-				log.debug("Allocating {} {} hugepage-backed bytes using C", size, type);
+				log.debug("Allocating {} {} hugepage-backed bytes using C", bytes, type);
 			}
 
 			// If no huge memory page file support has been detected, exit right away
@@ -466,34 +467,34 @@ public final class JniMemoryManager implements IxyMemoryManager {
 
 			// Round the size to a multiple of the page size
 			val mask = (HUGE_PAGE_SIZE - 1);
-			size = (size & mask) == 0 ? size : (size + HUGE_PAGE_SIZE) & ~mask;
+			bytes = (bytes & mask) == 0 ? bytes : (bytes + HUGE_PAGE_SIZE) & ~mask;
 
 			// Skip if we cannot guarantee contiguity
-			if (layoutType == LayoutType.CONTIGUOUS && size > HUGE_PAGE_SIZE) return 0;
+			if (layoutType == LayoutType.CONTIGUOUS && bytes > HUGE_PAGE_SIZE) return 0;
 		} else if (BuildConfig.DEBUG) {
-			log.debug("Allocating {} {} bytes using C", size, type);
+			log.debug("Allocating {} {} bytes using C", bytes, type);
 		}
 
 		// Allocate the memory
-		return c_allocate(size, allocationType == AllocationType.HUGE, BuildConfig.HUGE_MNT);
+		return c_allocate(bytes, allocationType == AllocationType.HUGE, BuildConfig.HUGE_MNT);
 	}
 
 	@Override
 	@Contract(value = "_, null, _ -> fail; _, _, null -> fail; _, !null, !null -> new", pure = true)
-	public @NotNull IxyDmaMemory dmaAllocate(long size, @NotNull AllocationType allocationType, @NotNull LayoutType layoutType) {
+	public @NotNull IxyDmaMemory dmaAllocate(long bytes, @NotNull AllocationType allocationType, @NotNull LayoutType layoutType) {
 		if (!BuildConfig.DEBUG) log.debug("Allocating DualMemory using C");
-		val virt = allocate(size, allocationType, layoutType);
+		val virt = allocate(bytes, allocationType, layoutType);
 		val phys = virt2phys(virt);
 		return DmaMemory.of(virt, phys);
 	}
 
 	@Override
 	@Contract(value = "_, _, null -> fail", pure = true)
-	public boolean free(long address, long size, @NotNull AllocationType allocationType) {
+	public boolean free(long address, long bytes, @NotNull AllocationType allocationType) {
 		// Stop if anything is wrong
 		if (!BuildConfig.OPTIMIZED) {
 			if (address == 0) throw new InvalidMemoryAddressException("address");
-			if (size <= 0) throw new InvalidSizeException("size");
+			if (bytes <= 0) throw new InvalidSizeException("bytes");
 			if (allocationType == null) throw new InvalidNullParameterException("allocationType");
 		}
 
@@ -502,7 +503,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		val huge = allocationType == AllocationType.HUGE;
 		if (huge) {
 			if (BuildConfig.DEBUG) {
-				log.debug("Freeing {} hugepage-backed bytes @ 0x{} using C", size, xaddress);
+				log.debug("Freeing {} hugepage-backed bytes @ 0x{} using C", bytes, xaddress);
 			}
 
 			// If no huge memory page file support has been detected, exit right away
@@ -511,13 +512,13 @@ public final class JniMemoryManager implements IxyMemoryManager {
 			// Round the size and address to a multiple of the page size
 			val mask = (HUGE_PAGE_SIZE - 1);
 			address = (address & mask) == 0 ? address : address & ~mask;
-			size = (size & mask) == 0 ? size : (size + HUGE_PAGE_SIZE) & ~mask;
+			bytes = (bytes & mask) == 0 ? bytes : (bytes + HUGE_PAGE_SIZE) & ~mask;
 		} else if (BuildConfig.DEBUG) {
-			log.debug("Freeing {} bytes @ 0x{} using C", size, xaddress);
+			log.debug("Freeing {} bytes @ 0x{} using C", bytes, xaddress);
 		}
 
 		// Perform some checks when using huge memory pages
-		return c_free(address, size, huge);
+		return c_free(address, bytes, huge);
 	}
 
 	@Override
@@ -705,85 +706,83 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
-	@SuppressWarnings("Duplicates")
 	@Contract(value = "_, _, null, _ -> fail", mutates = "param3")
-	public void get(long src, int size, @NotNull byte[] dest, int offset) {
+	public void get(long src, int bytes, @NotNull byte[] dest, int offset) {
 		if (!BuildConfig.OPTIMIZED) {
-			if (!check(src, size, dest, offset)) return;
-			size = Math.min(size, dest.length - offset);
+			if (check(src, bytes, dest, offset)) return;
+			bytes = Math.min(bytes, dest.length - offset);
 		}
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(src);
-			log.debug("Copying memory data segment of {} bytes from 0x{} using C", size, xaddress);
+			log.debug("Copying memory data segment of {} bytes from 0x{} using C", bytes, xaddress);
 		}
-		c_get(src, size, dest, offset);
+		c_get(src, bytes, dest, offset);
 	}
 
 	@Override
-	@SuppressWarnings("Duplicates")
 	@Contract(value = "_, _, null, _ -> fail", mutates = "param3")
-	public void getVolatile(long src, int size, @NotNull byte[] dest, int offset) {
+	public void getVolatile(long src, int bytes, @NotNull byte[] dest, int offset) {
 		if (!BuildConfig.OPTIMIZED) {
-			if (!check(src, size, dest, offset)) return;
-			size = Math.min(size, dest.length - offset);
+			if (check(src, bytes, dest, offset)) return;
+			bytes = Math.min(bytes, dest.length - offset);
 		}
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(src);
-			log.debug("Copying memory data segment of {} bytes from 0x{} using C", size, xaddress);
+			log.debug("Copying memory data segment of {} bytes from 0x{} using C", bytes, xaddress);
 		}
-		c_get_volatile(src, size, dest, offset);
+		c_get_volatile(src, bytes, dest, offset);
 	}
 
 	@Override
 	@Contract(value = "_, _, null, _ -> fail", pure = true)
-	public void put(long dest, int size, @NotNull byte[] src, int offset) {
+	public void put(long dest, int bytes, @NotNull byte[] src, int offset) {
 		if (!BuildConfig.OPTIMIZED) {
-			if (!check(dest, size, src, offset)) return;
-			size = Math.min(size, src.length);
+			if (check(dest, bytes, src, offset)) return;
+			bytes = Math.min(bytes, src.length);
 		}
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(dest);
-			log.debug("Copying buffer of {} bytes at offset 0x{} using the Unsafe object", size, xaddress);
+			log.debug("Copying buffer of {} bytes at offset 0x{} using the Unsafe object", bytes, xaddress);
 		}
-		c_put(dest, size, src, offset);
+		c_put(dest, bytes, src, offset);
 	}
 
 	@Override
 	@Contract(value = "_, _, null, _ -> fail", pure = true)
-	public void putVolatile(long dest, int size, @NotNull byte[] src, int offset) {
+	public void putVolatile(long dest, int bytes, @NotNull byte[] src, int offset) {
 		if (!BuildConfig.OPTIMIZED) {
-			if (!check(dest, size, src, offset)) return;
-			size = Math.min(size, src.length);
+			if (check(dest, bytes, src, offset)) return;
+			bytes = Math.min(bytes, src.length);
 		}
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(dest);
-			log.debug("Copying buffer of {} bytes at offset 0x{} using C", size, xaddress);
+			log.debug("Copying buffer of {} bytes at offset 0x{} using C", bytes, xaddress);
 		}
-		c_put_volatile(dest, size, src, offset);
+		c_put_volatile(dest, bytes, src, offset);
 	}
 
 	@Override
 	@Contract(pure = true)
-	public void copy(long src, int size, long dest) {
+	public void copy(long src, int bytes, long dest) {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(src);
 			val xdest = Long.toHexString(dest);
-			log.debug("Copying memory region ({} B) @ 0x{} to 0x{} using C", size, xsrc, xdest);
+			log.debug("Copying memory region ({} B) @ 0x{} to 0x{} using C", bytes, xsrc, xdest);
 		}
-		if (!BuildConfig.OPTIMIZED && !check(src, dest, size)) return;
-		c_copy(src, size, dest);
+		if (!BuildConfig.OPTIMIZED && check(src, dest, bytes)) return;
+		c_copy(src, bytes, dest);
 	}
 
 	@Override
 	@Contract(pure = true)
-	public void copyVolatile(long src, int size, long dest) {
+	public void copyVolatile(long src, int bytes, long dest) {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(src);
 			val xdest = Long.toHexString(dest);
-			log.debug("Copying memory region ({} B) @ 0x{} to 0x{} using C", size, xsrc, xdest);
+			log.debug("Copying memory region ({} B) @ 0x{} to 0x{} using C", bytes, xsrc, xdest);
 		}
-		if (!BuildConfig.OPTIMIZED && !check(src, dest, size)) return;
-		c_copy_volatile(src, size, dest);
+		if (!BuildConfig.OPTIMIZED && check(src, dest, bytes)) return;
+		c_copy_volatile(src, bytes, dest);
 	}
 
 	@Override
