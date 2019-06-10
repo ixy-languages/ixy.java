@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Minimum functionality a packet should expose.
+ * Ixy's packet specification.
  *
  * @author Esaú García Sánchez-Torija
  */
