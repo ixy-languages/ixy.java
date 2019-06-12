@@ -46,10 +46,10 @@ pmd {
 
 // Define a set of custom properties which may or may not be useful, but should be inherited from the root project
 ext {
-	DEBUG     = rootProject.ext.has("DEBUG")     ? project.DEBUG     : false
-	UNSAFE    = rootProject.ext.has("UNSAFE")    ? project.UNSAFE    : true
-	OPTIMIZED = rootProject.ext.has("OPTIMIZED") ? project.OPTIMIZED : true
-	HUGE_MNT  = rootProject.ext.has("HUGE_MNT")  ? project.HUGE_MNT  : "/mnt/huge"
+	DEBUG     = rootProject.ext.has("DEBUG")     ? rootProject.ext.DEBUG     : false
+	UNSAFE    = rootProject.ext.has("UNSAFE")    ? rootProject.ext.UNSAFE    : true
+	OPTIMIZED = rootProject.ext.has("OPTIMIZED") ? rootProject.ext.OPTIMIZED : true
+	HUGE_MNT  = rootProject.ext.has("HUGE_MNT")  ? rootProject.ext.HUGE_MNT  : "/mnt/huge"
 }
 
 // Configure the C library
@@ -137,7 +137,7 @@ tasks.withType(com.github.gmazzo.gradle.plugins.tasks.BuildConfigTask) {
 }
 
 // Disable Lombok's @Generated annotation
-lombok.config['lombok.addLombokGeneratedAnnotation'] = "${false}"
+lombok.config['lombok.addLombokGeneratedAnnotation'] = "${true}"
 
 // Disable the warning about the Unsafe proprietary API during compilation
 tasks.withType(JavaCompile) {
