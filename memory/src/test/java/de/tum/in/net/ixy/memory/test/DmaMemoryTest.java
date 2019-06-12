@@ -2,7 +2,6 @@ package de.tum.in.net.ixy.memory.test;
 
 import de.tum.in.net.ixy.generic.IxyDmaMemory;
 import de.tum.in.net.ixy.memory.DmaMemory;
-import lombok.val;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -33,7 +32,7 @@ final class DmaMemoryTest {
 	private long physicalAddress;
 
 	/** Holds an instance of {@link DmaMemory} that will be used to test. */
-	private IxyDmaMemory dmaMemory;
+	private DmaMemory dmaMemory;
 
 	// Randomizes "virtual" and "physical" and creates an "DmaMemory" instance that uses them.
 	@BeforeEach
@@ -44,12 +43,19 @@ final class DmaMemoryTest {
 	}
 
 	@Test
-	@DisplayName("The virtual memory address is stored correctly")
+	@DisabledIfOptimized
+	@DisplayName("Wrong parameters produce exceptions")
+	void of_exceptionsNotOptimized() {
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> DmaMemory.of(null));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> DmaMemory.of((IxyDmaMemory) null));
+	}
+
+	@Test
+	@DisplayName("Instances can be copied with the constructor")
 	void of() {
 		assumeThat(dmaMemory).isNotNull();
-		val copy = DmaMemory.of(dmaMemory);
-		assertThat(copy).isEqualTo(dmaMemory);
-		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> DmaMemory.of(null));
+		assertThat(DmaMemory.of(dmaMemory)).isEqualTo(dmaMemory);
+		assertThat(DmaMemory.of((IxyDmaMemory) dmaMemory)).isEqualTo(dmaMemory);
 	}
 
 	@Test

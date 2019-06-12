@@ -42,7 +42,7 @@ public final class DmaMemory implements IxyDmaMemory {
 	 * @return A copy of the {@code dmaMemory}.
 	 */
 	@Contract(value = "null -> fail; _ -> new", pure = true)
-	public static @NotNull IxyDmaMemory of(@NotNull IxyDmaMemory dmaMemory) {
+	public static @NotNull DmaMemory of(@NotNull IxyDmaMemory dmaMemory) {
 		if (!BuildConfig.OPTIMIZED && dmaMemory == null) throw new InvalidNullParameterException("dmaMemory");
 		return of(dmaMemory.getVirtualAddress(), dmaMemory.getPhysicalAddress());
 	}
@@ -53,9 +53,8 @@ public final class DmaMemory implements IxyDmaMemory {
 	 * @param dmaMemory The direct memory address specification to copy.
 	 * @return A copy of the {@code dmaMemory}.
 	 */
-	@SuppressWarnings("MethodParameterOfConcreteClass")
 	@Contract(value = "null -> fail; _ -> new", pure = true)
-	public static @NotNull IxyDmaMemory of(@NotNull DmaMemory dmaMemory) {
+	public static @NotNull DmaMemory of(@NotNull DmaMemory dmaMemory) {
 		if (!BuildConfig.OPTIMIZED && dmaMemory == null) throw new InvalidNullParameterException("dmaMemory");
 		return of(dmaMemory.virtualAddress, dmaMemory.physicalAddress);
 	}
