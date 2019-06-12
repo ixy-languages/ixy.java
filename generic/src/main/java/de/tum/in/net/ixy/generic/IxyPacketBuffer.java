@@ -211,11 +211,11 @@ public interface IxyPacketBuffer {
 	 * This method is necessary for packet generation applications.
 	 *
 	 * @param offset The offset to start copying from.
-	 * @param length The amount of data to copy.
+	 * @param bytes  The number of bytes to copy.
 	 * @param buffer The buffer to copy the data to.
 	 */
 	@Contract(value = "_, _, null -> fail", mutates = "param3")
-	void get(int offset, int length, @NotNull byte[] buffer);
+	void get(int offset, int bytes, @NotNull byte[] buffer);
 
 	/**
 	 * Copies a segment of the packet.
@@ -223,13 +223,18 @@ public interface IxyPacketBuffer {
 	 * This method is necessary for packet generation applications.
 	 *
 	 * @param offset The offset to start copying from.
-	 * @param length The amount of data to copy.
+	 * @param bytes  The number of bytes to copy.
 	 * @return A copy the packet segment.
 	 */
 	@Contract(pure = true)
-	default @NotNull byte[] get(int offset, int length) {
-		val buffer = new byte[length];
-		get(offset, length, buffer);
+	default @NotNull byte[] get(int offset, int bytes) {
+		if (!BuildConfig.OPTIMIZED) {
+			if (bytes < 0) {
+				throw new IllegalArgumentException("The parameter 'bytes' is an invalid size");
+			}
+		}
+		val buffer = new byte[bytes];
+		get(offset, bytes, buffer);
 		return buffer;
 	}
 
@@ -239,11 +244,11 @@ public interface IxyPacketBuffer {
 	 * This method is necessary for packet generation applications.
 	 *
 	 * @param offset The offset to start copying from.
-	 * @param length The amount of data to copy.
+	 * @param bytes  The number of bytes to copy.
 	 * @param buffer The buffer to copy the data to.
 	 */
 	@Contract(value = "_, _, null -> fail", mutates = "param3")
-	void getVolatile(int offset, int length, @NotNull byte[] buffer);
+	void getVolatile(int offset, int bytes, @NotNull byte[] buffer);
 
 	/**
 	 * Copies a segment of the packet using volatile memory addresses.
@@ -251,13 +256,18 @@ public interface IxyPacketBuffer {
 	 * This method is necessary for packet generation applications.
 	 *
 	 * @param offset The offset to start copying from.
-	 * @param length The amount of data to copy.
+	 * @param bytes  The number of bytes to copy.
 	 * @return A copy the packet segment.
 	 */
 	@Contract(pure = true)
-	default @NotNull byte[] getVolatile(int offset, int length) {
-		val buffer = new byte[length];
-		getVolatile(offset, length, buffer);
+	default @NotNull byte[] getVolatile(int offset, int bytes) {
+		if (!BuildConfig.OPTIMIZED) {
+			if (bytes < 0) {
+				throw new IllegalArgumentException("The parameter 'bytes' is an invalid size");
+			}
+		}
+		val buffer = new byte[bytes];
+		getVolatile(offset, bytes, buffer);
 		return buffer;
 	}
 
@@ -267,11 +277,11 @@ public interface IxyPacketBuffer {
 	 * This method is necessary for packet generation applications.
 	 *
 	 * @param offset The offset to start copying from.
-	 * @param length The amount of data to copy.
+	 * @param bytes  The number of bytes to copy.
 	 * @param buffer The buffer to copy the data to.
 	 */
 	@Contract(value = "_, _, null -> fail", pure = true)
-	void put(int offset, int length, @NotNull byte[] buffer);
+	void put(int offset, int bytes, @NotNull byte[] buffer);
 
 	/**
 	 * Writes a segment of the packet using volatile memory addresses.
@@ -279,10 +289,10 @@ public interface IxyPacketBuffer {
 	 * This method is necessary for packet generation applications.
 	 *
 	 * @param offset The offset to start copying from.
-	 * @param length The amount of data to copy.
+	 * @param bytes  The number of bytes to copy.
 	 * @param buffer The buffer to copy the data to.
 	 */
 	@Contract(value = "_, _, null -> fail", pure = true)
-	void putVolatile(int offset, int length, @NotNull byte[] buffer);
+	void putVolatile(int offset, int bytes, @NotNull byte[] buffer);
 
 }

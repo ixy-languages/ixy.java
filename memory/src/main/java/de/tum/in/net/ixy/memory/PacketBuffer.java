@@ -1,14 +1,17 @@
 package de.tum.in.net.ixy.memory;
 
 import de.tum.in.net.ixy.generic.IxyMemoryManager;
+import de.tum.in.net.ixy.generic.IxyMempool;
 import de.tum.in.net.ixy.generic.IxyPacketBuffer;
 
-import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NonNull;
-import lombok.Setter;
+import lombok.ToString;
 import lombok.val;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * A wrapper for a packet buffer with a specific memory layout.
@@ -30,69 +33,163 @@ import lombok.extern.slf4j.Slf4j;
  * @author Esaú García Sánchez-Torija
  */
 @Slf4j
-public final class PacketBuffer implements IxyPacketBuffer, Comparable<PacketBuffer>, Cloneable {
+public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacketBuffer> {
 
-	///////////////////////////////////////////////////// BUILDER //////////////////////////////////////////////////////
+	/**
+	 * Builder pattern for packet buffers.
+	 *
+	 * @author Esaú García Sánchez-Torija
+	 */
+	@Slf4j
+	@EqualsAndHashCode(onlyExplicitlyIncluded = true, doNotUseGetters = true)
+	public static final class Builder {
 
-	/** {@inheritDoc} */
-	public static final class Builder extends IxyPacketBuffer.Builder {
+		/** The memory manager of the packet. */
+		@EqualsAndHashCode.Include
+		private @Nullable IxyMemoryManager mmanager;
 
-		/** The memory manager to use with the packets. */
-		@NonNull
-		private IxyMemoryManager mmanager;
+		/** The virtual memory address of the packet. */
+		@EqualsAndHashCode.Include
+		private long virtual;
+
+		/** The physical memory address of the packet. */
+		@EqualsAndHashCode.Include
+		private @Nullable Long physical;
+
+		/** The size of the packet. */
+		@EqualsAndHashCode.Include
+		private @Nullable Integer size;
+
+		/** The memory pool identifier of the packet. */
+		@EqualsAndHashCode.Include
+		private @Nullable Integer pool;
+
+		// Private builder only accessible to the outer class
+		private Builder() {}
 
 		/**
-		 * Creates the packet builder with a fixed memory manager.
+		 * Sets the memory manager of the builder.
 		 *
-		 * @param mmanager The memory manage to use.
+		 * @param memoryManager The memory manager.
+		 * @return This builder.
 		 */
-		public Builder(@NonNull final IxyMemoryManager mmanager) {
-			this.mmanager = mmanager;
+		@Contract("_ -> !null")
+		public @NotNull Builder manager(@NotNull IxyMemoryManager memoryManager) {
+			if (BuildConfig.DEBUG) log.debug("Setting memory manager");
+			mmanager = memoryManager;
+			return this;
 		}
 
 		/**
-		 * Sets the virtual address of the packet.
-		 * <p>
-		 * This method will automatically set the physical memory address using the underlying memory manager {@link
-		 * #mmanager}.
+		 * Sets the virtual memory address of the builder.
 		 *
-		 * @param virtualAddress The virtual address of the packet.
+		 * @param virtualAddress The virtual memory address.
+		 * @return This builder.
 		 */
-		@Override
-		public void setVirtualAddress(long virtualAddress) {
-			super.setVirtualAddress(virtualAddress);
-			physicalAddress = mmanager.virt2phys(virtualAddress);
+		@Contract("_ -> !null")
+		public @NotNull Builder virtual(long virtualAddress) {
+			if (BuildConfig.DEBUG) {
+				val xaddress = Long.toHexString(virtualAddress);
+				log.debug("Setting virtual memory address 0x{}", xaddress);
+			}
+			virtual = virtualAddress;
+			return this;
 		}
 
 		/**
-		 * Builds the packet with the properties of the builder.
-		 * <p>
-		 * If a property is {@code null}, it won't be set.
+		 * Sets the physical memory address of the builder.
 		 *
-		 * @return The new packet.
+		 * @param physicalAddress The physical memory address.
+		 * @return This builder.
 		 */
+		@Contract("_ -> !null")
+		public @NotNull Builder physical(@Nullable Long physicalAddress) {
+			if (BuildConfig.DEBUG) {
+				val xaddress = Long.toHexString(physicalAddress == null ? 0L : physicalAddress);
+				log.debug("Setting physical memory address 0x{}", xaddress);
+			}
+			physical = physicalAddress;
+			return this;
+		}
+
+		/**
+		 * Sets the size of the builder.
+		 *
+		 * @param size The size.
+		 * @return This builder.
+		 */
+		@Contract("_ -> !null")
+		public @NotNull Builder size(@Nullable Integer size) {
+			if (BuildConfig.DEBUG) log.debug("Setting size {}", size);
+			this.size = size;
+			return this;
+		}
+
+		/**
+		 * Sets the memory pool identifier of the builder.
+		 *
+		 * @param pool The memory pool identifier.
+		 * @return This builder.
+		 */
+		@Contract("_ -> !null")
+		public Builder pool(@Nullable Integer pool) {
+			if (BuildConfig.DEBUG) log.debug("Setting memory pool identifier {}", pool);
+			this.pool = pool;
+			return this;
+		}
+
+		/**
+		 * Sets the memory pool identifier of the builder.
+		 *
+		 * @param pool The memory pool identifier.
+		 * @return This builder.
+		 */
+		@Contract("_ -> !null")
+		public Builder pool(@Nullable IxyMempool pool) {
+			return pool(pool == null ? null : pool.getId());
+		}
+
+		/**
+		 * Builds a new packet buffer using the properties of the builder.
+		 *
+		 * @return The packet buffer.
+		 */
+		@Contract(value = " -> new", pure = true)
+		public @NotNull PacketBuffer build() {
+			return new PacketBuffer(mmanager, virtual, physical, size, pool);
+		}
+
 		@Override
-		@NonNull
-		public IxyPacketBuffer build() {
-			val packet = new PacketBuffer(virtualAddress, mmanager);
-			if (physicalAddress != null) packet.setPhysicalAddress(physicalAddress);
-			if (size != null) packet.setSize(size);
-			if (memoryPoolId != null) packet.setMemoryPoolId(memoryPoolId);
-			return packet;
+		@Contract(pure = true)
+		public String toString() {
+			var string = PacketBuffer.class.getSimpleName();
+			string += ".";
+			string += Builder.class.getSimpleName();
+			string += "(manager=";
+			string += mmanager;
+			string += ", virtual=";
+			string += virtual;
+			string += ", physical=";
+			string += physical;
+			string += ", size=";
+			string += size;
+			string += ", pool=";
+			string += pool;
+			string += ")";
+			return string;
 		}
 
 	}
 
-	//////////////////////////////////////////////////// EXCEPTIONS ////////////////////////////////////////////////////
-
-	/** Cached exception thrown when an offset is not correctly formatted. */
-	private static final IllegalArgumentException OFFSET = new IllegalArgumentException("Offset must be an integer equal to or greater than 0");
-
-	/** Cached exception thrown when a size is not correctly formatted. */
-	private static final IllegalArgumentException SIZE = new IllegalArgumentException("Size must be an integer equal to or greater than 0");
-
-	/** Cached exception thrown when a buffer is not correctly formatted. */
-	private static final IllegalArgumentException BUFFER = new IllegalArgumentException("Buffer must be initialized and have a non-negative length");
+	/**
+	 * Returns a new {@link Builder} instance.
+	 *
+	 * @return A builder.
+	 */
+	@Contract(value = " -> new", pure = true)
+	public static Builder builder() {
+		return new Builder();
+	}
 
 	/////////////////////////////////////////////////////// SIZES //////////////////////////////////////////////////////
 
@@ -156,58 +253,40 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<PacketBuf
 	 * If one the parameters is not formatted correctly, an {@link IllegalArgumentException} will be thrown.
 	 *
 	 * @param offset The offset to start copying from.
-	 * @param size   The amount of data to copy.
+	 * @param bytes  The number of bytes to copy.
 	 * @param buffer The buffer to copy the data to.
+	 * @return Whether the operation should be stopped.
 	 */
-	@SuppressWarnings("Duplicates")
-	private static void getCheck(final int offset, int size, final byte[] buffer) {
-		if (offset < 0) throw OFFSET;
-		else if (size < 0) throw SIZE;
-		else if (buffer == null) throw BUFFER;
+	@Contract(value = "_, _, null -> fail", pure = true)
+	private static boolean check(int offset, int bytes, @Nullable byte[] buffer) {
+		if (offset < 0) throw new InvalidOffsetException("offset");
+		else if (bytes < 0) throw new InvalidSizeException("length");
+		else if (buffer == null) throw new InvalidBufferException("buffer");
+		return (bytes == 0 || buffer.length == 0);
 	}
 
-	/**
-	 * Common checks performed by {@link #put(int, int, byte[])} and {@link #putVolatile(int, int, byte[])}.
-	 * <p>
-	 * If one the parameters is not formatted correctly, an {@link IllegalArgumentException} will be thrown.
-	 *
-	 * @param offset The offset to start copying to.
-	 * @param size   The amount of data to copy.
-	 * @param buffer The buffer to copy the data from.
-	 */
-	@SuppressWarnings("Duplicates")
-	private static void putCheck(final int offset, int size, final byte[] buffer) {
-		if (offset < 0) throw OFFSET;
-		else if (size < 0) throw SIZE;
-		else if (buffer == null) throw BUFFER;
-	}
-
-	///////////////////////////////////////////////////// MEMBERS //////////////////////////////////////////////////////
+	///////////////////////////////////////////////// MEMBER VARIABLES /////////////////////////////////////////////////
 
 	/** Holds a reference to a memory manager. */
-	private IxyMemoryManager mmanager;
+	private final @NotNull IxyMemoryManager mmanager;
 
-	//////////////////////////////////////////////// NON-STATIC METHODS ////////////////////////////////////////////////
+	////////////////////////////////////////////////// MEMBER METHODS //////////////////////////////////////////////////
 
-	/**
-	 * The base memory address of the packet buffer.
-	 * ------------------ GETTER ------------------
-	 * {@inheritDoc}
-	 */
-	@Getter
-	@Setter(AccessLevel.NONE)
-	private long virtualAddress;
+	@Getter(onMethod_ = {@Contract(pure = true)})
+	private final long virtualAddress;
 
-	/**
-	 * Creates a new instance that wraps a packet buffer.
-	 *
-	 * @param address       The base address of the packet buffer.
-	 * @param memoryManager A memory manager instance to manipulate the memory.
-	 */
-	public PacketBuffer(final long address, final IxyMemoryManager memoryManager) {
-		if (BuildConfig.DEBUG) log.trace("Instantiating packet buffer with address 0x{}", Long.toHexString(address));
-		virtualAddress = address;
+	@Contract("null, _, _, _, _ -> fail")
+	private PacketBuffer(@NotNull IxyMemoryManager memoryManager, long virtualAddress, @Nullable Long physicalAddress, @Nullable Integer size, @Nullable Integer pool) {
+		if (BuildConfig.DEBUG) log.trace("Instantiating packet buffer with address 0x{}", Long.toHexString(virtualAddress));
+		if (!BuildConfig.OPTIMIZED) {
+			if (virtualAddress == 0) throw new InvalidMemoryAddressException("address");
+			if (memoryManager == null) throw new InvalidNullParameterException("mmanager");
+		}
 		mmanager = memoryManager;
+		this.virtualAddress = virtualAddress;
+		if (physicalAddress != null) setPhysicalAddress(physicalAddress);
+		if (size != null) setSize(size);
+		if (pool != null) setMemoryPoolId(pool);
 	}
 
 	/**
@@ -218,97 +297,84 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<PacketBuf
 	 *
 	 * @param physicalAddress The physical memory address.
 	 */
-	public void setPhysicalAddress(final long physicalAddress) {
+	private void setPhysicalAddress(long physicalAddress) {
 		if (BuildConfig.DEBUG) log.trace("Writing physical address pointer field");
-		if (!BuildConfig.OPTIMIZED) checkMemoryManager();
 		mmanager.putLong(virtualAddress + PAP_OFFSET, physicalAddress);
 	}
 
 	/**
-	 * Sets the memory pool id of the underlying packet buffer.
+	 * Sets the memory pool identifier of the underlying packet buffer.
 	 * <p>
 	 * This method is necessary for packet generation applications.
 	 *
-	 * @param memoryPoolId The memory pool id.
+	 * @param memoryPoolId The memory pool identifier.
 	 */
-	public void setMemoryPoolId(final int memoryPoolId) {
+	private void setMemoryPoolId(int memoryPoolId) {
 		if (BuildConfig.DEBUG) log.trace("Writing memory pool index field");
-		if (!BuildConfig.OPTIMIZED) checkMemoryManager();
 		mmanager.putInt(virtualAddress + PAP_OFFSET, memoryPoolId);
-	}
-
-	/** Checks whether a memory manager has been defined. */
-	private void checkMemoryManager() {
-		if (mmanager == null) throw new IllegalStateException("The memory manager is not defined");
 	}
 
 	//////////////////////////////////////////////// OVERRIDDEN METHODS ////////////////////////////////////////////////
 
-	/** {@inheritDoc} */
 	@Override
+	@Contract(pure = true)
 	public long getPhysicalAddress() {
 		if (BuildConfig.DEBUG) log.trace("Reading physical address pointer field");
-		if (!BuildConfig.OPTIMIZED) checkMemoryManager();
 		return mmanager.getLong(virtualAddress + PAP_OFFSET);
 	}
 
-	/** {@inheritDoc} */
 	@Override
+	@Contract(pure = true)
 	public int getMemoryPoolId() {
 		if (BuildConfig.DEBUG) log.trace("Reading memory pool index field");
-		if (!BuildConfig.OPTIMIZED) checkMemoryManager();
 		return mmanager.getInt(virtualAddress + MPI_OFFSET);
 	}
 
-	/** {@inheritDoc} */
 	@Override
+	@Contract(pure = true)
 	public int getSize() {
 		if (BuildConfig.DEBUG) log.trace("Reading packet size field");
-		if (!BuildConfig.OPTIMIZED) checkMemoryManager();
 		return mmanager.getInt(virtualAddress + PKT_OFFSET);
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public void setSize(final int size) {
+	@Contract(pure = true)
+	public void setSize(int size) {
 		val address = virtualAddress + PKT_OFFSET;
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
 			log.trace("Writing packet size field @ 0x{} with value {}", xaddress, size);
 		}
-		if (!BuildConfig.OPTIMIZED) checkMemoryManager();
 		mmanager.putInt(virtualAddress + PKT_OFFSET, size);
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public byte getByte(final int offset) {
+	@Contract(pure = true)
+	public byte getByte(int offset) {
 		val address = virtualAddress + DATA_OFFSET;
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
 			val xoffset = Integer.toHexString(offset);
 			log.trace("Reading data byte @ 0x{} with offset 0x{}", xaddress, xoffset);
 		}
-		if (!BuildConfig.OPTIMIZED) checkMemoryManager();
 		return mmanager.getByte(address + offset);
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public byte getByteVolatile(final int offset) {
+	@Contract(pure = true)
+	public byte getByteVolatile(int offset) {
 		val address = virtualAddress + DATA_OFFSET;
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
 			val xoffset = Integer.toHexString(offset);
 			log.trace("Reading volatile data byte @ 0x{} with offset 0x{}", xaddress, xoffset);
 		}
-		if (!BuildConfig.OPTIMIZED) checkMemoryManager();
 		return mmanager.getByteVolatile(address + offset);
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public void putByte(final int offset, final byte value) {
+	@Contract(pure = true)
+	public void putByte(int offset, byte value) {
 		val address = virtualAddress + DATA_OFFSET;
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
@@ -316,13 +382,12 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<PacketBuf
 			val xoffset = Integer.toHexString(offset);
 			log.trace("Writing data byte 0x{} @ 0x{} with offset 0x{}", xvalue, xaddress, xoffset);
 		}
-		if (!BuildConfig.OPTIMIZED) checkMemoryManager();
 		mmanager.putByte(address + offset, value);
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public void putByteVolatile(final int offset, final byte value) {
+	@Contract(pure = true)
+	public void putByteVolatile(int offset, byte value) {
 		val address = virtualAddress + DATA_OFFSET;
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
@@ -330,39 +395,36 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<PacketBuf
 			val xoffset = Integer.toHexString(offset);
 			log.trace("Writing volatile data byte 0x{} @ 0x{} with offset 0x{}", xvalue, xaddress, xoffset);
 		}
-		if (!BuildConfig.OPTIMIZED) checkMemoryManager();
 		mmanager.putByteVolatile(virtualAddress + DATA_OFFSET + offset, value);
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public short getShort(final int offset) {
+	@Contract(pure = true)
+	public short getShort(int offset) {
 		val address = virtualAddress + DATA_OFFSET;
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
 			val xoffset = Integer.toHexString(offset);
 			log.trace("Reading data short @ 0x{} with offset 0x{}", xaddress, xoffset);
 		}
-		if (!BuildConfig.OPTIMIZED) checkMemoryManager();
 		return mmanager.getShort(address + offset);
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public short getShortVolatile(final int offset) {
+	@Contract(pure = true)
+	public short getShortVolatile(int offset) {
 		val address = virtualAddress + DATA_OFFSET;
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
 			val xoffset = Integer.toHexString(offset);
 			log.trace("Reading volatile data short @ 0x{} with offset 0x{}", xaddress, xoffset);
 		}
-		if (!BuildConfig.OPTIMIZED) checkMemoryManager();
 		return mmanager.getShortVolatile(address + offset);
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public void putShort(final int offset, final short value) {
+	@Contract(pure = true)
+	public void putShort(int offset, short value) {
 		val address = virtualAddress + DATA_OFFSET;
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
@@ -370,13 +432,12 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<PacketBuf
 			val xoffset = Integer.toHexString(offset);
 			log.trace("Writing data short 0x{} @ 0x{} with offset 0x{}", xvalue, xaddress, xoffset);
 		}
-		if (!BuildConfig.OPTIMIZED) checkMemoryManager();
 		mmanager.putShort(address + offset, value);
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public void putShortVolatile(final int offset, final short value) {
+	@Contract(pure = true)
+	public void putShortVolatile(int offset, short value) {
 		val address = virtualAddress + DATA_OFFSET;
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
@@ -384,39 +445,36 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<PacketBuf
 			val xoffset = Integer.toHexString(offset);
 			log.trace("Writing volatile data short 0x{} @ 0x{} with offset 0x{}", xvalue, xaddress, xoffset);
 		}
-		if (!BuildConfig.OPTIMIZED) checkMemoryManager();
 		mmanager.putShortVolatile(virtualAddress + DATA_OFFSET + offset, value);
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public int getInt(final int offset) {
+	@Contract(pure = true)
+	public int getInt(int offset) {
 		val address = virtualAddress + DATA_OFFSET;
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
 			val xoffset = Integer.toHexString(offset);
 			log.trace("Reading data int @ 0x{} with offset 0x{}", xaddress, xoffset);
 		}
-		if (!BuildConfig.OPTIMIZED) checkMemoryManager();
 		return mmanager.getInt(address + offset);
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public int getIntVolatile(final int offset) {
+	@Contract(pure = true)
+	public int getIntVolatile(int offset) {
 		val address = virtualAddress + DATA_OFFSET;
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
 			val xoffset = Integer.toHexString(offset);
 			log.trace("Reading volatile data int @ 0x{} with offset 0x{}", xaddress, xoffset);
 		}
-		if (!BuildConfig.OPTIMIZED) checkMemoryManager();
 		return mmanager.getIntVolatile(address + offset);
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public void putInt(final int offset, final int value) {
+	@Contract(pure = true)
+	public void putInt(int offset, int value) {
 		val address = virtualAddress + DATA_OFFSET;
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(value);
@@ -424,13 +482,12 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<PacketBuf
 			val xoffset = Integer.toHexString(offset);
 			log.trace("Writing data int 0x{} @ 0x{} with offset 0x{}", xvalue, xaddress, xoffset);
 		}
-		if (!BuildConfig.OPTIMIZED) checkMemoryManager();
 		mmanager.putInt(address + offset, value);
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public void putIntVolatile(final int offset, final int value) {
+	@Contract(pure = true)
+	public void putIntVolatile(int offset, int value) {
 		val address = virtualAddress + DATA_OFFSET;
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(value);
@@ -438,39 +495,36 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<PacketBuf
 			val xoffset = Integer.toHexString(offset);
 			log.trace("Writing volatile data int 0x{} @ 0x{} with offset 0x{}", xvalue, xaddress, xoffset);
 		}
-		if (!BuildConfig.OPTIMIZED) checkMemoryManager();
 		mmanager.putIntVolatile(virtualAddress + DATA_OFFSET + offset, value);
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public long getLong(final int offset) {
+	@Contract(pure = true)
+	public long getLong(int offset) {
 		val address = virtualAddress + DATA_OFFSET;
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
 			val xoffset = Integer.toHexString(offset);
 			log.trace("Reading data long @ 0x{} with offset 0x{}", xaddress, xoffset);
 		}
-		if (!BuildConfig.OPTIMIZED) checkMemoryManager();
 		return mmanager.getLong(address + offset);
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public long getLongVolatile(final int offset) {
+	@Contract(pure = true)
+	public long getLongVolatile(int offset) {
 		val address = virtualAddress + DATA_OFFSET;
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
 			val xoffset = Integer.toHexString(offset);
 			log.trace("Reading volatile data long @ 0x{} with offset 0x{}", xaddress, xoffset);
 		}
-		if (!BuildConfig.OPTIMIZED) checkMemoryManager();
 		return mmanager.getLongVolatile(address + offset);
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public void putLong(final int offset, final long value) {
+	@Contract(pure = true)
+	public void putLong(int offset, long value) {
 		val address = virtualAddress + DATA_OFFSET;
 		if (BuildConfig.DEBUG) {
 			val xvalue = Long.toHexString(value);
@@ -478,13 +532,12 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<PacketBuf
 			val xoffset = Integer.toHexString(offset);
 			log.trace("Writing data long 0x{} @ 0x{} with offset 0x{}", xvalue, xaddress, xoffset);
 		}
-		if (!BuildConfig.OPTIMIZED) checkMemoryManager();
 		mmanager.putLong(address + offset, value);
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public void putLongVolatile(final int offset, final long value) {
+	@Contract(pure = true)
+	public void putLongVolatile(int offset, long value) {
 		val address = virtualAddress + DATA_OFFSET;
 		if (BuildConfig.DEBUG) {
 			val xvalue = Long.toHexString(value);
@@ -492,83 +545,71 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<PacketBuf
 			val xoffset = Integer.toHexString(offset);
 			log.trace("Writing volatile data long 0x{} @ 0x{} with offset 0x{}", xvalue, xaddress, xoffset);
 		}
-		if (!BuildConfig.OPTIMIZED) checkMemoryManager();
 		mmanager.putLongVolatile(virtualAddress + DATA_OFFSET + offset, value);
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public void get(final int offset, int size, final byte[] buffer) {
+	@Contract(value = "_, _, null -> fail", mutates = "param3")
+	public void get(int offset, int bytes, @NotNull byte[] buffer) {
 		if (BuildConfig.DEBUG) {
 			val xoffset = Integer.toHexString(offset);
-			log.debug("Reading {} bytes starting from offset 0x{}", size, xoffset);
+			log.debug("Reading {} bytes starting from offset 0x{}", bytes, xoffset);
 		}
 		if (!BuildConfig.OPTIMIZED) {
-			checkMemoryManager();
-			getCheck(offset, size, buffer);
-			size = Math.min(size, buffer.length);
+			if (check(offset, bytes, buffer)) return;
+			bytes = Math.min(bytes, buffer.length);
 		}
-		mmanager.get(virtualAddress + offset, size, buffer, 0);
+		mmanager.get(virtualAddress + offset, bytes, buffer, 0);
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public void getVolatile(final int offset, int size, final byte[] buffer) {
+	@Contract(value = "_, _, null -> fail", mutates = "param3")
+	public void getVolatile(int offset, int bytes, @NotNull byte[] buffer) {
 		if (BuildConfig.DEBUG) {
 			val xoffset = Integer.toHexString(offset);
-			log.debug("Reading {} volatile bytes starting from offset 0x{}", size, xoffset);
+			log.debug("Reading {} volatile bytes starting from offset 0x{}", bytes, xoffset);
 		}
 		if (!BuildConfig.OPTIMIZED) {
-			checkMemoryManager();
-			getCheck(offset, size, buffer);
-			size = Math.min(size, buffer.length);
+			if (check(offset, bytes, buffer)) return;
+			bytes = Math.min(bytes, buffer.length);
 		}
-		mmanager.getVolatile(virtualAddress + offset, size, buffer, 0);
+		mmanager.getVolatile(virtualAddress + offset, bytes, buffer, 0);
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public void put(final int offset, int size, final byte[] buffer) {
+	@Contract(value = "_, _, null -> fail", pure = true)
+	public void put(int offset, int bytes, @NotNull byte[] buffer) {
 		if (BuildConfig.DEBUG) {
 			val xoffset = Integer.toHexString(offset);
-			log.debug("Writing {} bytes starting from offset 0x{}", size, xoffset);
+			log.debug("Writing {} bytes starting from offset 0x{}", bytes, xoffset);
 		}
 		if (!BuildConfig.OPTIMIZED) {
-			checkMemoryManager();
-			putCheck(offset, size, buffer);
-			size = Math.min(size, buffer.length);
+			if (check(offset, bytes, buffer)) return;
+			bytes = Math.min(bytes, buffer.length);
 		}
-		mmanager.put(virtualAddress + offset, size, buffer, 0);
+		mmanager.put(virtualAddress + offset, bytes, buffer, 0);
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public void putVolatile(final int offset, int size, final byte[] buffer) {
+	@Contract(value = "_, _, null -> fail", pure = true)
+	public void putVolatile(int offset, int bytes, @NotNull byte[] buffer) {
 		if (BuildConfig.DEBUG) {
 			val xoffset = Integer.toHexString(offset);
-			log.debug("Writing {} volatile bytes starting from offset 0x{}", size, xoffset);
+			log.debug("Writing {} volatile bytes starting from offset 0x{}", bytes, xoffset);
 		}
 		if (!BuildConfig.OPTIMIZED) {
-			checkMemoryManager();
-			putCheck(offset, size, buffer);
-			size = Math.min(size, buffer.length);
+			if (check(offset, bytes, buffer)) return;
+			bytes = Math.min(bytes, buffer.length);
 		}
-		mmanager.putVolatile(virtualAddress + offset, size, buffer, 0);
+		mmanager.putVolatile(virtualAddress + offset, bytes, buffer, 0);
 	}
 
-	/** {@inheritDoc} */
 	@Override
-	public int compareTo(@NonNull final PacketBuffer that) {
+	@Contract(value = "null -> fail", pure = true)
+	public int compareTo(@NotNull IxyPacketBuffer o) {
 		if (BuildConfig.DEBUG) log.debug("Comparing with another packet");
-		return Long.compare(virtualAddress, that.virtualAddress);
-	}
-
-	/** {@inheritDoc} */
-	@Override
-	public PacketBuffer clone() throws CloneNotSupportedException {
-		val clone = (PacketBuffer) super.clone();
-		if (BuildConfig.DEBUG) log.debug("Cloning packet");
-		return clone;
+		if (!BuildConfig.OPTIMIZED && o == null) throw new InvalidNullParameterException("o");
+		return Long.compare(virtualAddress, o.getVirtualAddress());
 	}
 
 }
