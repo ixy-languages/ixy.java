@@ -4,7 +4,9 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.Closeable;
+import java.io.IOException;
 import java.nio.MappedByteBuffer;
+import java.util.Optional;
 
 /**
  * Ixy's PCI device specification.
@@ -31,55 +33,76 @@ public interface IxyPciDevice extends Closeable {
 	 * Returns the vendor identifier.
 	 *
 	 * @return The vendor identifier.
+	 * @throws IOException If an I/O error occurs.
 	 */
 	@Contract(pure = true)
-	int getVendorId();
+	int getVendorId() throws IOException;
 
 	/**
 	 * Returns the device identifier.
 	 *
 	 * @return The device identifier.
+	 * @throws IOException If an I/O error occurs.
 	 */
 	@Contract(pure = true)
-	short getDeviceId();
+	short getDeviceId() throws IOException;
 
 	/**
 	 * Returns the class identifier.
 	 *
 	 * @return The class identifier.
+	 * @throws IOException If an I/O error occurs.
 	 */
 	@Contract(pure = true)
-	byte getClassId();
+	byte getClassId() throws IOException;
 
 	/**
 	 * Checks whether the <em>direct memory access</em> is enabled or not.
 	 *
 	 * @return The DMA status.
+	 * @throws IOException If an I/O error occurs.
 	 */
 	@Contract(pure = true)
-	boolean isDmaEnabled();
+	boolean isDmaEnabled() throws IOException;
 
-	/** Enables <em>direct memory access</em>. */
+	/**
+	 * Enables <em>direct memory access</em>.
+	 *
+	 * @throws IOException If an I/O error occurs.
+	 */
 	@Contract(pure = true)
-	void enableDma();
+	void enableDma() throws IOException;
 
-	/** Disables <em>direct memory access</em>. */
+	/**
+	 * Disables <em>direct memory access</em>.
+	 *
+	 * @throws IOException If an I/O error occurs.
+	 */
 	@Contract(pure = true)
-	void disableDma();
+	void disableDma() throws IOException;
 
-	/** Binds the driver. */
-	void bind();
+	/**
+	 * Binds the driver.
+	 *
+	 * @throws IOException If an I/O error occurs.
+	 */
+	void bind() throws IOException;
 
-	/** Unbinds the driver. */
-	void unbind();
+	/**
+	 * Unbinds the driver.
+	 *
+	 * @throws IOException If an I/O error occurs.
+	 */
+	void unbind() throws IOException;
 
 	/**
 	 * Checks whether the device memory can be mapped or not.
 	 *
 	 * @return The mappability.
+	 * @throws IOException If an I/O error occurs.
 	 */
 	@Contract(pure = true)
-	boolean isMappable();
+	boolean isMappable() throws IOException;
 
 	/**
 	 * Returns the memory space mapped to a byte buffer.
@@ -87,6 +110,6 @@ public interface IxyPciDevice extends Closeable {
 	 * @return The mapped memory.
 	 */
 	@Contract(value = " -> new", pure = true)
-	@NotNull MappedByteBuffer map();
+	@NotNull Optional<MappedByteBuffer> map();
 
 }
