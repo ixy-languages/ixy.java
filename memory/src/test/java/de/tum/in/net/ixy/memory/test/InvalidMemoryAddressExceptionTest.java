@@ -16,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
  *
  * @author Esaú García Sánchez-Torija
  */
+@DisplayName("InvalidMemoryAddressException")
 final class InvalidMemoryAddressExceptionTest {
 
 	@Test
