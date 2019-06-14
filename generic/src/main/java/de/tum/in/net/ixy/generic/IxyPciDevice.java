@@ -36,7 +36,7 @@ public interface IxyPciDevice extends Closeable {
 	 * @throws IOException If an I/O error occurs.
 	 */
 	@Contract(pure = true)
-	int getVendorId() throws IOException;
+	short getVendorId() throws IOException;
 
 	/**
 	 * Returns the device identifier.
