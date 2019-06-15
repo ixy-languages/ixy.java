@@ -26,9 +26,10 @@ ext {
 
 // Compile all subprojects as dependencies
 dependencies {
+	compile project(':ixy.generic')
+	compile project(':ixy.forwarder')
 	compile project(':ixy.pci')
 	compile project(':ixy.memory')
-	compile project(':ixy.generic')
 	compile project(':ixy.ixgbe')
 }
 
