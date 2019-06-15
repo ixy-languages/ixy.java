@@ -2,8 +2,9 @@
 rootProject.name = 'ixy.java'
 
 // Include the rest of the projects and override their names
-include 'pci', 'memory', 'generic', 'ixgbe'
-findProject(':pci')?.name     = 'ixy.pci'
-findProject(':memory')?.name  = 'ixy.memory'
-findProject(':generic')?.name = 'ixy.generic'
-findProject(':ixgbe')?.name   = 'ixy.ixgbe'
+include 'generic', 'forwarder', 'pci', 'memory', 'ixgbe'
+findProject(':generic')?.name   = 'ixy.generic'
+findProject(':forwarder')?.name = 'ixy.forwarder'
+findProject(':pci')?.name       = 'ixy.pci'
+findProject(':memory')?.name    = 'ixy.memory'
+findProject(':ixgbe')?.name     = 'ixy.ixgbe'
