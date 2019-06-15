@@ -279,8 +279,8 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 	private PacketBuffer(@NotNull IxyMemoryManager memoryManager, long virtualAddress, @Nullable Long physicalAddress, @Nullable Integer size, @Nullable Integer pool) {
 		if (BuildConfig.DEBUG) log.trace("Instantiating packet buffer with address 0x{}", Long.toHexString(virtualAddress));
 		if (!BuildConfig.OPTIMIZED) {
-			if (virtualAddress == 0) throw new InvalidMemoryAddressException("address");
 			if (memoryManager == null) throw new InvalidNullParameterException("mmanager");
+			if (virtualAddress == 0) throw new InvalidMemoryAddressException("address");
 		}
 		mmanager = memoryManager;
 		this.virtualAddress = virtualAddress;

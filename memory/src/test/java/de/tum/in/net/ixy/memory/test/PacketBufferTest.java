@@ -53,8 +53,7 @@ final class PacketBufferTest {
 	private int pool;
 
 	/** Holds a mocked memory manager. */
-	@Mock
-	private IxyMemoryManager mmanager;
+	private IxyMemoryManager mmanager = mock(IxyMemoryManager.class);
 
 	/** Holds an instance of {@link PacketBuffer} that will be used to test. */
 	private PacketBuffer packetBuffer;
@@ -92,9 +91,10 @@ final class PacketBufferTest {
 		@Test
 		@DisplayName("A memory pool can be used to set the memory pool identifier")
 		void poolMempool() {
-			assumeThat(random).isNotNull();
-			val mmanager = mock(IxyMemoryManager.class);
 			val mempool = mock(IxyMempool.class);
+			assumeThat(random).isNotNull();
+			assumeThat(mmanager).isNotNull();
+			assumeThat(mempool).isNotNull();
 			for (var i = 0; i < 2; i += 1) {
 				reset(mmanager);
 				reset(mempool);
@@ -117,12 +117,12 @@ final class PacketBufferTest {
 		@Test
 		@DisplayName("The toString() method works as expected")
 		void ToString() {
-			val genericPattern = "%s\\.%s(\\w*manager\\w*=%s, \\w*virt\\w*=%d, \\w*phys\\w*=%d, \\w*size\\w*=%d, \\w*pool\\w*=%d)";
+			val genericPattern = "^%s\\.%s\\(\\w*manager\\w*=%s, \\w*virt\\w*=%d, \\w*phys\\w*=%d, \\w*size\\w*=%d, \\w*pool\\w*=%d\\)$";
 			val specificPattern = String.format(genericPattern,
 					PacketBuffer.class.getSimpleName(), PacketBuffer.Builder.class.getSimpleName(),
 					mmanager.toString(), virtual, physical, size, pool);
 			val builder = PacketBuffer.builder().manager(mmanager).virtual(virtual).physical(physical).size(size).pool(pool);
-			assumeThat(builder.toString()).matches(Pattern.compile(specificPattern));
+			assertThat(builder.toString()).matches(Pattern.compile(specificPattern));
 		}
 
 	}

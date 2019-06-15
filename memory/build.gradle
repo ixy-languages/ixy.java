@@ -169,7 +169,7 @@ test {
 	// Configure Logback
 	if (project.DEBUG) systemProperty 'logback.configurationFile', 'logback-test.xml'
 
-	// Enable JUnit 5 and execute all tests always
+	// Enable JUnit 5 and stop as soon as something fails
 	useJUnitPlatform { failFast = true }
 
 	// Use all processor cores to test
