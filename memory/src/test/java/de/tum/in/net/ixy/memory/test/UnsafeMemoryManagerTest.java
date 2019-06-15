@@ -191,6 +191,12 @@ final class UnsafeMemoryManagerTest extends AbstractMemoryTest {
 					}
 				}
 			}
+			// Create the tests for memory address translation
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for obj2virt(Object)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.obj2virt(null));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.obj2virt(null));
+			}));
 			/// Add other tests that cannot be added with a loop
 			// For bytes
 			tests.add(DynamicTest.dynamicTest("Parameters are checked for getByte(0)", () -> {
@@ -307,10 +313,8 @@ final class UnsafeMemoryManagerTest extends AbstractMemoryTest {
 		assumeThat(mmanager).isNotNull();
 		// Huge memory pages are not supported
 		if (allocationType == AllocationType.HUGE) {
-			assertThatExceptionOfType(UnsupportedOperationException.class)
-					.as("Allocation").isThrownBy(() -> mmanager.allocate(size, AllocationType.HUGE, layoutType));
-			assertThatExceptionOfType(UnsupportedOperationException.class)
-					.as("Freeing").isThrownBy(() -> mmanager.free(1, size, AllocationType.HUGE));
+			assertThatExceptionOfType(UnsupportedOperationException.class).as("Allocation").isThrownBy(() -> mmanager.allocate(size, AllocationType.HUGE, layoutType));
+			assertThatExceptionOfType(UnsupportedOperationException.class).as("Freeing").isThrownBy(() -> mmanager.free(1, size, AllocationType.HUGE));
 			return;
 		}
 		// Allocate the memory and make sure it's valid
@@ -321,10 +325,7 @@ final class UnsafeMemoryManagerTest extends AbstractMemoryTest {
 			for (var i = 0; i < bytes; i += 1) {
 				// Compute all the addresses that can be used without overlapping
 				val alignment = i;
-				val aligned = LongStream.range(0, size - 1 - bytes)
-						.parallel()
-						.filter(x -> x % bytes == alignment)
-						.map(x -> addr + x);
+				val aligned = LongStream.range(0, size - 1 - bytes).parallel().filter(x -> x % bytes == alignment).map(x -> addr + x);
 				// Compute the most significant bit (excluding the last one which defines the sign) and maximum value
 				val msb = 1 << ((bytes << 3) - 1 - 1);
 				val max = (msb - 1) | msb;
@@ -358,8 +359,7 @@ final class UnsafeMemoryManagerTest extends AbstractMemoryTest {
 	@DisplayName("DmaMemory cannot be allocated")
 	void dmaAllocate() {
 		assumeThat(mmanager).isNotNull();
-		assertThatExceptionOfType(UnsupportedOperationException.class).as("Translation")
-				.isThrownBy(() -> mmanager.dmaAllocate(1, AllocationType.STANDARD, LayoutType.STANDARD));
+		assertThatExceptionOfType(UnsupportedOperationException.class).as("Translation").isThrownBy(() -> mmanager.dmaAllocate(1, AllocationType.STANDARD, LayoutType.STANDARD));
 	}
 
 	@Test
@@ -452,6 +452,12 @@ final class UnsafeMemoryManagerTest extends AbstractMemoryTest {
 		val bytes = new byte[size];
 		random.nextBytes(bytes);
 		commonTest_copyVolatile(bytes, (repetitionInfo.getCurrentRepetition() & 1) == 0);
+	}
+
+	@Test
+	@DisplayName("Objects can be translated to memory addresses")
+	void obj2pvirt() {
+		commonTest_obj2virt("Hello World!");
 	}
 
 	@Test

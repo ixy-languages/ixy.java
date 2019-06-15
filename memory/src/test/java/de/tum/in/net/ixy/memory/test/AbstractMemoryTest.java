@@ -1,7 +1,9 @@
 package de.tum.in.net.ixy.memory.test;
 
+import de.tum.in.net.ixy.generic.BuildConfig;
 import de.tum.in.net.ixy.generic.IxyMemoryManager;
 import lombok.val;
+import org.assertj.core.api.SoftAssertions;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -49,7 +51,6 @@ abstract class AbstractMemoryTest {
 		expected += 3 * 3 * 3;     // allocate
 		expected += 3 * 3 * 2;     // free
 		Collection<DynamicTest> tests = new ArrayList<>(expected);
-
 		// Create the tests for get(Volatile)/put(Volatile)
 		long[] addresses = {0L, 1L};
 		int[] sizes = {-1, 0, 1};
@@ -86,7 +87,6 @@ abstract class AbstractMemoryTest {
 				}
 			}
 		}
-
 		// Create the tests for copy(Volatile)
 		addresses = new long[]{0L, 1L};
 		sizes = new int[]{-1, 0, 1};
@@ -108,7 +108,6 @@ abstract class AbstractMemoryTest {
 				}
 			}
 		}
-
 		// Create the tests for allocate/free
 		addresses = new long[]{0L, 1L};
 		sizes = new int[]{-1, 0, 1};
@@ -136,7 +135,11 @@ abstract class AbstractMemoryTest {
 				}
 			}
 		}
-
+		// Create the tests for memory address translation
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for obj2virt(Object)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.obj2virt(null));
+		}));
 		/// Add other tests that cannot be added with a loop
 		// For bytes
 		tests.add(DynamicTest.dynamicTest("Parameters are checked for getByte(0)", () -> {
@@ -224,7 +227,7 @@ abstract class AbstractMemoryTest {
 	@Contract(pure = true)
 	final void commonTest_addressSize() {
 		assumeThat(mmanager).isNotNull();
-		val addrsize = mmanager.addressSize();
+		val addrsize = mmanager.addressSize() * Byte.SIZE;
 		assertThat(addrsize)
 				.as("Address size").isPositive()
 				.withFailMessage("should be a power of two").isEqualTo(addrsize & -addrsize);
@@ -327,11 +330,11 @@ abstract class AbstractMemoryTest {
 		val address = assumeAllocate(data.length);
 		// Write the data
 		mmanager.put(address, data.length, data, 0);
-		mmanager.put(address, 0, data, 0);
+		if (!BuildConfig.OPTIMIZED) mmanager.put(address, 0, data, 0);
 		// Recover the data from memory
 		val copy = new byte[data.length];
 		mmanager.get(address, copy.length, copy, 0);
-		mmanager.get(address, 0, copy, 0); // Just for the coverage
+		if (!BuildConfig.OPTIMIZED) mmanager.get(address, 0, copy, 0); // Just for the coverage
 		// Release the memory and verify the contents
 		mmanager.free(address, copy.length, AllocationType.STANDARD);
 		assertThat(copy).as("Read|Written data").isEqualTo(data);
@@ -348,11 +351,11 @@ abstract class AbstractMemoryTest {
 		val address = assumeAllocate(data.length);
 		// Write the data
 		mmanager.putVolatile(address, data.length, data, 0);
-		mmanager.putVolatile(address, 0, data, 0);
+		if (!BuildConfig.OPTIMIZED) mmanager.putVolatile(address, 0, data, 0);
 		// Recover the data from memory
 		val copy = new byte[data.length];
 		mmanager.getVolatile(address, copy.length, copy, 0);
-		mmanager.getVolatile(address, 0, copy, 0); // Just for the coverage
+		if (!BuildConfig.OPTIMIZED) mmanager.getVolatile(address, 0, copy, 0); // Just for the coverage
 		// Release the memory and verify the contents
 		mmanager.free(address, copy.length, AllocationType.STANDARD);
 		assertThat(copy).as("Read|Written data").isEqualTo(data);
@@ -424,6 +427,35 @@ abstract class AbstractMemoryTest {
 		mmanager.free(src, data.length, AllocationType.STANDARD);
 		mmanager.free(dest, copy.length, AllocationType.STANDARD);
 		assertThat(copy).as("Copied data").isEqualTo(data);
+	}
+
+	/**
+	 * Tests the method {@link IxyMemoryManager#obj2virt(Object)}.
+	 *
+	 * @param object The object sample.
+	 */
+	@Contract(value = "null -> fail", pure = true)
+	final void commonTest_obj2virt(@NotNull Object object) {
+		assumeThat(object).isNotNull();
+		assumeThat(mmanager).isNotNull();
+		assertThat(mmanager.obj2virt(object)).isNotZero();
+	}
+
+	/** Tests the method {@link IxyMemoryManager#virt2phys(long)}. */
+	@Contract(pure = true)
+	final void commonTest_virt2phys() {
+		val virt = assumeAllocate(1);
+		// Translate it, get the page size and compute the mask
+		val phys = mmanager.virt2phys(virt);
+		val pagesize = mmanager.pageSize();
+		val mask = pagesize - 1;
+		// Free up the memory and verify the memory addresses
+		val softly = new SoftAssertions();
+		softly.assertThat(mmanager.free(virt, 1, AllocationType.STANDARD)).as("Freeing").isTrue();
+		softly.assertThat(phys).as("Physical address").isNotZero();
+		softly.assertThat(pagesize).as("Page size").isPositive().withFailMessage("should be a power of two").isEqualTo(pagesize & -pagesize);
+		softly.assertThat(phys & mask).as("Offset").isEqualTo(virt & mask);
+		softly.assertAll();
 	}
 
 	/**

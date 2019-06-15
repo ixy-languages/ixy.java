@@ -513,7 +513,6 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 			checkUnsafe();
 			if (check(src, dest, bytes)) return;
 		}
-
 		// Change how the loop operates based on the address order
 		if (src < dest) {
 			src += bytes - 1L;
@@ -527,6 +526,28 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 				val value = unsafe.getByteVolatile(null, src++);
 				unsafe.putByteVolatile(null, dest++, value);
 			}
+		}
+	}
+
+	@Override
+	@Contract(value = "null -> fail", pure = true)
+	public long obj2virt(@NotNull Object object) {
+		if (BuildConfig.DEBUG) log.debug("Computing the address of an object using the Unsafe object");
+		if (!BuildConfig.OPTIMIZED) {
+			checkUnsafe();
+			if (object == null) throw new InvalidNullParameterException("object");
+		}
+		// Create an array containing the object, this way we can compute the address of the first item
+		Object[] array = {object};
+		val baseOffset = unsafe.arrayBaseOffset(Object[].class);
+		val addressSize = unsafe.arrayIndexScale(Object[].class);
+		switch (addressSize) {
+			case 4:
+				return unsafe.getInt(array, baseOffset);
+			case 8:
+				return unsafe.getLong(array, baseOffset);
+			default:
+				throw new IllegalStateException(String.format("unsupported address size: %d", addressSize));
 		}
 	}
 

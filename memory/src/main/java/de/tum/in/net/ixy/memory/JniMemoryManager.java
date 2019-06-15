@@ -786,6 +786,14 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(value = "null -> fail", pure = true)
+	public long obj2virt(@NotNull Object object) {
+		if (BuildConfig.DEBUG) log.debug("Computing the address of an object using the Unsafe object");
+		if (!BuildConfig.OPTIMIZED && object == null) throw new InvalidNullParameterException("object");
+		throw new UnsupportedOperationException("The C library does not provide an implementation for this operation");
+	}
+
+	@Override
 	@Contract(pure = true)
 	public long virt2phys(long address) {
 		if (BuildConfig.DEBUG) {

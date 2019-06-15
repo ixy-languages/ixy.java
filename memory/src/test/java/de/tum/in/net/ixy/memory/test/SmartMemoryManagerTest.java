@@ -283,21 +283,16 @@ final class SmartMemoryManagerTest extends AbstractMemoryTest {
 	}
 
 	@Test
+	@DisplayName("Objects can be translated to memory addresses")
+	void obj2pvirt() {
+		commonTest_obj2virt("Hello World!");
+	}
+
+	@Test
 	@EnabledOnOs(OS.LINUX)
 	@DisplayName("Virtual addresses can be translated to physical addresses")
 	void virt2phys() {
-		val virt = assumeAllocate(1);
-		// Translate it, get the page size and compute the mask
-		val phys = mmanager.virt2phys(virt);
-		val pagesize = mmanager.pageSize();
-		val mask = pagesize - 1;
-		// Free up the memory and verify the memory addresses
-		val softly = new SoftAssertions();
-		softly.assertThat(mmanager.free(virt, 1, AllocationType.STANDARD)).as("Freeing").isTrue();
-		softly.assertThat(phys).as("Physical address").isNotZero();
-		softly.assertThat(pagesize).as("Page size").isPositive().withFailMessage("should be a power of two").isEqualTo(pagesize & -pagesize);
-		softly.assertThat(phys & mask).as("Offset").isEqualTo(virt & mask);
-		softly.assertAll();
+		commonTest_virt2phys();
 	}
 
 	/**

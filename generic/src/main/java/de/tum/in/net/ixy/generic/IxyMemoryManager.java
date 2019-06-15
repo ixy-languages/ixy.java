@@ -397,6 +397,15 @@ public interface IxyMemoryManager {
 	void copyVolatile(long src, int bytes, long dest);
 
 	/**
+	 * Translates an object to its virtual memory address.
+	 *
+	 * @param object The object.
+	 * @return The virtual memory address.
+	 */
+	@Contract(value = "null -> fail", pure = true)
+	long obj2virt(@NotNull Object object);
+
+	/**
 	 * Translates a virtual memory address to its physical counterpart.
 	 * <p>
 	 * This method does not guarantee the validity of the returned physical memory address.

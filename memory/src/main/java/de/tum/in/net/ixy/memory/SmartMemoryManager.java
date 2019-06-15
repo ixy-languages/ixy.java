@@ -432,6 +432,11 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	public long obj2virt(@NotNull Object object) {
+		return unsafe.obj2virt(object);
+	}
+
+	@Override
 	@Contract(pure = true)
 	@SuppressWarnings("AccessOfSystemProperties")
 	public long virt2phys(long address) {
