@@ -1,5 +1,5 @@
 /**
- * Contains the tests of the package {@link de.tum.in.net.ixy.pci}.
+ * Package containing all the JUnit 5 tests of the package {@link de.tum.in.net.ixy.pci}.
  *
  * @author Esaú García Sánchez-Torija
  */

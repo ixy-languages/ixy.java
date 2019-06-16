@@ -1,5 +1,5 @@
 /**
- * Contains the implementation of the PCI device specifications from {@link de.tum.in.net.ixy.generic}.
+ * Contains the implementation of the PCI device specification from {@link de.tum.in.net.ixy.generic}.
  *
  * @author Esaú García Sánchez-Torija
  */
