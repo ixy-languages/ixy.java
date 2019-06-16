@@ -38,7 +38,7 @@ import java.util.stream.IntStream;
 @Slf4j
 @ToString(onlyExplicitlyIncluded = true, doNotUseGetters = true)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, doNotUseGetters = true, callSuper = true)
-@SuppressWarnings({"resource", "IOResourceOpenedButNotSafelyClosed", "PMD.BeanMembersShouldSerialize"})
+@SuppressWarnings({"ConstantConditions", "IOResourceOpenedButNotSafelyClosed", "PMD.BeanMembersShouldSerialize", "resource"})
 public abstract class Device extends IxyDevice {
 
 	////////////////////////////////////////////////////// PATHS ///////////////////////////////////////////////////////

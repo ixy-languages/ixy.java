@@ -15,14 +15,14 @@ import org.jetbrains.annotations.NotNull;
 import static de.tum.in.net.ixy.memory.Utility.check;
 
 /**
- * A simple implementation of Ixy's memory manager specification using JNI.
+ * Simple implementation of Ixy's memory manager specification using JNI.
  *
  * @author Esaú García Sánchez-Torija
  */
 @Slf4j
-@SuppressWarnings("ConstantConditions")
 @ToString(onlyExplicitlyIncluded = true, doNotUseGetters = true)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, doNotUseGetters = true)
+@SuppressWarnings({"ConstantConditions", "PMD.AvoidDuplicateLiterals", "PMD.BeanMembersShouldSerialize"})
 public final class JniMemoryManager implements IxyMemoryManager {
 
 	////////////////////////////////////////////////// STATIC METHODS //////////////////////////////////////////////////
@@ -456,9 +456,9 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		}
 
 		// Perform some checks when using huge memory pages
-		val type = layoutType == LayoutType.CONTIGUOUS ? "contiguous" : "non-contiguous";
 		if (allocationType == AllocationType.HUGE) {
 			if (BuildConfig.DEBUG) {
+				val type = layoutType == LayoutType.CONTIGUOUS ? "contiguous" : "non-contiguous";
 				log.debug("Allocating {} {} hugepage-backed bytes using C", bytes, type);
 			}
 
@@ -472,6 +472,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 			// Skip if we cannot guarantee contiguity
 			if (layoutType == LayoutType.CONTIGUOUS && bytes > HUGE_PAGE_SIZE) return 0;
 		} else if (BuildConfig.DEBUG) {
+			val type = layoutType == LayoutType.CONTIGUOUS ? "contiguous" : "non-contiguous";
 			log.debug("Allocating {} {} bytes using C", bytes, type);
 		}
 
@@ -497,26 +498,23 @@ public final class JniMemoryManager implements IxyMemoryManager {
 			if (bytes <= 0) throw new InvalidSizeException("bytes");
 			if (allocationType == null) throw new InvalidNullParameterException("allocationType");
 		}
-
 		// Perform some checks when using huge memory pages
-		val xaddress = Long.toHexString(address);
 		val huge = allocationType == AllocationType.HUGE;
 		if (huge) {
 			if (BuildConfig.DEBUG) {
+				val xaddress = Long.toHexString(address);
 				log.debug("Freeing {} hugepage-backed bytes @ 0x{} using C", bytes, xaddress);
 			}
-
 			// If no huge memory page file support has been detected, exit right away
 			if (HUGE_PAGE_SIZE <= 0) return false;
-
 			// Round the size and address to a multiple of the page size
 			val mask = (HUGE_PAGE_SIZE - 1);
 			address = (address & mask) == 0 ? address : address & ~mask;
 			bytes = (bytes & mask) == 0 ? bytes : (bytes + HUGE_PAGE_SIZE) & ~mask;
 		} else if (BuildConfig.DEBUG) {
+			val xaddress = Long.toHexString(address);
 			log.debug("Freeing {} bytes @ 0x{} using C", bytes, xaddress);
 		}
-
 		// Perform some checks when using huge memory pages
 		return c_free(address, bytes, huge);
 	}

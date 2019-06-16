@@ -17,14 +17,14 @@ import sun.misc.Unsafe;
 import static de.tum.in.net.ixy.memory.Utility.check;
 
 /**
- * A simple implementation of Ixy's memory manager specification using the {@link Unsafe} object.
+ * Simple implementation of Ixy's memory manager specification using the {@link Unsafe} object.
  *
  * @author Esaú García Sánchez-Torija
  */
 @Slf4j
-@SuppressWarnings("ConstantConditions")
 @ToString(onlyExplicitlyIncluded = true, doNotUseGetters = true)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, doNotUseGetters = true)
+@SuppressWarnings({"ConstantConditions", "PMD.AvoidDuplicateLiterals", "PMD.AvoidLiteralsInIfCondition", "PMD.BeanMembersShouldSerialize", "PMD.MissingStaticMethodInNonInstantiatableClass"})
 public final class UnsafeMemoryManager implements IxyMemoryManager {
 
 	//////////////////////////////////////////////////// EXCEPTIONS ////////////////////////////////////////////////////
@@ -134,15 +134,18 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 			if (layoutType == null) throw new InvalidNullParameterException("layoutType");
 		}
 		// Hugepage-based allocation is not supported
-		val type = layoutType == LayoutType.CONTIGUOUS ? "contiguous" : "non-contiguous";
 		if (allocationType == AllocationType.HUGE) {
 			if (BuildConfig.DEBUG) {
+				val type = layoutType == LayoutType.CONTIGUOUS ? "contiguous" : "non-contiguous";
 				log.debug("Allocating {} {} hugepage-backed bytes using the Unsafe object", bytes, type);
 			}
 			throw new UnsupportedUnsafeOperationException();
 		}
 		// Allocate the memory
-		if (BuildConfig.DEBUG) log.debug("Allocating {} {} bytes using the Unsafe object", bytes, type);
+		if (BuildConfig.DEBUG) {
+			val type = layoutType == LayoutType.CONTIGUOUS ? "contiguous" : "non-contiguous";
+			log.debug("Allocating {} {} bytes using the Unsafe object", bytes, type);
+		}
 		if (BuildConfig.OPTIMIZED) {
 			return unsafe.allocateMemory(bytes);
 		} else {
@@ -166,13 +169,18 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 			if (allocationType == null) throw new InvalidNullParameterException("allocationType");
 		}
 		// Hugepage-based freeing is not supported
-		val xsrc = Long.toHexString(address);
 		if (allocationType == AllocationType.HUGE) {
-			if (BuildConfig.DEBUG) log.debug("Freeing {} {} hugepage-backed bytes using the Unsafe object", bytes, xsrc);
+			if (BuildConfig.DEBUG) {
+				val xsrc = Long.toHexString(address);
+				log.debug("Freeing {} {} hugepage-backed bytes using the Unsafe object", bytes, xsrc);
+			}
 			throw new UnsupportedUnsafeOperationException();
 		}
 		// Free the memory
-		if (BuildConfig.DEBUG) log.debug("Freeing {} bytes @ 0x{} using the Unsafe object", bytes, xsrc);
+		if (BuildConfig.DEBUG) {
+			val xsrc = Long.toHexString(address);
+			log.debug("Freeing {} bytes @ 0x{} using the Unsafe object", bytes, xsrc);
+		}
 		if (BuildConfig.OPTIMIZED) {
 			unsafe.freeMemory(address);
 		} else {
@@ -435,6 +443,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@SuppressWarnings("PMD.AssignmentInOperand")
 	@Contract(value = "_, _, null, _ -> fail", mutates = "param3")
 	public void getVolatile(long src, int bytes, @NotNull byte[] dest, int offset) {
 		if (!BuildConfig.OPTIMIZED) {
@@ -469,6 +478,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@SuppressWarnings("PMD.AssignmentInOperand")
 	@Contract(value = "_, _, null, _ -> fail", pure = true)
 	public void putVolatile(long dest, int bytes, @NotNull byte[] src, int offset) {
 		if (!BuildConfig.OPTIMIZED) {
@@ -503,6 +513,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@Contract(pure = true)
+	@SuppressWarnings("PMD.AssignmentInOperand")
 	public void copyVolatile(long src, int bytes, long dest) {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(src);
@@ -531,6 +542,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@Contract(value = "null -> fail", pure = true)
+	@SuppressWarnings("PMD.DataflowAnomalyAnalysis")
 	public long obj2virt(@NotNull Object object) {
 		if (BuildConfig.DEBUG) log.debug("Computing the address of an object using the Unsafe object");
 		if (!BuildConfig.OPTIMIZED) {
