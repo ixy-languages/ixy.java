@@ -46,9 +46,7 @@ pmd {
 // Define a set of custom properties which may or may not be useful, but should be inherited from the root project
 ext {
 	DEBUG     = rootProject.ext.has("DEBUG")     ? rootProject.ext.DEBUG     : false
-	UNSAFE    = rootProject.ext.has("UNSAFE")    ? rootProject.ext.UNSAFE    : true
 	OPTIMIZED = rootProject.ext.has("OPTIMIZED") ? rootProject.ext.OPTIMIZED : true
-	HUGE_MNT  = rootProject.ext.has("HUGE_MNT")  ? rootProject.ext.HUGE_MNT  : "/mnt/huge"
 }
 
 // Compute the package name without sequential repetition of the different package levels
@@ -68,9 +66,7 @@ buildConfig {
 	packageName      FQPN
 	language         'java'
 	buildConfigField 'boolean', 'DEBUG',       "${project.DEBUG}"
-	buildConfigField 'boolean', 'UNSAFE',      "${project.UNSAFE}"
 	buildConfigField 'boolean', 'OPTIMIZED',   "${project.OPTIMIZED}"
-	buildConfigField 'String',  'HUGE_MNT',    "\"${project.HUGE_MNT}\""
 	buildConfigField 'String',  'LOCK_CONFIG', "\"CONFIG\""
 	buildConfigField 'String',  'LOCK_NIC',    "\"NIC\""
 }
@@ -119,9 +115,6 @@ tasks.withType(com.github.spotbugs.SpotBugsTask) {
 
 // Exclude the tests that will fail always if no NICs are available
 test {
-	// Configure Logback
-	if (project.DEBUG) systemProperty 'logback.configurationFile', 'logback-test.xml'
-	
 	// Enable JUnit 5 and execute all tests always
 	useJUnitPlatform { failFast = false }
 
