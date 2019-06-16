@@ -73,11 +73,19 @@ public interface IxyMempool {
 	void free(@NotNull IxyPacketBuffer packet);
 
 	/**
+	 * Registers the memory pool.
+	 * <p>
+	 * Idempotently registers the memory pool in the system.
+	 */
+	void register();
+
+	/**
 	 * Finds a memory pool given its identifier.
 	 *
 	 * @param id The memory pool identifier.
 	 * @return The memory pool.
 	 */
+	@Contract(pure = true)
 	@Nullable IxyMempool find(int id);
 
 	/**
@@ -86,6 +94,7 @@ public interface IxyMempool {
 	 * @param packet The packet whose memory pool will be searched.
 	 * @return The memory pool that owns a packet.
 	 */
+	@Contract(pure = true)
 	default @Nullable IxyMempool find(@Nullable IxyPacketBuffer packet) {
 		return packet == null ? null : find(packet.getMemoryPoolId());
 	}
