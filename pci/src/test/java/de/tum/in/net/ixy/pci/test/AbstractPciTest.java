@@ -83,10 +83,22 @@ abstract class AbstractPciTest {
 	@Contract(pure = true)
 	void commonTest_bindunbind(@NotNull Device device) {
 		assertThat(device).isNotNull();
-		assertThatExceptionOfType(IOException.class).isThrownBy(device::bind);
-		assertDoesNotThrow(device::unbind);
-		assertThatExceptionOfType(IOException.class).isThrownBy(device::unbind);
-		assertDoesNotThrow(device::bind);
+		val status = device.isBound();
+		if (status) {
+			assertThatExceptionOfType(IOException.class).isThrownBy(device::bind);
+			assertDoesNotThrow(device::unbind);
+			assertThat(device.isBound()).isFalse();
+			assertThatExceptionOfType(IOException.class).isThrownBy(device::unbind);
+			assertDoesNotThrow(device::bind);
+			assertThat(device.isBound()).isTrue();
+		} else {
+			assertThatExceptionOfType(IOException.class).isThrownBy(device::unbind);
+			assertDoesNotThrow(device::bind);
+			assertThat(device.isBound()).isTrue();
+			assertThatExceptionOfType(IOException.class).isThrownBy(device::bind);
+			assertDoesNotThrow(device::unbind);
+			assertThat(device.isBound()).isFalse();
+		}
 	}
 
 }

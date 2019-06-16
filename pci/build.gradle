@@ -1,14 +1,14 @@
 // Include all the plugins this module depends on
 plugins {
-	id 'java-library'                                    // Java library plugin
-	id 'jacoco'                                          // Java Code Coverage
-	id 'pmd'                                             // Static code analyzer
-	id 'com.github.gmazzo.buildconfig' version '1.5.0'   // BuildConfig (like in Android)
-	id 'io.freefair.lombok'            version '3.6.4'   // Lombok
-	id 'com.github.spotbugs'           version '2.0.0'   // Bug finder
-	id 'com.simonharrer.modernizer'    version '1.6.0-1' // Modernizer plugin
-	id 'com.adarshr.test-logger'       version '1.6.0'   // Gradle Test Logger (more beautiful than the default)
-//	id 'com.github.ben-manes.versions' version '0.21.0'  // Outdated dependencies detection support
+	id 'java-library'                                                      // Java library plugin
+	id 'jacoco'                                                            // Java Code Coverage
+	id 'pmd'                                                               // Static code analyzer
+	id 'com.github.gmazzo.buildconfig'                    version '1.5.0'  // BuildConfig (like in Android)
+	id 'io.freefair.lombok'                               version '3.7.1'  // Lombok
+	id 'com.github.spotbugs'                              version '2.0.0'  // Bug finder
+	id 'com.github.andygoossens.gradle-modernizer-plugin' version '1.2.0'  // Modernizer plugin
+	id 'com.adarshr.test-logger'                          version '1.7.0'  // Gradle Test Logger (more beautiful than the default)
+//	id 'com.github.ben-manes.versions'                    version '0.21.0' // Outdated dependencies detection support
 }
 
 // Configure the group and version of the project, which should match the root project's
@@ -31,14 +31,16 @@ jacoco {
 
 // Use the latest SpotBugs version if possible => https://github.com/spotbugs/spotbugs/releases
 spotbugs {
-	toolVersion    = '3.1.12'
+	toolVersion    = '4.0.0-beta2'
 	ignoreFailures = true
+	effort         = 'max'
+	reportLevel    = 'medium'
 }
 
 // Use the latest PMD version if possible => https://pmd.github.io/#downloads
 pmd {
 	toolVersion    = '6.14.0'
-	ignoreFailures = true
+	ignoreFailures = false
 }
 
 // Define a set of custom properties which may or may not be useful, but should be inherited from the root project
@@ -76,7 +78,7 @@ buildConfig {
 // Define the dependencies and the minimum scope needed for them to work
 dependencies {
 	api            project(':ixy.generic')
-	implementation group: 'org.slf4j',     name: 'slf4j-api',   version: '1.7.26'
+	implementation group: 'org.slf4j',     name: 'slf4j-api',   version: '1.8.0-beta4'
 	compileOnly    group: 'org.jetbrains', name: 'annotations', version: '17.0.0'
 
 	testCompileOnly    group: 'org.jetbrains',     name: 'annotations',           version: '17.0.0'
@@ -90,7 +92,7 @@ dependencies {
 	if (project.DEBUG)
 		testRuntime group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
 	else
-		testRuntime group: 'org.slf4j', name: 'slf4j-nop', version: '1.7.26'
+		testRuntime group: 'org.slf4j', name: 'slf4j-nop', version: '1.8.0-beta4'
 }
 
 // Disable the "@Generated" annotation used by the BuildConfig generated class
@@ -113,9 +115,9 @@ tasks.withType(Javadoc) {
 // Export the SpotBugs reports in HTML format only
 tasks.withType(com.github.spotbugs.SpotBugsTask) {
 	reports {
-		html.enabled  = true
+		html.enabled  = false
 		xml.enabled   = false
-		text.enabled  = false
+		text.enabled  = true
 		emacs.enabled = false
 	}
 }
@@ -162,7 +164,11 @@ test {
 jacocoTestReport {
 	reports {
 		html.enabled = true
-		xml.enabled  = false
+		xml.enabled  = true
 		csv.enabled  = false
 	}
 }
+
+// Disable checking the test files
+spotbugsTest.enabled = false
+pmdTest.enabled = false

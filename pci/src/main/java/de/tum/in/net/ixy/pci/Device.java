@@ -21,14 +21,16 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
 @Slf4j
 @ToString(onlyExplicitlyIncluded = true, doNotUseGetters = true)
-@SuppressWarnings({"resource", "IOResourceOpenedButNotSafelyClosed"})
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, doNotUseGetters = true)
+@SuppressWarnings({"resource", "IOResourceOpenedButNotSafelyClosed", "PMD.BeanMembersShouldSerialize"})
 public class Device implements IxyPciDevice {
 
 	////////////////////////////////////////////////////// PATHS ///////////////////////////////////////////////////////
@@ -240,6 +242,12 @@ public class Device implements IxyPciDevice {
 	}
 
 	@Override
+	public boolean isBound() {
+		val dev = String.format(PCI_DRV_RES_PATH_FMT, driver, name);
+		return Files.exists(Path.of(dev));
+	}
+
+	@Override
 	public void bind() throws IOException {
 		if (BuildConfig.DEBUG) log.debug("Binding driver of PCI device {}", name);
 		if (BuildConfig.DEBUG) {
@@ -274,6 +282,7 @@ public class Device implements IxyPciDevice {
 	}
 
 	@Override
+	@SuppressWarnings("PMD.DataflowAnomalyAnalysis")
 	public @NotNull Optional<MappedByteBuffer> map() {
 		if (BuildConfig.DEBUG) log.trace("Mapping 'resource0' of PCI device {}", name);
 		val path = String.format(PCI_RES_PATH_FMT, name, PCI_RES_MAP);
