@@ -81,18 +81,13 @@ dependencies {
 	implementation group: 'org.slf4j',     name: 'slf4j-api',   version: '1.8.0-beta4'
 	compileOnly    group: 'org.jetbrains', name: 'annotations', version: '17.0.0'
 
+	testRuntime        group: 'org.slf4j',         name: 'slf4j-nop',             version: '1.8.0-beta4'
 	testCompileOnly    group: 'org.jetbrains',     name: 'annotations',           version: '17.0.0'
 	testCompile        group: 'org.junit.jupiter', name: 'junit-jupiter-params',  version: '5.5.0-M1'
 	testRuntimeOnly    group: 'org.junit.jupiter', name: 'junit-jupiter-engine',  version: '5.5.0-M1'
 	testImplementation group: 'org.assertj',       name: 'assertj-core',          version: '3.12.2'
 	testImplementation group: 'org.mockito',       name: 'mockito-core',          version: '2.28.2'
 	testImplementation group: 'org.mockito',       name: 'mockito-junit-jupiter', version: '2.28.2'
-
-	// Add Logback based on if the DEBUG flag is enabled
-	if (project.DEBUG)
-		testRuntime group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
-	else
-		testRuntime group: 'org.slf4j', name: 'slf4j-nop', version: '1.8.0-beta4'
 }
 
 // Disable the "@Generated" annotation used by the BuildConfig generated class
