@@ -354,4 +354,12 @@ public abstract class IxyDevice implements IxyPciDevice {
 		txBusyWait(queue, packets, 0, packets.length);
 	}
 
+	/**
+	 * Updates an stats instance.
+	 *
+	 * @param stats The stats.
+	 */
+	@Contract(value = "null -> fail", mutates = "param1")
+	public abstract void readStats(@NotNull IxyStats stats);
+
 }
