@@ -145,7 +145,7 @@ public abstract class Device extends IxyDevice {
 	private final @NotNull ByteBuffer buffer;
 
 	/** A cached instance of the mapped memory. */
-	protected final @Nullable MappedByteBuffer mmap = map().orElse(null);
+	protected final @Nullable MappedByteBuffer mappedByteBuffer = map().orElse(null);
 
 	////////////////////////////////////////////////// MEMBER METHODS //////////////////////////////////////////////////
 
@@ -169,7 +169,7 @@ public abstract class Device extends IxyDevice {
 	 * @throws FileNotFoundException If the device does not exist.
 	 */
 	@Contract("null, _ -> fail; _, null -> fail")
-	public Device(@NotNull String name, @NotNull String driver) throws FileNotFoundException {
+	protected Device(@NotNull String name, @NotNull String driver) throws FileNotFoundException {
 		if (!BuildConfig.OPTIMIZED) {
 			if (name == null) throw new InvalidNullParameterException("name");
 			if (driver == null) throw new InvalidNullParameterException("name");
@@ -191,7 +191,7 @@ public abstract class Device extends IxyDevice {
 
 	/** Checks that the mapped memory is available. */
 	protected void checkMmap() {
-		if (mmap == null) throw new IllegalStateException("The memory map could not be created");
+		if (mappedByteBuffer == null) throw new IllegalStateException("The memory map could not be created");
 	}
 
 	//////////////////////////////////////////////// OVERRIDDEN METHODS ////////////////////////////////////////////////
@@ -380,7 +380,7 @@ public abstract class Device extends IxyDevice {
 			checkMmap();
 			if (offset < 0) throw new InvalidOffsetException("offset");
 		}
-		return mmap.getInt(offset);
+		return mappedByteBuffer.getInt(offset);
 	}
 
 	@Override
@@ -393,7 +393,7 @@ public abstract class Device extends IxyDevice {
 			checkMmap();
 			if (offset < 0) throw new InvalidOffsetException("offset");
 		}
-		mmap.putInt(offset, value);
+		mappedByteBuffer.putInt(offset, value);
 	}
 
 }

@@ -1,6 +1,5 @@
 package de.tum.in.net.ixy.pci;
 
-import de.tum.in.net.ixy.generic.BuildConfig;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 

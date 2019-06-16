@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
  */
 @EnabledOnOs(OS.LINUX)
 @DisplayName("Device (Ixgbe)")
-final class IxgbePciTest extends AbstractPciTest {
+final class IxgbePciTest {
 
 	/** The name of the environment variable that counts how many Ixgbe PCI devices exist. */
 	private static final @NotNull String ENV_KEY_NIC_COUNT = "IXY_IXGBE_COUNT";
@@ -122,7 +122,7 @@ final class IxgbePciTest extends AbstractPciTest {
 	@EnabledIfIxgbe
 	@EnabledIfRoot
 	void getVendorId(Device device) {
-		commonTest_getVendorId(device, EXPECTED_VENDOR);
+		CommonPciTest.getVendorId(device, EXPECTED_VENDOR);
 	}
 
 	@ResourceLock(value = BuildConfig.LOCK_CONFIG, mode = ResourceAccessMode.READ)
@@ -132,7 +132,7 @@ final class IxgbePciTest extends AbstractPciTest {
 	@EnabledIfIxgbe
 	@EnabledIfRoot
 	void getDeviceId(Device device) {
-		commonTest_getDeviceId(device, EXPECTED_DEVICES);
+		CommonPciTest.getDeviceId(device, EXPECTED_DEVICES);
 	}
 
 	@ResourceLock(value = BuildConfig.LOCK_CONFIG, mode = ResourceAccessMode.READ)
@@ -142,7 +142,7 @@ final class IxgbePciTest extends AbstractPciTest {
 	@EnabledIfIxgbe
 	@EnabledIfRoot
 	void getClassId(Device device) {
-		commonTest_getClassId(device, EXPECTED_CLASS);
+		CommonPciTest.getClassId(device, EXPECTED_CLASS);
 	}
 
 	@ResourceLock(value = BuildConfig.LOCK_CONFIG, mode = ResourceAccessMode.READ_WRITE)
@@ -154,7 +154,7 @@ final class IxgbePciTest extends AbstractPciTest {
 	void isDmaEnabled(Device device) {
 		assertThat(device).isNotNull();
 		assertDoesNotThrow(device::enableDma);
-		commonTest_isDmaEnabled(device, true);
+		CommonPciTest.isDmaEnabled(device, true);
 	}
 
 	@ResourceLock(value = BuildConfig.LOCK_CONFIG, mode = ResourceAccessMode.READ_WRITE)
@@ -166,7 +166,7 @@ final class IxgbePciTest extends AbstractPciTest {
 	void isDmaDisabled(Device device) {
 		assertThat(device).isNotNull();
 		assertDoesNotThrow(device::disableDma);
-		commonTest_isDmaEnabled(device, false);
+		CommonPciTest.isDmaEnabled(device, false);
 	}
 
 	@ResourceLock(value = BuildConfig.LOCK_CONFIG, mode = ResourceAccessMode.READ)
@@ -176,7 +176,7 @@ final class IxgbePciTest extends AbstractPciTest {
 	@EnabledIfIxgbe
 	@EnabledIfRoot
 	void map(Device device) {
-		commonTest_map(device);
+		CommonPciTest.map(device);
 	}
 
 	@ResourceLock(value = BuildConfig.LOCK_CONFIG, mode = ResourceAccessMode.READ)
@@ -186,7 +186,7 @@ final class IxgbePciTest extends AbstractPciTest {
 	@EnabledIfIxgbe
 	@EnabledIfRoot
 	void close(Device device) {
-		commonTest_close(device);
+		CommonPciTest.close(device);
 	}
 
 	@ResourceLock(value = BuildConfig.LOCK_CONFIG, mode = ResourceAccessMode.READ)
@@ -196,7 +196,7 @@ final class IxgbePciTest extends AbstractPciTest {
 	@EnabledIfIxgbe
 	@EnabledIfRoot
 	void close_exceptions(Device device) {
-		commonTest_close_exceptions(device);
+		CommonPciTest.close_exceptions(device);
 	}
 
 	@ResourceLock(value = BuildConfig.LOCK_NIC, mode = ResourceAccessMode.READ_WRITE)
@@ -206,7 +206,7 @@ final class IxgbePciTest extends AbstractPciTest {
 	@EnabledIfIxgbe
 	@EnabledIfRoot
 	void bindunbind(Device device) {
-		commonTest_bindunbind(device);
+		CommonPciTest.bindunbind(device);
 	}
 
 	@AfterAll

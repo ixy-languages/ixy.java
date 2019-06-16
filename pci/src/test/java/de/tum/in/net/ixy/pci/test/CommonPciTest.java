@@ -7,45 +7,52 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assumptions.assumeThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
-abstract class AbstractPciTest {
+/**
+ * Collection of common tests.
+ *
+ * @author Esaú García Sanchez-Torija
+ */
+enum CommonPciTest {
+
+	// Finish enumerating
+	;
 
 	@Contract(pure = true)
-	void commonTest_getVendorId(@Nullable Device device, short vendor) {
+	static void getVendorId(@Nullable Device device, short vendor) {
 		assumeThat(device).isNotNull();
 		val vendorId = assertDoesNotThrow(device::getVendorId);
 		assertThat(vendorId).isEqualTo(vendor);
 	}
 
-	@Contract(pure = true)
-	void commonTest_getDeviceId(@Nullable Device device, @NotNull Set<Short> devices) {
+	@Contract(value = "_, null -> fail", pure = true)
+	static void getDeviceId(@Nullable Device device, @NotNull Iterable<Short> devices) {
 		assumeThat(device).isNotNull();
 		val deviceId = assertDoesNotThrow(device::getDeviceId);
 		assertThat(deviceId).isIn(devices);
 	}
 
 	@Contract(pure = true)
-	void commonTest_getClassId(@Nullable Device device, byte klass) {
+	static void getClassId(@Nullable Device device, byte klass) {
 		assumeThat(device).isNotNull();
 		val classId = assertDoesNotThrow(device::getClassId);
 		assertThat(classId).isEqualTo(klass);
 	}
 
 	@Contract(pure = true)
-	void commonTest_isDmaEnabled(@Nullable Device device, boolean status) {
+	static void isDmaEnabled(@Nullable Device device, boolean status) {
 		assumeThat(device).isNotNull();
 		val dmaStatus = assertDoesNotThrow(device::isDmaEnabled);
 		assertThat(dmaStatus).isEqualTo(status);
 	}
 
 	@Contract(pure = true)
-	void commonTest_map(@Nullable Device device) {
+	static void map(@Nullable Device device) {
 		assumeThat(device).isNotNull();
 		val mappable = assertDoesNotThrow(device::isMappable);
 		val map = device.map();
@@ -57,14 +64,14 @@ abstract class AbstractPciTest {
 	}
 
 	@Contract(pure = true)
-	void commonTest_close(@Nullable Device device) {
+	static void close(@Nullable Device device) {
 		assumeThat(device).isNotNull();
 		assertDoesNotThrow(device::close);
 		assertDoesNotThrow(device::close);
 	}
 
 	@Contract(pure = true)
-	void commonTest_close_exceptions(@NotNull Device device) {
+	static void close_exceptions(@Nullable Device device) {
 		assertThat(device).isNotNull();
 		assertDoesNotThrow(device::close);
 		assertThatExceptionOfType(IOException.class).isThrownBy(device::getVendorId);
@@ -81,7 +88,7 @@ abstract class AbstractPciTest {
 	}
 
 	@Contract(pure = true)
-	void commonTest_bindunbind(@NotNull Device device) {
+	static void bindunbind(@Nullable Device device) {
 		assertThat(device).isNotNull();
 		val status = device.isBound();
 		if (status) {
