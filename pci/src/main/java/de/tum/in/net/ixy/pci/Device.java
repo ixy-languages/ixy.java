@@ -28,6 +28,13 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
+/**
+ * Simple implementation of an {@link de.tum.in.net.ixy.generic.IxyPciDevice}.
+ * <p>
+ * It extends the class {@link IxyDevice} to prevent running into multiple-inheritance problems.
+ *
+ * @author Esau García Sánchez-Torija
+ */
 @Slf4j
 @ToString(onlyExplicitlyIncluded = true, doNotUseGetters = true)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, doNotUseGetters = true, callSuper = true)
