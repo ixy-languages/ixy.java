@@ -107,9 +107,9 @@ final class IxgbePciTest extends AbstractPciTest {
 		for (val device : wrong) {
 			for (val driver : wrong) {
 				if (Objects.equals(device, File.separator) && Objects.equals(driver, File.separator)) {
-					assertThatExceptionOfType(FileNotFoundException.class).isThrownBy(() -> new Device(device, driver));
+					assertThatExceptionOfType(FileNotFoundException.class).isThrownBy(() -> new DummyDevice(device, driver));
 				} else {
-					assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new Device(device, driver));
+					assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new DummyDevice(device, driver));
 				}
 			}
 		}
@@ -257,14 +257,14 @@ final class IxgbePciTest extends AbstractPciTest {
 	}
 
 	/**
-	 * Creates a {@link Pci} instance and handles any checked exception.
+	 * Creates a {@link Device} instance and handles any checked exception.
 	 *
 	 * @param device The PCI device.
-	 * @return The {@link Pci} instance.
+	 * @return The {@link Device} instance.
 	 */
 	private static @NotNull Optional<@Nullable Device> newPci(@NonNull String device) {
 		try {
-			return Optional.of(new Device(device, DRIVER));
+			return Optional.of(new DummyDevice(device, DRIVER));
 		} catch (FileNotFoundException e) {
 			val message = e.getMessage();
 			if (message == null) {

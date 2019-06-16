@@ -20,6 +20,7 @@ public interface IxyPciDevice extends Closeable {
 	 *
 	 * @return The name.
 	 */
+	@Contract(pure = true)
 	@NotNull String getName();
 
 	/**
@@ -27,6 +28,7 @@ public interface IxyPciDevice extends Closeable {
 	 *
 	 * @return The driver.
 	 */
+	@Contract(pure = true)
 	@NotNull String getDriver();
 
 	/**
@@ -70,7 +72,6 @@ public interface IxyPciDevice extends Closeable {
 	 *
 	 * @throws IOException If an I/O error occurs.
 	 */
-	@Contract(pure = true)
 	void enableDma() throws IOException;
 
 	/**
@@ -78,8 +79,15 @@ public interface IxyPciDevice extends Closeable {
 	 *
 	 * @throws IOException If an I/O error occurs.
 	 */
-	@Contract(pure = true)
 	void disableDma() throws IOException;
+
+	/**
+	 * Checks whether the driver is bound or not.
+	 *
+	 * @return The bind status.
+	 */
+	@Contract(pure = true)
+	boolean isBound();
 
 	/**
 	 * Binds the driver.

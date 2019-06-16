@@ -1,7 +1,7 @@
 package de.tum.in.net.ixy.pci;
 
-import de.tum.in.net.ixy.generic.BuildConfig;
-import de.tum.in.net.ixy.generic.IxyPciDevice;
+import de.tum.in.net.ixy.generic.InvalidOffsetException;
+import de.tum.in.net.ixy.generic.IxyDevice;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -29,9 +30,9 @@ import java.util.stream.IntStream;
 
 @Slf4j
 @ToString(onlyExplicitlyIncluded = true, doNotUseGetters = true)
-@EqualsAndHashCode(onlyExplicitlyIncluded = true, doNotUseGetters = true)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, doNotUseGetters = true, callSuper = true)
 @SuppressWarnings({"resource", "IOResourceOpenedButNotSafelyClosed", "PMD.BeanMembersShouldSerialize"})
-public class Device implements IxyPciDevice {
+public abstract class Device extends IxyDevice {
 
 	////////////////////////////////////////////////////// PATHS ///////////////////////////////////////////////////////
 
@@ -143,6 +144,9 @@ public class Device implements IxyPciDevice {
 	 */
 	private final @NotNull ByteBuffer buffer;
 
+	/** A cached instance of the mapped memory. */
+	protected final @Nullable MappedByteBuffer mmap = map().orElse(null);
+
 	////////////////////////////////////////////////// MEMBER METHODS //////////////////////////////////////////////////
 
 	/** Holds the name of the device. */
@@ -164,6 +168,7 @@ public class Device implements IxyPciDevice {
 	 * @param driver The driver.
 	 * @throws FileNotFoundException If the device does not exist.
 	 */
+	@Contract("null, _ -> fail; _, null -> fail")
 	public Device(@NotNull String name, @NotNull String driver) throws FileNotFoundException {
 		if (!BuildConfig.OPTIMIZED) {
 			if (name == null) throw new InvalidNullParameterException("name");
@@ -184,9 +189,15 @@ public class Device implements IxyPciDevice {
 		unbindChannel = new FileOutputStream(String.format(PCI_DRV_RES_PATH_FMT, driver, PCI_RES_UNBIND)).getChannel();
 	}
 
+	/** Checks that the mapped memory is available. */
+	protected void checkMmap() {
+		if (mmap == null) throw new IllegalStateException("The memory map could not be created");
+	}
+
 	//////////////////////////////////////////////// OVERRIDDEN METHODS ////////////////////////////////////////////////
 
 	@Override
+	@Contract(pure = true)
 	public short getVendorId() throws IOException {
 		if (BuildConfig.DEBUG) log.debug("Reading vendor id of PCI device {}", name);
 		if (BuildConfig.DEBUG) {
@@ -199,6 +210,7 @@ public class Device implements IxyPciDevice {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public short getDeviceId() throws IOException {
 		if (BuildConfig.DEBUG) log.debug("Reading device id of PCI device {}", name);
 		if (BuildConfig.DEBUG) {
@@ -211,6 +223,7 @@ public class Device implements IxyPciDevice {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public byte getClassId() throws IOException {
 		if (BuildConfig.DEBUG) log.debug("Reading class id of PCI device {}", name);
 		val pos = buffer.position();
@@ -224,6 +237,7 @@ public class Device implements IxyPciDevice {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public boolean isDmaEnabled() throws IOException {
 		if (BuildConfig.DEBUG) log.debug("Checking if DMA is enabled on PCI device {}", name);
 		return (getCommand() & DMA_BIT) != 0;
@@ -242,6 +256,7 @@ public class Device implements IxyPciDevice {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public boolean isBound() {
 		val dev = String.format(PCI_DRV_RES_PATH_FMT, driver, name);
 		return Files.exists(Path.of(dev));
@@ -270,6 +285,7 @@ public class Device implements IxyPciDevice {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public boolean isMappable() throws IOException {
 		if (BuildConfig.DEBUG) log.debug("Checking mapability of PCI device {}", name);
 		if (BuildConfig.DEBUG) {
@@ -282,6 +298,7 @@ public class Device implements IxyPciDevice {
 	}
 
 	@Override
+	@Contract(pure = true)
 	@SuppressWarnings("PMD.DataflowAnomalyAnalysis")
 	public @NotNull Optional<MappedByteBuffer> map() {
 		if (BuildConfig.DEBUG) log.trace("Mapping 'resource0' of PCI device {}", name);
@@ -318,6 +335,7 @@ public class Device implements IxyPciDevice {
 	 * @return The value.
 	 * @throws IOException If an I/O error occurs.
 	 */
+	@Contract(pure = true)
 	private short getCommand() throws IOException {
 		if (BuildConfig.DEBUG) {
 			val bytes = config.position(POSITION_COMMAND).read(buffer.clear().limit(BYTES_COMMAND).mark());
@@ -349,6 +367,33 @@ public class Device implements IxyPciDevice {
 		} else {
 			config.position(POSITION_COMMAND).write(buffer.position(pos).limit(BYTES_COMMAND));
 		}
+	}
+
+	@Override
+	@Contract(pure = true)
+	protected int getRegister(int offset) {
+		if (BuildConfig.DEBUG) {
+			val xoffset = Integer.toHexString(offset);
+			log.debug("Reading register @ 0x{}", xoffset);
+		}
+		if (!BuildConfig.OPTIMIZED) {
+			checkMmap();
+			if (offset < 0) throw new InvalidOffsetException("offset");
+		}
+		return mmap.getInt(offset);
+	}
+
+	@Override
+	protected void setRegister(int offset, int value) {
+		if (BuildConfig.DEBUG) {
+			val xoffset = Integer.toHexString(offset);
+			log.debug("Reading register @ 0x{}", xoffset);
+		}
+		if (!BuildConfig.OPTIMIZED) {
+			checkMmap();
+			if (offset < 0) throw new InvalidOffsetException("offset");
+		}
+		mmap.putInt(offset, value);
 	}
 
 }

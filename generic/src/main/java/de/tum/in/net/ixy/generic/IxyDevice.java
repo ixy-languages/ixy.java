@@ -2,8 +2,8 @@ package de.tum.in.net.ixy.generic;
 
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-
-import java.util.Arrays;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Ixy's device specification.
@@ -11,7 +11,7 @@ import java.util.Arrays;
  * @author Esaú García Sánchez-Torija
  */
 @Slf4j
-public abstract class IxyDevice {
+public abstract class IxyDevice implements IxyPciDevice {
 
 	/**
 	 * Returns the value of an arbitrary register.
@@ -19,6 +19,7 @@ public abstract class IxyDevice {
 	 * @param offset The offset to start reading from.
 	 * @return The value of the register.
 	 */
+	@Contract(pure = true)
 	protected abstract int getRegister(int offset);
 
 	/**
@@ -65,6 +66,7 @@ public abstract class IxyDevice {
 	 * @param offset The offset to start reading from.
 	 * @param flags  The flags to check for.
 	 */
+	@Contract(pure = true)
 	protected void waitClearRegister(int offset, int flags) {
 		if (BuildConfig.DEBUG) {
 			val xoffset = Integer.toHexString(offset);
@@ -90,6 +92,7 @@ public abstract class IxyDevice {
 	 * @param offset The offset to start reading from.
 	 * @param flags  The flags to check for.
 	 */
+	@Contract(pure = true)
 	protected void waitSetRegister(int offset, int flags) {
 		if (BuildConfig.DEBUG) {
 			val xoffset = Integer.toHexString(offset);
@@ -114,6 +117,7 @@ public abstract class IxyDevice {
 	 *
 	 * @return The promiscuous status.
 	 */
+	@Contract(pure = true)
 	public abstract boolean isPromiscuous();
 
 	/** Enables the promiscuous mode. */
@@ -127,16 +131,59 @@ public abstract class IxyDevice {
 	 *
 	 * @return The link speed.
 	 */
+	@Contract(pure = true)
 	public abstract long getLinkSpeed();
 
 	/**
 	 * Reads a batch of packets from a queue.
 	 *
-	 * @param queue   The queue to use.
+	 * @param queue   The queue.
+	 * @param packets The packet list.
+	 * @param offset  The offset to start reading from.
+	 * @param length  The number of packets to read.
+	 * @return The number of packets read.
+	 */
+	@Contract(mutates = "param2")
+	public abstract int rxBatch(int queue, @NotNull IxyPacketBuffer[] packets, int offset, int length);
+
+	/**
+	 * Wrapper for {@link #rxBatch(int, IxyPacketBuffer[], int, int)} that computes the size automatically based on the
+	 * parameter {@code offset}.
+	 *
+	 * @param queue   The queue.
+	 * @param packets The packet list.
+	 * @param offset  The offset to start reading from.
+	 * @return The number of packets read.
+	 */
+	@Contract(mutates = "param2")
+	public int rxBatch(int queue, @NotNull IxyPacketBuffer[] packets, int offset) {
+		if (!BuildConfig.OPTIMIZED) {
+			if (packets == null) throw new InvalidNullParameterException("packets");
+			if (offset < 0) throw new InvalidOffsetException("offset");
+		}
+		val length = packets.length - offset;
+		if (length <= 0) return 0;
+		if (BuildConfig.DEBUG) log.debug("Delegate reading a batch of {} packets", length);
+		return rxBatch(queue, packets, offset, length);
+	}
+
+	/**
+	 * Wrapper for {@link #rxBatch(int, IxyPacketBuffer[], int, int)} that reads as many packets as the buffer can
+	 * hold.
+	 *
+	 * @param queue   The queue.
 	 * @param packets The packet list.
 	 * @return The number of packets read.
 	 */
-	public abstract int rxBatch(int queue, IxyPacketBuffer[] packets);
+	@Contract(mutates = "param2")
+	public int rxBatch(int queue, @NotNull IxyPacketBuffer[] packets) {
+		if (!BuildConfig.OPTIMIZED) {
+			if (packets == null) throw new InvalidNullParameterException("packets");
+			if (packets.length == 0) return 0;
+		}
+		if (BuildConfig.DEBUG) log.debug("Delegate reading a whole batch of packets");
+		return rxBatch(queue, packets, 0, packets.length);
+	}
 
 	/**
 	 * Reads a batch of packets in a queue synchronously.
@@ -144,12 +191,58 @@ public abstract class IxyDevice {
 	 * @param queue   The queue.
 	 * @param packets The packet list.
 	 */
-	public void rxBusyWait(int queue, IxyPacketBuffer[] packets) {
-		var received = 0;
-		val len = packets.length;
-		while (received < len) {
-			received += rxBatch(queue, Arrays.copyOfRange(packets, received, packets.length));
+	@Contract(mutates = "param2")
+	public void rxBusyWait(int queue, @NotNull IxyPacketBuffer[] packets, int offset, int length) {
+		if (!BuildConfig.OPTIMIZED) {
+			if (packets == null) throw new InvalidNullParameterException("packets");
+			if (offset < 0) throw new InvalidOffsetException("offset");
+			length = Math.min(length, packets.length - offset);
 		}
+		if (BuildConfig.DEBUG) log.debug("Synchronously reading a batch of {} packets", length);
+		var received = 0;
+		while (received < length) {
+			val processed = rxBatch(queue, packets, offset, length);
+			received += processed;
+			offset += processed;
+			length -= processed;
+		}
+	}
+
+	/**
+	 * Wrapper for {@link #rxBusyWait(int, IxyPacketBuffer[], int, int)} that computes the size automatically based on
+	 * the parameter {@code offset}.
+	 *
+	 * @param queue   The queue.
+	 * @param packets The packet list.
+	 * @param offset  The offset to start reading from.
+	 */
+	@Contract(mutates = "param2")
+	public void rxBusyWait(int queue, @NotNull IxyPacketBuffer[] packets, int offset) {
+		if (!BuildConfig.OPTIMIZED) {
+			if (packets == null) throw new InvalidNullParameterException("packets");
+			if (offset < 0) throw new InvalidOffsetException("offset");
+		}
+		val length = packets.length - offset;
+		if (length <= 0) return;
+		if (BuildConfig.DEBUG) log.debug("Delegate synchronously reading a batch of {} packets", length);
+		rxBusyWait(queue, packets, offset, length);
+	}
+
+	/**
+	 * Wrapper for {@link #rxBusyWait(int, IxyPacketBuffer[], int, int)} that reads as many packets as the buffer can
+	 * hold.
+	 *
+	 * @param queue   The queue.
+	 * @param packets The packet list.
+	 */
+	@Contract(mutates = "param2")
+	public void rxBusyWait(int queue, @NotNull IxyPacketBuffer[] packets) {
+		if (!BuildConfig.OPTIMIZED) {
+			if (packets == null) throw new InvalidNullParameterException("packets");
+			if (packets.length == 0) return;
+		}
+		if (BuildConfig.DEBUG) log.debug("Delegate synchronously reading a whole batch of packets");
+		rxBusyWait(queue, packets, 0, packets.length);
 	}
 
 	/**
@@ -159,20 +252,106 @@ public abstract class IxyDevice {
 	 * @param packets The packet list.
 	 * @return The number of packets written.
 	 */
-	public abstract int txBatch(int queue, IxyPacketBuffer[] packets);
+	@Contract(mutates = "param2")
+	public abstract int txBatch(int queue, @NotNull IxyPacketBuffer[] packets, int offset, int size);
 
 	/**
-	 * Writes a batch of packets in a queue synchronously.
+	 * Wrapper for {@link #txBatch(int, IxyPacketBuffer[], int, int)} that computes the size automatically based on the
+	 * parameter {@code offset}.
+	 *
+	 * @param queue   The queue.
+	 * @param packets The packet list.
+	 * @param offset  The offset to start reading from.
+	 * @return The number of packets written.
+	 */
+	@Contract(mutates = "param2")
+	public int txBatch(int queue, @NotNull IxyPacketBuffer[] packets, int offset) {
+		if (!BuildConfig.OPTIMIZED) {
+			if (packets == null) throw new InvalidNullParameterException("packets");
+			if (offset < 0) throw new InvalidOffsetException("offset");
+		}
+		val length = packets.length - offset;
+		if (length <= 0) return 0;
+		if (BuildConfig.DEBUG) log.debug("Delegate reading a batch of {} packets", length);
+		return txBatch(queue, packets, offset, length);
+	}
+
+	/**
+	 * Wrapper for {@link #txBatch(int, IxyPacketBuffer[], int, int)} that reads as many packets as the buffer can
+	 * hold.
+	 *
+	 * @param queue   The queue.
+	 * @param packets The packet list.
+	 * @return The number of packets written.
+	 */
+	@Contract(mutates = "param2")
+	public int txBatch(int queue, @NotNull IxyPacketBuffer[] packets) {
+		if (!BuildConfig.OPTIMIZED) {
+			if (packets == null) throw new InvalidNullParameterException("packets");
+			if (packets.length == 0) return 0;
+		}
+		if (BuildConfig.DEBUG) log.debug("Delegate writing a whole batch of packets");
+		return txBatch(queue, packets, 0, packets.length);
+	}
+
+	/**
+	 * Reads a batch of packets in a queue synchronously.
 	 *
 	 * @param queue   The queue.
 	 * @param packets The packet list.
 	 */
-	public void txBusyWait(int queue, IxyPacketBuffer[] packets) {
-		var sent = 0;
-		val len = packets.length;
-		while (sent < len) {
-			sent += txBatch(queue, Arrays.copyOfRange(packets, sent, packets.length));
+	@Contract(mutates = "param2")
+	public void txBusyWait(int queue, @NotNull IxyPacketBuffer[] packets, int offset, int length) {
+		if (!BuildConfig.OPTIMIZED) {
+			if (packets == null) throw new InvalidNullParameterException("packets");
+			if (offset < 0) throw new InvalidOffsetException("offset");
+			length = Math.min(length, packets.length - offset);
 		}
+		if (BuildConfig.DEBUG) log.debug("Synchronously writing a batch of {} packets", length);
+		var received = 0;
+		while (received < length) {
+			val processed = txBatch(queue, packets, offset, length);
+			received += processed;
+			offset += processed;
+			length -= processed;
+		}
+	}
+
+	/**
+	 * Wrapper for {@link #txBusyWait(int, IxyPacketBuffer[], int, int)} that computes the size automatically based on
+	 * the parameter {@code offset}.
+	 *
+	 * @param queue   The queue.
+	 * @param packets The packet list.
+	 * @param offset  The offset to start reading from.
+	 */
+	@Contract(mutates = "param2")
+	public void txBusyWait(int queue, @NotNull IxyPacketBuffer[] packets, int offset) {
+		if (!BuildConfig.OPTIMIZED) {
+			if (packets == null) throw new InvalidNullParameterException("packets");
+			if (offset < 0) throw new InvalidOffsetException("offset");
+		}
+		val length = packets.length - offset;
+		if (length <= 0) return;
+		if (BuildConfig.DEBUG) log.debug("Delegate synchronously writing a batch of {} packets", length);
+		txBusyWait(queue, packets, offset, length);
+	}
+
+	/**
+	 * Wrapper for {@link #txBusyWait(int, IxyPacketBuffer[], int, int)} that writes as many packets as the buffer can
+	 * hold.
+	 *
+	 * @param queue   The queue.
+	 * @param packets The packet list.
+	 */
+	@Contract(mutates = "param2")
+	public void txBusyWait(int queue, @NotNull IxyPacketBuffer[] packets) {
+		if (!BuildConfig.OPTIMIZED) {
+			if (packets == null) throw new InvalidNullParameterException("packets");
+			if (packets.length == 0) return;
+		}
+		if (BuildConfig.DEBUG) log.debug("Delegate synchronously writing a whole batch of packets");
+		txBusyWait(queue, packets, 0, packets.length);
 	}
 
 }
