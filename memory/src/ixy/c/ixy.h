@@ -33,10 +33,10 @@ Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1hugepage_1size(const JNIEnv *,
 /*
  * Class:     de_tum_in_net_ixy_memory_JniMemoryManager
  * Method:    c_allocate
- * Signature: (JZZLjava/lang/String;)J
+ * Signature: (JZLjava/lang/String;)J
  */
 JNIEXPORT jlong JNICALL
-Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1allocate(JNIEnv *, const jclass, const jlong, const jboolean, const jboolean, jstring);
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1allocate(JNIEnv *, const jclass, const jlong, const jboolean, jstring);
 
 /*
  * Class:     de_tum_in_net_ixy_memory_JniMemoryManager
