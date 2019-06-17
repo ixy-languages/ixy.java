@@ -75,13 +75,13 @@ buildConfig {
 // Configure the program binary with all the libraries
 task uberjar(type: Jar, dependsOn: ["compileJava"]) {
 	zip64 = true
-	classifier = 'all'
+	archiveClassifier = 'all'
 	manifest {
 		attributes 'Main-Class': "${project.mainClassName}",
 				   'Implementation-Title': 'Ixy Driver Runner',
 				   'Implementation-Version': project.version
 	}
-	baseName = "Ixy"
+	archiveBaseName = "Ixy"
 	from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
 	with jar
 }
