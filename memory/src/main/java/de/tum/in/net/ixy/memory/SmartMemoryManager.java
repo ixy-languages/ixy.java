@@ -439,7 +439,7 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@Contract(pure = true)
-	@SuppressWarnings("AccessOfSystemProperties")
+	@SuppressWarnings({"AccessOfSystemProperties", "PMD.DataflowAnomalyAnalysis"})
 	public long virt2phys(long address) {
 		if (BuildConfig.DEBUG) log.trace("Smart memory translation of address 0x{}", Long.toHexString(address));
 
