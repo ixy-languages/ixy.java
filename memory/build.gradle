@@ -1,17 +1,15 @@
-import com.github.spotbugs.SpotBugsTask
-
 // Include all the plugins this module depends on
 plugins {
-	id 'c'                                               // C plugin
-	id 'java-library'                                    // Java library plugin
-	id 'jacoco'                                          // Java Code Coverage
-	id 'pmd'                                             // Static code analyzer
-	id 'com.github.gmazzo.buildconfig' version '1.5.0'   // BuildConfig (like in Android)
-	id 'io.freefair.lombok'            version '3.6.4'   // Lombok
-	id 'com.github.spotbugs'           version '2.0.0'   // Bug finder
-	id 'com.simonharrer.modernizer'    version '1.6.0-1' // Modernizer plugin
-	id 'com.adarshr.test-logger'       version '1.6.0'   // Gradle Test Logger (more beautiful than the default)
-//	id 'com.github.ben-manes.versions' version '0.21.0'  // Outdated dependencies detection support
+	id 'c'                                                                 // C plugin
+	id 'java-library'                                                      // Java library plugin
+	id 'jacoco'                                                            // Java Code Coverage
+	id 'pmd'                                                               // Static code analyzer
+	id 'com.github.gmazzo.buildconfig'                    version '1.5.0'  // BuildConfig (like in Android)
+	id 'io.freefair.lombok'                               version '3.7.1'  // Lombok
+	id 'com.github.spotbugs'                              version '2.0.0'  // Bug finder
+	id 'com.github.andygoossens.gradle-modernizer-plugin' version '1.2.0'  // Modernizer plugin
+	id 'com.adarshr.test-logger'                          version '1.7.0'  // Gradle Test Logger (more beautiful than the default)
+//	id 'com.github.ben-manes.versions'                    version '0.21.0' // Outdated dependencies detection support
 }
 
 // Configure the group and version of the project, which should match the root project's
@@ -34,8 +32,10 @@ jacoco {
 
 // Use the latest SpotBugs version if possible => https://github.com/spotbugs/spotbugs/releases
 spotbugs {
-	toolVersion    = '3.1.12'
+	toolVersion    = '4.0.0-beta2'
 	ignoreFailures = true
+	effort         = 'max'
+	reportLevel    = 'medium'
 }
 
 // Use the latest PMD version if possible => https://pmd.github.io/#downloads
@@ -112,11 +112,11 @@ buildConfig {
 
 // Define the dependencies and the minimum scope needed for them to work
 dependencies {
-	api project(':ixy.generic')
-	implementation group: 'org.slf4j',     name: 'slf4j-api',   version: '1.7.26'
+	api            project(':ixy.generic')
+	implementation group: 'org.slf4j',     name: 'slf4j-api',   version: '1.8.0-beta4'
 	compileOnly    group: 'org.jetbrains', name: 'annotations', version: '17.0.0'
 
-	testRuntime        group: 'org.slf4j',         name: 'slf4j-nop',             version: '1.7.26'
+	testRuntime        group: 'org.slf4j',         name: 'slf4j-nop',             version: '1.8.0-beta4'
 	testCompileOnly    group: 'org.jetbrains',     name: 'annotations',           version: '17.0.0'
 	testCompile        group: 'org.junit.jupiter', name: 'junit-jupiter-params',  version: '5.5.0-M1'
 	testRuntimeOnly    group: 'org.junit.jupiter', name: 'junit-jupiter-engine',  version: '5.5.0-M1'
@@ -130,9 +130,6 @@ tasks.withType(com.github.gmazzo.gradle.plugins.tasks.BuildConfigTask) {
 	addGeneratedAnnotation = false
 }
 
-// Disable Lombok's @Generated annotation
-lombok.config['lombok.addLombokGeneratedAnnotation'] = "${true}"
-
 // Disable the warning about the Unsafe proprietary API during compilation
 tasks.withType(JavaCompile) {
 	options.compilerArgs << '-XDignore.symbol.file'
@@ -142,15 +139,15 @@ tasks.withType(JavaCompile) {
 tasks.withType(Javadoc) {
 	options.links << 'https://docs.oracle.com/en/java/javase/12/docs/api/'
 	options.addBooleanOption('html5', true)
-	options.noQualifiers "all"
+	options.noQualifiers 'all'
 }
 
 // Export the SpotBugs reports in HTML format only
-tasks.withType(SpotBugsTask) {
+tasks.withType(com.github.spotbugs.SpotBugsTask) {
 	reports {
-		html.enabled  = true
+		html.enabled  = false
 		xml.enabled   = false
-		text.enabled  = false
+		text.enabled  = true
 		emacs.enabled = false
 	}
 }
@@ -160,8 +157,8 @@ test {
 	// Add the native library path
 	systemProperty "java.library.path", file("${buildDir}/libs/ixy/shared").absolutePath
 
-	// Enable JUnit 5 and stop as soon as something fails
-	useJUnitPlatform { failFast = true }
+	// Enable JUnit 5 and execute all tests always
+	useJUnitPlatform { failFast = false }
 
 	// Use all processor cores to test
 	maxParallelForks = Runtime.runtime.availableProcessors()
@@ -205,4 +202,6 @@ jacocoTestReport {
 	}
 }
 
-
+// Disable checking the test files
+spotbugsTest.enabled = false
+pmdTest.enabled = false

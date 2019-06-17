@@ -1,14 +1,14 @@
 // Include all the plugins this module depends on
 plugins {
-	id 'java-library'                                    // Java library plugin
-	id 'jacoco'                                          // Java Code Coverage
-	id 'pmd'                                             // Static code analyzer
-	id 'com.github.gmazzo.buildconfig' version '1.5.0'   // BuildConfig (like in Android)
-	id 'io.freefair.lombok'            version '3.6.4'   // Lombok
-	id 'com.github.spotbugs'           version '2.0.0'   // Bug finder
-	id 'com.simonharrer.modernizer'    version '1.6.0-1' // Modernizer plugin
-	id 'com.adarshr.test-logger'       version '1.6.0'   // Gradle Test Logger (more beautiful than the default)
-//	id 'com.github.ben-manes.versions' version '0.21.0'  // Outdated dependencies detection support
+	id 'java-library'                                                      // Java library plugin
+	id 'jacoco'                                                            // Java Code Coverage
+	id 'pmd'                                                               // Static code analyzer
+	id 'com.github.gmazzo.buildconfig'                    version '1.5.0'  // BuildConfig (like in Android)
+	id 'io.freefair.lombok'                               version '3.7.1'  // Lombok
+	id 'com.github.spotbugs'                              version '2.0.0'  // Bug finder
+	id 'com.github.andygoossens.gradle-modernizer-plugin' version '1.2.0'  // Modernizer plugin
+	id 'com.adarshr.test-logger'                          version '1.7.0'  // Gradle Test Logger (more beautiful than the default)
+//	id 'com.github.ben-manes.versions'                    version '0.21.0' // Outdated dependencies detection support
 }
 
 // Configure the group and version of the project, which should match the root project's
@@ -31,22 +31,22 @@ jacoco {
 
 // Use the latest SpotBugs version if possible => https://github.com/spotbugs/spotbugs/releases
 spotbugs {
-	toolVersion    = '3.1.12'
+	toolVersion    = '4.0.0-beta2'
 	ignoreFailures = true
+	effort         = 'max'
+	reportLevel    = 'medium'
 }
 
 // Use the latest PMD version if possible => https://pmd.github.io/#downloads
 pmd {
 	toolVersion    = '6.14.0'
-	ignoreFailures = true
+	ignoreFailures = false
 }
 
 // Define a set of custom properties which may or may not be useful, but should be inherited from the root project
 ext {
-	DEBUG     = rootProject.ext.has("DEBUG")     ? project.DEBUG     : false
-	UNSAFE    = rootProject.ext.has("UNSAFE")    ? project.UNSAFE    : true
-	OPTIMIZED = rootProject.ext.has("OPTIMIZED") ? project.OPTIMIZED : false
-	HUGE_MNT  = rootProject.ext.has("HUGE_MNT")  ? project.HUGE_MNT  : "/mnt/huge"
+	DEBUG     = rootProject.ext.has("DEBUG")     ? rootProject.ext.DEBUG     : false
+	OPTIMIZED = rootProject.ext.has("OPTIMIZED") ? rootProject.ext.OPTIMIZED : true
 }
 
 // Compute the package name without sequential repetition of the different package levels
@@ -66,24 +66,22 @@ buildConfig {
 	packageName      FQPN
 	language         'java'
 	buildConfigField 'boolean', 'DEBUG',     "${project.DEBUG}"
-	buildConfigField 'boolean', 'UNSAFE',    "${project.UNSAFE}"
 	buildConfigField 'boolean', 'OPTIMIZED', "${project.OPTIMIZED}"
-	buildConfigField 'String',  'HUGE_MNT',  "\"${project.HUGE_MNT}\""
 }
 
 // Define the dependencies and the minimum scope needed for them to work
 dependencies {
-	compile            group: 'org.slf4j',         name: 'slf4j-api',            version: '1.8.0-beta4'
-	implementation     group: 'org.jetbrains',     name: 'annotations',          version: '16.0.2'
-	testCompile        group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: '5.5.0-M1'
-	testRuntimeOnly    group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: '5.5.0-M1'
-	testImplementation group: 'org.jetbrains',     name: 'annotations',          version: '17.0.0'
+	api            project(':ixy.generic')
+	implementation group: 'org.slf4j',     name: 'slf4j-api',   version: '1.8.0-beta4'
+	compileOnly    group: 'org.jetbrains', name: 'annotations', version: '17.0.0'
 
-	// Add Logback based on if the DEBUG flag is enabled
-	if (project.DEBUG)
-		testCompile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
-	else
-		testCompile group: 'org.slf4j',      name: 'slf4j-nop',       version: '1.8.0-beta4'
+	testRuntime        group: 'org.slf4j',         name: 'slf4j-nop',             version: '1.8.0-beta4'
+	testCompileOnly    group: 'org.jetbrains',     name: 'annotations',           version: '17.0.0'
+	testCompile        group: 'org.junit.jupiter', name: 'junit-jupiter-params',  version: '5.5.0-M1'
+	testRuntimeOnly    group: 'org.junit.jupiter', name: 'junit-jupiter-engine',  version: '5.5.0-M1'
+	testImplementation group: 'org.assertj',       name: 'assertj-core',          version: '3.12.2'
+	testImplementation group: 'org.mockito',       name: 'mockito-core',          version: '2.28.2'
+	testImplementation group: 'org.mockito',       name: 'mockito-junit-jupiter', version: '2.28.2'
 }
 
 // Disable the "@Generated" annotation used by the BuildConfig generated class
@@ -91,18 +89,24 @@ tasks.withType(com.github.gmazzo.gradle.plugins.tasks.BuildConfigTask) {
 	addGeneratedAnnotation = false
 }
 
+// Disable the warning about the Unsafe proprietary API during compilation
+tasks.withType(JavaCompile) {
+	options.compilerArgs << '-XDignore.symbol.file'
+}
+
 // Add the links to the official documentation
 tasks.withType(Javadoc) {
-	options.links += ['https://docs.oracle.com/en/java/javase/12/docs/api/']
+	options.links << 'https://docs.oracle.com/en/java/javase/12/docs/api/'
 	options.addBooleanOption('html5', true)
+	options.noQualifiers 'all'
 }
 
 // Export the SpotBugs reports in HTML format only
 tasks.withType(com.github.spotbugs.SpotBugsTask) {
 	reports {
-		html.enabled  = true
+		html.enabled  = false
 		xml.enabled   = false
-		text.enabled  = false
+		text.enabled  = true
 		emacs.enabled = false
 	}
 }
@@ -135,7 +139,7 @@ test {
 		showPassed                 true
 		showSkipped                true
 		showFailed                 true
-		showStandardStreams        true
+		showStandardStreams        false
 		showPassedStandardStreams  true
 		showSkippedStandardStreams true
 		showFailedStandardStreams  true
@@ -146,7 +150,11 @@ test {
 jacocoTestReport {
 	reports {
 		html.enabled = true
-		xml.enabled  = false
+		xml.enabled  = true
 		csv.enabled  = false
 	}
 }
+
+// Disable checking the test files
+spotbugsTest.enabled = false
+pmdTest.enabled = false

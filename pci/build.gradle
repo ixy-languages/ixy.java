@@ -100,7 +100,7 @@ tasks.withType(JavaCompile) {
 tasks.withType(Javadoc) {
 	options.links << 'https://docs.oracle.com/en/java/javase/12/docs/api/'
 	options.addBooleanOption('html5', true)
-	options.noQualifiers "all"
+	options.noQualifiers 'all'
 }
 
 // Export the SpotBugs reports in HTML format only
