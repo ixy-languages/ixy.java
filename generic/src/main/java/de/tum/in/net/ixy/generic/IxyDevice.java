@@ -174,7 +174,7 @@ public abstract class IxyDevice implements IxyPciDevice {
 	 *
 	 * @param queue   The queue.
 	 * @param packets The packet list.
-	 * @return The number of packets read.
+	 * @return The number of read packets.
 	 */
 	@Contract(mutates = "param2")
 	public int rxBatch(int queue, @NotNull IxyPacketBuffer[] packets) {
@@ -191,6 +191,8 @@ public abstract class IxyDevice implements IxyPciDevice {
 	 *
 	 * @param queue   The queue.
 	 * @param packets The packet list.
+	 * @param offset  The offset to start reading from.
+	 * @param length  The number of packets to read.
 	 */
 	@Contract(mutates = "param2")
 	public void rxBusyWait(int queue, @NotNull IxyPacketBuffer[] packets, int offset, int length) {
@@ -251,10 +253,12 @@ public abstract class IxyDevice implements IxyPciDevice {
 	 *
 	 * @param queue   The queue.
 	 * @param packets The packet list.
-	 * @return The number of packets written.
+	 * @param offset  The offset to start writing to.
+	 * @param length  The number of packets to write.
+	 * @return The number of written packets.
 	 */
 	@Contract(mutates = "param2")
-	public abstract int txBatch(int queue, @NotNull IxyPacketBuffer[] packets, int offset, int size);
+	public abstract int txBatch(int queue, @NotNull IxyPacketBuffer[] packets, int offset, int length);
 
 	/**
 	 * Wrapper for {@link #txBatch(int, IxyPacketBuffer[], int, int)} that computes the size automatically based on the
@@ -262,8 +266,8 @@ public abstract class IxyDevice implements IxyPciDevice {
 	 *
 	 * @param queue   The queue.
 	 * @param packets The packet list.
-	 * @param offset  The offset to start reading from.
-	 * @return The number of packets written.
+	 * @param offset  The offset to start writing to.
+	 * @return The number of written packets.
 	 */
 	@Contract(mutates = "param2")
 	public int txBatch(int queue, @NotNull IxyPacketBuffer[] packets, int offset) {
@@ -283,7 +287,7 @@ public abstract class IxyDevice implements IxyPciDevice {
 	 *
 	 * @param queue   The queue.
 	 * @param packets The packet list.
-	 * @return The number of packets written.
+	 * @return The number of written packets.
 	 */
 	@Contract(mutates = "param2")
 	public int txBatch(int queue, @NotNull IxyPacketBuffer[] packets) {
@@ -300,6 +304,8 @@ public abstract class IxyDevice implements IxyPciDevice {
 	 *
 	 * @param queue   The queue.
 	 * @param packets The packet list.
+	 * @param offset  The offset to start writing to.
+	 * @param length  The number of packets to write.
 	 */
 	@Contract(mutates = "param2")
 	public void txBusyWait(int queue, @NotNull IxyPacketBuffer[] packets, int offset, int length) {
@@ -324,7 +330,7 @@ public abstract class IxyDevice implements IxyPciDevice {
 	 *
 	 * @param queue   The queue.
 	 * @param packets The packet list.
-	 * @param offset  The offset to start reading from.
+	 * @param offset  The offset to start writing to.
 	 */
 	@Contract(mutates = "param2")
 	public void txBusyWait(int queue, @NotNull IxyPacketBuffer[] packets, int offset) {

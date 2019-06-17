@@ -109,7 +109,12 @@ public abstract class IxyStats {
 		log.info("{} TX: {} packets | {} bytes", address, getTxPackets(), getTxBytes());
 	}
 
-	/** Prints the connection stats by comparing them with an older instance. **/
+	/**
+	 * Prints the connection stats by comparing them with an older instance.
+	 *
+	 * @param stats The initial stats.
+	 * @param nanos The delta of time in nanoseconds.
+	 */
 	public void printStatsConnection(@NotNull IxyStats stats, long nanos){
 		if (!BuildConfig.OPTIMIZED) {
 			if (stats == null) throw new InvalidNullParameterException("stats");
