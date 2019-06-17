@@ -2,6 +2,7 @@ package de.tum.in.net.ixy.memory;
 
 import de.tum.in.net.ixy.generic.IxyDmaMemory;
 import de.tum.in.net.ixy.generic.IxyMemoryManager;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -12,7 +13,7 @@ import lombok.val;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import sun.misc.Unsafe;
+import sun.misc.Unsafe; // NOPMD
 
 import static de.tum.in.net.ixy.memory.Utility.check;
 
@@ -57,6 +58,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	 */
 	@Setter(AccessLevel.NONE)
 	@SuppressWarnings("JavaDoc")
+	@SuppressFBWarnings("SI_INSTANCE_BEFORE_FINALS_ASSIGNED")
 	@Getter(onMethod_ = {@Contract(value = "_ -> !null", pure = true)})
 	private static final @NotNull IxyMemoryManager singleton = new UnsafeMemoryManager();
 
@@ -77,6 +79,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	 * Because the member property {@link #singleton} is initialized with a new instance of this class, any further
 	 * attempts to instantiate it will produce an {@link IllegalStateException} to be thrown.
 	 */
+	@SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
 	private UnsafeMemoryManager() {
 		if (BuildConfig.DEBUG) log.debug("Creating an Unsafe-backed memory manager");
 		if (singleton == null) {
@@ -109,6 +112,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@Contract(pure = true)
+	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
 	public int addressSize() {
 		if (BuildConfig.DEBUG) log.debug("Computing address size using the Unsafe object");
 		if (!BuildConfig.OPTIMIZED) checkUnsafe();
@@ -117,6 +121,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@Contract(pure = true)
+	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
 	public long pageSize() {
 		if (BuildConfig.DEBUG) log.debug("Computing page size using the Unsafe object");
 		if (!BuildConfig.OPTIMIZED) checkUnsafe();
@@ -124,6 +129,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
 	@Contract(value = "_, null, _ -> fail; _, _, null -> fail", pure = true)
 	public long allocate(long bytes, @NotNull AllocationType allocationType, @NotNull LayoutType layoutType) {
 		// Stop if anything is wrong
@@ -159,6 +165,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
 	@Contract(value = "_, _, null -> fail", pure = true)
 	public boolean free(long address, long bytes, @NotNull AllocationType allocationType) {
 		// Stop if anything is wrong
@@ -196,6 +203,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@Contract(pure = true)
+	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
 	public byte getByte(long address) {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(address);
@@ -210,6 +218,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@Contract(pure = true)
+	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
 	public byte getByteVolatile(long address) {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(address);
@@ -224,6 +233,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@Contract(pure = true)
+	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
 	public void putByte(long address, byte value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
@@ -239,6 +249,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@Contract(pure = true)
+	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
 	public void putByteVolatile(long address, byte value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
@@ -254,6 +265,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@Contract(pure = true)
+	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
 	public short getShort(long address) {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(address);
@@ -268,6 +280,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@Contract(pure = true)
+	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
 	public short getShortVolatile(long address) {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(address);
@@ -282,6 +295,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@Contract(pure = true)
+	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
 	public void putShort(long address, short value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
@@ -297,6 +311,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@Contract(pure = true)
+	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
 	public void putShortVolatile(long address, short value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
@@ -312,6 +327,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@Contract(pure = true)
+	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
 	public int getInt(long address) {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(address);
@@ -326,6 +342,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@Contract(pure = true)
+	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
 	public int getIntVolatile(long address) {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(address);
@@ -340,6 +357,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@Contract(pure = true)
+	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
 	public void putInt(long address, int value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(value);
@@ -355,6 +373,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@Contract(pure = true)
+	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
 	public void putIntVolatile(long address, int value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(value);
@@ -370,6 +389,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@Contract(pure = true)
+	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
 	public long getLong(long address) {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(address);
@@ -384,6 +404,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@Contract(pure = true)
+	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
 	public long getLongVolatile(long address) {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(address);
@@ -398,6 +419,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@Contract(pure = true)
+	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
 	public void putLong(long address, long value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Long.toHexString(value);
@@ -413,6 +435,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@Contract(pure = true)
+	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
 	public void putLongVolatile(long address, long value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Long.toHexString(value);
@@ -427,6 +450,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
 	@Contract(value = "_, _, null, _ -> fail", mutates = "param3")
 	public void get(long src, int bytes, @NotNull byte[] dest, int offset) {
 		if (!BuildConfig.OPTIMIZED) {
@@ -443,6 +467,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
 	@SuppressWarnings("PMD.AssignmentInOperand")
 	@Contract(value = "_, _, null, _ -> fail", mutates = "param3")
 	public void getVolatile(long src, int bytes, @NotNull byte[] dest, int offset) {
@@ -462,6 +487,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
 	@Contract(value = "_, _, null, _ -> fail", pure = true)
 	public void put(long dest, int bytes, @NotNull byte[] src, int offset) {
 		if (!BuildConfig.OPTIMIZED) {
@@ -478,6 +504,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
 	@SuppressWarnings("PMD.AssignmentInOperand")
 	@Contract(value = "_, _, null, _ -> fail", pure = true)
 	public void putVolatile(long dest, int bytes, @NotNull byte[] src, int offset) {
@@ -498,6 +525,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@Contract(pure = true)
+	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
 	public void copy(long src, int bytes, long dest) {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(src);
@@ -513,6 +541,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@Contract(pure = true)
+	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
 	@SuppressWarnings("PMD.AssignmentInOperand")
 	public void copyVolatile(long src, int bytes, long dest) {
 		if (BuildConfig.DEBUG) {
@@ -541,6 +570,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
 	@Contract(value = "null -> fail", pure = true)
 	@SuppressWarnings("PMD.DataflowAnomalyAnalysis")
 	public long obj2virt(@NotNull Object object) {

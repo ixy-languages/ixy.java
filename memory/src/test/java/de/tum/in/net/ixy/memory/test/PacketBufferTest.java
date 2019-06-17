@@ -77,6 +77,7 @@ final class PacketBufferTest {
 	 * @author Esaú García Sánchez-Torija
 	 */
 	@Nested
+	@DisplayName("PacketBuffer.Builder")
 	final class BuilderTest {
 
 		@Test

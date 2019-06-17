@@ -78,6 +78,7 @@ final class UnsafeMemoryManagerTest extends AbstractMemoryTest {
 	 * @author Esaú García Sánchez-Torija
 	 */
 	@Nested
+	@DisplayName("UnsafeMemoryManager (Parameters)")
 	final class Parameters {
 
 		// Creates the tests that check that the API checks the parameters

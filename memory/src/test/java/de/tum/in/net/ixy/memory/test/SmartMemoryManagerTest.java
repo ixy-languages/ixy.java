@@ -80,6 +80,7 @@ final class SmartMemoryManagerTest extends AbstractMemoryTest {
 	 * @author Esaú García Sánchez-Torija
 	 */
 	@Nested
+	@DisplayName("SmartMemoryManager (Parameters)")
 	final class Parameters {
 
 		// Creates the tests that check that the API checks the parameters

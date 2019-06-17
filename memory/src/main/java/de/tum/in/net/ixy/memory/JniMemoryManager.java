@@ -2,6 +2,7 @@ package de.tum.in.net.ixy.memory;
 
 import de.tum.in.net.ixy.generic.IxyDmaMemory;
 import de.tum.in.net.ixy.generic.IxyMemoryManager;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -36,6 +37,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 */
 	@Setter(AccessLevel.NONE)
 	@SuppressWarnings("JavaDoc")
+	@SuppressFBWarnings("SI_INSTANCE_BEFORE_FINALS_ASSIGNED")
 	@Getter(onMethod_ = {@Contract(value = "_ -> !null", pure = true)})
 	private static final @NotNull IxyMemoryManager singleton = new JniMemoryManager();
 
@@ -411,6 +413,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 * Because the member {@link #singleton} is initialized with a new instance of this class, any further attempts to
 	 * instantiate it will produce an {@link IllegalStateException} to be thrown.
 	 */
+	@SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
 	private JniMemoryManager() {
 		if (BuildConfig.DEBUG) log.debug("Creating a JNI-backed memory manager");
 		if (singleton == null) {

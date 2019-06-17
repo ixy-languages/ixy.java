@@ -81,6 +81,7 @@ final class JniMemoryManagerTest extends AbstractMemoryTest {
 	 * @author Esaú García Sánchez-Torija
 	 */
 	@Nested
+	@DisplayName("JniMemoryManager (Parameters)")
 	final class Parameters {
 
 		// Creates the tests that check that the API checks the parameters

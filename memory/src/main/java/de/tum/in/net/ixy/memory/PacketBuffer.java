@@ -3,8 +3,10 @@ package de.tum.in.net.ixy.memory;
 import de.tum.in.net.ixy.generic.IxyMemoryManager;
 import de.tum.in.net.ixy.generic.IxyMempool;
 import de.tum.in.net.ixy.generic.IxyPacketBuffer;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.jetbrains.annotations.Contract;
@@ -31,6 +33,8 @@ import org.jetbrains.annotations.Nullable;
  * @author Esaú García Sánchez-Torija
  */
 @Slf4j
+@ToString(onlyExplicitlyIncluded = true, doNotUseGetters = true)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, doNotUseGetters = true)
 @SuppressWarnings({"ConstantConditions", "PMD.AvoidDuplicateLiterals", "PMD.BeanMembersShouldSerialize"})
 public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacketBuffer> {
 
@@ -155,6 +159,7 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 		 * @return The packet buffer.
 		 */
 		@Contract(value = " -> new", pure = true)
+		@SuppressFBWarnings("NP_NULL_PARAM_DEREF")
 		public @NotNull PacketBuffer build() {
 			return new PacketBuffer(mmanager, virtualAddress, physicalAddress, packetSize, memoryPool);
 		}
@@ -273,6 +278,8 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 	////////////////////////////////////////////////// MEMBER METHODS //////////////////////////////////////////////////
 
 	@Getter(onMethod_ = {@Contract(pure = true)})
+	@ToString.Include(name = "virtual", rank = 1)
+	@EqualsAndHashCode.Include
 	private final long virtualAddress;
 
 	@Contract("null, _, _, _, _ -> fail")

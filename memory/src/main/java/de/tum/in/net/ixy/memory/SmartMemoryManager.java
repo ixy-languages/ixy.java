@@ -2,6 +2,7 @@ package de.tum.in.net.ixy.memory;
 
 import de.tum.in.net.ixy.generic.IxyDmaMemory;
 import de.tum.in.net.ixy.generic.IxyMemoryManager;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -83,6 +84,7 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 	@Setter(AccessLevel.NONE)
 	@SuppressWarnings("JavaDoc")
 	@Getter(onMethod_ = {@Contract(pure = true)})
+	@SuppressFBWarnings("SI_INSTANCE_BEFORE_FINALS_ASSIGNED")
 	private static final @NotNull IxyMemoryManager singleton = new SmartMemoryManager();
 
 	/**
@@ -115,6 +117,7 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 
 	/** Private constructor that throws an exception if the instance is already instantiated. */
 	@SuppressWarnings("ConstantConditions")
+	@SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
 	private SmartMemoryManager() {
 		if (BuildConfig.DEBUG) log.debug("Creating a smart memory manager");
 		if (singleton != null) {
@@ -439,6 +442,7 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@Contract(pure = true)
+	@SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE")
 	@SuppressWarnings({"AccessOfSystemProperties", "PMD.DataflowAnomalyAnalysis"})
 	public long virt2phys(long address) {
 		if (BuildConfig.DEBUG) log.trace("Smart memory translation of address 0x{}", Long.toHexString(address));
