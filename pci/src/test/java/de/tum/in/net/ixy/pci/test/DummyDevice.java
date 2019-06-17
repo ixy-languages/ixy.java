@@ -15,7 +15,15 @@ final class DummyDevice extends Device {
 	}
 
 	@Override
-	public void readStats(@NotNull IxyStats stats) {}
+	protected int getRegister(int offset) {
+		return 0;
+	}
+
+	@Override
+	protected void setRegister(int offset, int value) { }
+
+	@Override
+	public void readStats(@NotNull IxyStats stats) { }
 
 	@Override
 	public boolean isPromiscuous() {
@@ -23,10 +31,10 @@ final class DummyDevice extends Device {
 	}
 
 	@Override
-	public void enablePromiscuous() {}
+	public void enablePromiscuous() { }
 
 	@Override
-	public void disablePromiscuous() {}
+	public void disablePromiscuous() { }
 
 	@Override
 	public long getLinkSpeed() {

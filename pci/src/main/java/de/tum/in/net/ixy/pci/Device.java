@@ -151,9 +151,6 @@ public abstract class Device extends IxyDevice {
 	 */
 	private final @NotNull ByteBuffer buffer;
 
-	/** A cached instance of the mapped memory. */
-	protected final @Nullable MappedByteBuffer mappedByteBuffer = map().orElse(null);
-
 	////////////////////////////////////////////////// MEMBER METHODS //////////////////////////////////////////////////
 
 	/** Holds the name of the device. */
@@ -194,11 +191,6 @@ public abstract class Device extends IxyDevice {
 		resource = new RandomAccessFile(String.format(PCI_RES_PATH_FMT, name, PCI_RES_MAP), READ_WRITE_DATA).getChannel();
 		bindChannel = new FileOutputStream(String.format(PCI_DRV_RES_PATH_FMT, driver, PCI_RES_BIND)).getChannel();
 		unbindChannel = new FileOutputStream(String.format(PCI_DRV_RES_PATH_FMT, driver, PCI_RES_UNBIND)).getChannel();
-	}
-
-	/** Checks that the mapped memory is available. */
-	protected void checkMmap() {
-		if (mappedByteBuffer == null) throw new IllegalStateException("The memory map could not be created");
 	}
 
 	//////////////////////////////////////////////// OVERRIDDEN METHODS ////////////////////////////////////////////////
@@ -374,33 +366,6 @@ public abstract class Device extends IxyDevice {
 		} else {
 			config.position(POSITION_COMMAND).write(buffer.position(pos).limit(BYTES_COMMAND));
 		}
-	}
-
-	@Override
-	@Contract(pure = true)
-	protected int getRegister(int offset) {
-		if (BuildConfig.DEBUG) {
-			val xoffset = Integer.toHexString(offset);
-			log.debug("Reading register @ 0x{}", xoffset);
-		}
-		if (!BuildConfig.OPTIMIZED) {
-			checkMmap();
-			if (offset < 0) throw new InvalidOffsetException("offset");
-		}
-		return mappedByteBuffer.getInt(offset);
-	}
-
-	@Override
-	protected void setRegister(int offset, int value) {
-		if (BuildConfig.DEBUG) {
-			val xoffset = Integer.toHexString(offset);
-			log.debug("Reading register @ 0x{}", xoffset);
-		}
-		if (!BuildConfig.OPTIMIZED) {
-			checkMmap();
-			if (offset < 0) throw new InvalidOffsetException("offset");
-		}
-		mappedByteBuffer.putInt(offset, value);
 	}
 
 }

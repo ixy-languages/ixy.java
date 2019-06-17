@@ -1,12 +1,12 @@
 package de.tum.in.net.ixy.pci.test;
 
+import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.extension.ExtendWith;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-
-import org.jetbrains.annotations.NotNull;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
  * Enables a JUnit test if there are NICs with a specific driver available.
