@@ -45,8 +45,12 @@ pmd {
 
 // Define a set of custom properties which may or may not be useful, but should be inherited from the root project
 ext {
-	DEBUG     = rootProject.ext.has("DEBUG")     ? project.DEBUG     : false
-	OPTIMIZED = rootProject.ext.has("OPTIMIZED") ? project.OPTIMIZED : false
+	DEBUG             = rootProject.ext.has("DEBUG")     ? project.DEBUG     : false
+	OPTIMIZED         = rootProject.ext.has("OPTIMIZED") ? project.OPTIMIZED : false
+	PLUGIN_ID         = 'ixgbe-ixy'
+	PLUGIN_VERSION    = project.version
+	PLUGIN_PROVIDER   = 'Esaú García Sánchez-Torija'
+	PLUGIN_ENTRYPOINT = 'de.tum.in.net.ixy.ixgbe.IxgbePlugin'
 }
 
 // Compute the package name without sequential repetition of the different package levels
@@ -69,13 +73,23 @@ buildConfig {
 	buildConfigField 'boolean', 'OPTIMIZED', "${project.OPTIMIZED}"
 }
 
+// Configure the program manifest
+jar {
+	manifest {
+		attributes 'Plugin-Class':    "${project.PLUGIN_ENTRYPOINT}",
+				   'Plugin-Id':       "${project.PLUGIN_ID}",
+				   'Plugin-Version':  "${project.PLUGIN_VERSION}",
+				   'Plugin-Provider': "${project.PLUGIN_PROVIDER}"
+	}
+}
+
 // Define the dependencies and the minimum scope needed for them to work
 dependencies {
-	compile            project(':ixy.generic')
-	compile            project(':ixy.pci')
-	api                group: 'org.pf4j',          name: 'pf4j',                 version: '3.0.1'
-	implementation     group: 'org.slf4j',         name: 'slf4j-api',            version: '1.8.0-beta4'
-	compileOnly        group: 'org.jetbrains',     name: 'annotations',          version: '16.0.2'
+	compile        project(':ixy.generic')
+	compile        project(':ixy.pci')
+	api            group: 'org.pf4j',      name: 'pf4j',        version: '3.0.1'
+	implementation group: 'org.slf4j',     name: 'slf4j-api',   version: '1.8.0-beta4'
+	compileOnly    group: 'org.jetbrains', name: 'annotations', version: '17.0.0'
 
 	testRuntime        group: 'org.slf4j',         name: 'slf4j-nop',             version: '1.8.0-beta4'
 	testCompileOnly    group: 'org.jetbrains',     name: 'annotations',           version: '17.0.0'
@@ -160,3 +174,24 @@ jacocoTestReport {
 // Disable checking the test files
 spotbugsTest.enabled = false
 pmdTest.enabled = false
+
+// Creates the plugin JAR
+task plugin(type: Jar) {
+	archiveBaseName = "${project.PLUGIN_ID}"
+	into('classes') {
+		with jar
+	}
+	into('lib') {
+		from configurations.compile
+	}
+	archiveExtension = 'zip'
+}
+
+// Copies the plugin to the correct folder
+task assemblePlugin(type: Copy) {
+	from plugin
+	into rootProject.pluginsDir
+}
+
+// Assemble the plugin by default
+build.dependsOn project.tasks.assemblePlugin
