@@ -85,11 +85,16 @@ jar {
 
 // Define the dependencies and the minimum scope needed for them to work
 dependencies {
-	compileOnly    project(':ixy.generic')
-	compile        project(':ixy.pci')
-	api            group: 'org.pf4j',      name: 'pf4j',        version: '3.0.1'
-	implementation group: 'org.slf4j',     name: 'slf4j-api',   version: '1.8.0-beta4'
-	compileOnly    group: 'org.jetbrains', name: 'annotations', version: '17.0.0'
+	compileOnly project(':ixy.generic')
+	compile(project(':ixy.pci')) {
+		exclude group: 'org.slf4j'
+		exclude group: 'de.tum.in.net.ixy', name: 'ixy.generic'
+	}
+	compileOnly(group: 'org.pf4j', name: 'pf4j', version: '3.0.1') {
+		exclude group: 'org.slf4j'
+	}
+	compileOnly group: 'org.slf4j',     name: 'slf4j-api',   version: '1.8.0-beta4'
+	compileOnly group: 'org.jetbrains', name: 'annotations', version: '17.0.0'
 
 	testRuntime        group: 'org.slf4j',         name: 'slf4j-nop',             version: '1.8.0-beta4'
 	testCompileOnly    group: 'org.jetbrains',     name: 'annotations',           version: '17.0.0'
