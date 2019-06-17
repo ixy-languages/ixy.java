@@ -24,6 +24,9 @@ ext {
 	HUGE_MNT  = "/mnt/huge"
 }
 
+// Define the location for plugin JARs
+ext.pluginsDir = rootProject.buildDir.path + '/plugins'
+
 // Compile all subprojects as dependencies
 dependencies {
 	compile project(':ixy.app')
@@ -54,6 +57,9 @@ task aggregatePmdMain(type: Pmd) {
 		xml.destination = file("${buildDir}/reports/pmd/main.xml")
 	}
 }
+
+// Build always the uberjar
+build.dependsOn ':ixy.app:uberjar'
 
 // Add the execution data files to the merge task
 def first = true;
