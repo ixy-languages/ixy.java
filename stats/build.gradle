@@ -32,7 +32,7 @@ jacoco {
 // Use the latest SpotBugs version if possible => https://github.com/spotbugs/spotbugs/releases
 spotbugs {
 	toolVersion    = '4.0.0-beta2'
-	ignoreFailures = true
+	ignoreFailures = false
 	effort         = 'max'
 	reportLevel    = 'medium'
 }
@@ -67,8 +67,6 @@ buildConfig {
 	language         'java'
 	buildConfigField 'boolean', 'DEBUG',       "${project.DEBUG}"
 	buildConfigField 'boolean', 'OPTIMIZED',   "${project.OPTIMIZED}"
-	buildConfigField 'String',  'LOCK_CONFIG', "\"CONFIG\""
-	buildConfigField 'String',  'LOCK_NIC',    "\"NIC\""
 }
 
 // Define the dependencies and the minimum scope needed for them to work
