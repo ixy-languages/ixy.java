@@ -88,7 +88,7 @@ dependencies {
 	compileOnly project(':ixy.generic')
 	compile(project(':ixy.pci')) {
 		exclude group: 'org.slf4j'
-		exclude group: 'de.tum.in.net.ixy', name: 'ixy.generic'
+		exclude module: project(':ixy.generic').name
 	}
 	compileOnly(group: 'org.pf4j', name: 'pf4j', version: '3.0.1') {
 		exclude group: 'org.slf4j'
