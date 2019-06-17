@@ -1,6 +1,6 @@
 // Include all the plugins this module depends on
 plugins {
-	id 'java-library'                                                      // Java library plugin
+	id 'application'                                                       // Java application plugin
 	id 'jacoco'                                                            // Java Code Coverage
 	id 'pmd'                                                               // Static code analyzer
 	id 'com.github.gmazzo.buildconfig'                    version '1.5.0'  // BuildConfig (like in Android)
@@ -10,6 +10,9 @@ plugins {
 	id 'com.adarshr.test-logger'                          version '1.7.0'  // Gradle Test Logger (more beautiful than the default)
 //	id 'com.github.ben-manes.versions'                    version '0.21.0' // Outdated dependencies detection support
 }
+
+// Set the entry point of the application
+mainClassName = 'de.tum.in.net.ixy.Main'
 
 // Configure the group and version of the project, which should match the root project's
 group 'de.tum.in.net.ixy'
@@ -32,7 +35,7 @@ jacoco {
 // Use the latest SpotBugs version if possible => https://github.com/spotbugs/spotbugs/releases
 spotbugs {
 	toolVersion    = '4.0.0-beta2'
-	ignoreFailures = true
+	ignoreFailures = false
 	effort         = 'max'
 	reportLevel    = 'medium'
 }
@@ -45,8 +48,8 @@ pmd {
 
 // Define a set of custom properties which may or may not be useful, but should be inherited from the root project
 ext {
-	DEBUG     = rootProject.ext.has("DEBUG")     ? project.DEBUG     : false
-	OPTIMIZED = rootProject.ext.has("OPTIMIZED") ? project.OPTIMIZED : false
+	DEBUG     = rootProject.ext.has("DEBUG")     ? rootProject.ext.DEBUG     : false
+	OPTIMIZED = rootProject.ext.has("OPTIMIZED") ? rootProject.ext.OPTIMIZED : true
 }
 
 // Compute the package name without sequential repetition of the different package levels
@@ -71,19 +74,17 @@ buildConfig {
 
 // Define the dependencies and the minimum scope needed for them to work
 dependencies {
-	compile            project(':ixy.generic')
-	compile            project(':ixy.pci')
-	api                group: 'org.pf4j',          name: 'pf4j',                 version: '3.0.1'
-	implementation     group: 'org.slf4j',         name: 'slf4j-api',            version: '1.8.0-beta4'
-	compileOnly        group: 'org.jetbrains',     name: 'annotations',          version: '16.0.2'
+	compile     project(':ixy.generic')
+	compile     group: 'org.slf4j',     name: 'slf4j-api',   version: '1.8.0-beta4'
+	compileOnly group: 'org.jetbrains', name: 'annotations', version: '17.0.0'
 
-	testRuntime        group: 'org.slf4j',         name: 'slf4j-nop',             version: '1.8.0-beta4'
-	testCompileOnly    group: 'org.jetbrains',     name: 'annotations',           version: '17.0.0'
-	testCompile        group: 'org.junit.jupiter', name: 'junit-jupiter-params',  version: '5.5.0-M1'
-	testRuntimeOnly    group: 'org.junit.jupiter', name: 'junit-jupiter-engine',  version: '5.5.0-M1'
-	testImplementation group: 'org.assertj',       name: 'assertj-core',          version: '3.12.2'
-	testImplementation group: 'org.mockito',       name: 'mockito-core',          version: '2.28.2'
-	testImplementation group: 'org.mockito',       name: 'mockito-junit-jupiter', version: '2.28.2'
+	testRuntime     group: 'org.slf4j',         name: 'slf4j-nop',             version: '1.8.0-beta4'
+	testCompileOnly group: 'org.jetbrains',     name: 'annotations',           version: '17.0.0'
+	testCompile     group: 'org.junit.jupiter', name: 'junit-jupiter-params',  version: '5.5.0-M1'
+	testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine',  version: '5.5.0-M1'
+	testCompile     group: 'org.assertj',       name: 'assertj-core',          version: '3.12.2'
+	testCompile     group: 'org.mockito',       name: 'mockito-core',          version: '2.28.2'
+	testCompile     group: 'org.mockito',       name: 'mockito-junit-jupiter', version: '2.28.2'
 }
 
 // Disable the "@Generated" annotation used by the BuildConfig generated class
@@ -152,7 +153,7 @@ test {
 jacocoTestReport {
 	reports {
 		html.enabled = true
-		xml.enabled  = false
+		xml.enabled  = true
 		csv.enabled  = false
 	}
 }

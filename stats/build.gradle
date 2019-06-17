@@ -65,8 +65,8 @@ def FQPN = { ->
 buildConfig {
 	packageName      FQPN
 	language         'java'
-	buildConfigField 'boolean', 'DEBUG',       "${project.DEBUG}"
-	buildConfigField 'boolean', 'OPTIMIZED',   "${project.OPTIMIZED}"
+	buildConfigField 'boolean', 'DEBUG',     "${project.DEBUG}"
+	buildConfigField 'boolean', 'OPTIMIZED', "${project.OPTIMIZED}"
 }
 
 // Define the dependencies and the minimum scope needed for them to work
