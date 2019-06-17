@@ -1,6 +1,7 @@
 package de.tum.in.net.ixy.pci.test;
 
 import de.tum.in.net.ixy.generic.IxyPacketBuffer;
+import de.tum.in.net.ixy.generic.IxyStats;
 import de.tum.in.net.ixy.pci.Device;
 import org.jetbrains.annotations.NotNull;
 
@@ -12,6 +13,9 @@ final class DummyDevice extends Device {
 	DummyDevice(@NotNull String name, @NotNull String driver) throws FileNotFoundException {
 		super(name, driver);
 	}
+
+	@Override
+	public void readStats(@NotNull IxyStats stats) {}
 
 	@Override
 	public boolean isPromiscuous() {
