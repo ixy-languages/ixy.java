@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
  *
  * @author Esaú García Sánchez-Torija
  */
+@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 public interface IxyPacketBuffer {
 
 	/**

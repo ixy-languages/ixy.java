@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
  * @author Esaú García Sánchez-Torija
  */
 @Slf4j
+@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 public abstract class IxyDevice implements IxyPciDevice {
 
 	/**
