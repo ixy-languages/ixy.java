@@ -31,24 +31,20 @@ public abstract class IxyStats {
 	@Contract(pure = true)
 	protected abstract @NotNull IxyPciDevice getDevice();
 
-	/** Resets the stats. */
-	@Contract(pure = true)
-	abstract void clear();
-
 	/**
 	 * Returns the number of read packets.
 	 *
 	 * @return The number of read packets.
 	 */
 	@Contract(pure = true)
-	abstract int getRxPackets();
+	public abstract int getRxPackets();
 
 	/**
 	 * Sets the number of read packets.
 	 *
 	 * @param packets The number of read packets.
 	 */
-	abstract void setRxPackets(int packets);
+	public abstract void setRxPackets(int packets);
 
 	/**
 	 * Returns the number of written packets.
@@ -56,14 +52,14 @@ public abstract class IxyStats {
 	 * @return The number of written packets.
 	 */
 	@Contract(pure = true)
-	abstract int getTxPackets();
+	public abstract int getTxPackets();
 
 	/**
 	 * Sets the number of written packets.
 	 *
 	 * @param packets The number of written packets.
 	 */
-	abstract void setTxPackets(int packets);
+	public abstract void setTxPackets(int packets);
 
 	/**
 	 * Returns the number of read bytes.
@@ -71,14 +67,14 @@ public abstract class IxyStats {
 	 * @return The number of read bytes.
 	 */
 	@Contract(pure = true)
-	abstract long getRxBytes();
+	public abstract long getRxBytes();
 
 	/**
 	 * Sets the number of read bytes.
 	 *
 	 * @param bytes The number of read bytes.
 	 */
-	abstract void setRxBytes(long bytes);
+	public abstract void setRxBytes(long bytes);
 
 	/**
 	 * The number of written bytes.
@@ -86,16 +82,25 @@ public abstract class IxyStats {
 	 * @return The number of written bytes.
 	 */
 	@Contract(pure = true)
-	abstract long getTxBytes();
+	public abstract long getTxBytes();
 
 	/**
 	 * Sets the number of written bytes.
 	 *
 	 * @param bytes The number of written bytes.
 	 */
-	abstract void setTxBytes(long bytes);
+	public abstract void setTxBytes(long bytes);
 
 	///////////////////////////////////////////////// CONCRETE METHODS /////////////////////////////////////////////////
+
+	/** Clears the stats. */
+	public void clear() {
+		if (BuildConfig.DEBUG) log.debug("Clearing stats");
+		setRxPackets(0);
+		setTxPackets(0);
+		setRxBytes(0);
+		setTxBytes(0);
+	}
 
 	/** Prints the stats using the <em>Simple Logging Facade 4 Java</em>. */
 	public void printStats() {

@@ -1,10 +1,10 @@
 // Include all the plugins this module depends on
 plugins {
-	id 'java'                                               // Java application plugin
-	id 'jacoco'                                             // Java Code Coverage
-	id 'pmd'                                                // Static code analyzer
-	id 'io.freefair.aggregate-javadoc-jar' version '3.6.4'  // Aggregated JavaDoc
-	id 'com.github.ben-manes.versions'     version '0.21.0' // Outdated dependencies detection support
+	id 'java'                                                              // Java library plugin
+	id 'jacoco'                                                            // Java Code Coverage
+	id 'pmd'                                                               // Static code analyzer
+	id 'io.freefair.aggregate-javadoc-jar'                version '3.6.4'  // Aggregated JavaDoc
+	id 'com.github.ben-manes.versions'                    version '0.21.0' // Outdated dependencies detection support
 }
 
 // Configure the group and version of the project, which should match the root project's
@@ -30,6 +30,7 @@ dependencies {
 	compile project(':ixy.forwarder')
 	compile project(':ixy.pci')
 	compile project(':ixy.memory')
+	compile project(':ixy.stats')
 	compile project(':ixy.ixgbe')
 }
 
@@ -58,14 +59,6 @@ task aggregatePmdMain(type: Pmd) {
 	}
 }
 
-// Task that creates an aggregated PMD report of the test files
-task aggregatePmdTest(type: Pmd) {
-	reports {
-		html.destination = file("${buildDir}/reports/pmd/test.html")
-		xml.destination = file("${buildDir}/reports/pmd/test.xml")
-	}
-}
-
 // Add the execution data files to the merge task
 def first = true;
 subprojects.each {
@@ -82,6 +75,5 @@ subprojects.each {
 		}
 		jacocoTestReport.sourceSets it.sourceSets.main
 //		aggregatePmdMain.sourceSets.main << it.sourceSets.main
-//		aggregatePmdTest.sourceSets.test << it.sourceSets.test
 	}
 }
