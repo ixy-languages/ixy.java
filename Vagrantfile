@@ -23,16 +23,16 @@ Ixy is installed in ~/ixy, run with sudo, e.g. sudo ~/ixy/ixy-pktgen 0000:00:08.
 '
 
 	# Install OpenJDK 12
-	config.vm.provision "shell", privileged: true, run: "always", path: "bootstrap.sh"
+	config.vm.provision "shell", privileged: true, path: "bootstrap.sh"
 
 	# Configure Linux Huge Pages
-	config.vm.provision "shell", privileged: true, run: "always", path: "hugetlbfs.sh"
+	config.vm.provision "shell", privileged: true, path: "hugetlbfs.sh"
 
 	# Copy the script that maps PCI devices to NICs
 	config.vm.provision "file", source: "pci2nic.sh", destination: "$HOME/bin/pci2nic"
 
 	# Configure the environment variables that map the VirtIO PCI devices to the NICs
-	config.vm.provision "shell", privileged: false, run: "always", inline: <<-SHELL
+	config.vm.provision "shell", privileged: false, inline: <<-SHELL
 		chmod +x "$HOME/bin/pci2nic"
 		echo ''                                                                                        >> ~/.profile
 		echo '# Evaluating the output of this script allows us to map the NICs to the PCI bus devices' >> ~/.profile
