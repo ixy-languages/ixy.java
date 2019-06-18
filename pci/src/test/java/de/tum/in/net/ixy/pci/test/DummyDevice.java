@@ -47,7 +47,7 @@ final class DummyDevice extends Device {
 	}
 
 	@Override
-	public int txBatch(int queue, @NotNull IxyPacketBuffer[] packets, int offset, int size) {
+	public int txBatch(int queue, @NotNull IxyPacketBuffer[] packets, int offset, int length) {
 		return 0;
 	}
 
