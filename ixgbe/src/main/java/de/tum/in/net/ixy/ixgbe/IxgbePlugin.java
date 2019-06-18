@@ -15,7 +15,7 @@ import org.pf4j.PluginWrapper;
  * @author Esaú García Sánchez-Torija
  */
 @Slf4j
-public class IxgbePlugin extends Plugin {
+public final class IxgbePlugin extends Plugin {
 
 	/**
 	 * Initializes the plugin wrapper.
@@ -24,6 +24,7 @@ public class IxgbePlugin extends Plugin {
 	 */
 	public IxgbePlugin(@NotNull PluginWrapper wrapper) {
 		super(wrapper);
+		if (BuildConfig.DEBUG) log.info("The Ixgbe plugin has been instantiated");
 	}
 
 	/**
@@ -53,13 +54,13 @@ public class IxgbePlugin extends Plugin {
 	@Override
 	public void start() {
 		super.start();
-		log.info("The Ixgbe plugin has started");
+		if (BuildConfig.DEBUG) log.info("The Ixgbe plugin has started");
 	}
 
 	@Override
 	public void stop() {
 		super.stop();
-		log.info("The Ixgbe plugin has stopped");
+		if (BuildConfig.DEBUG) log.info("The Ixgbe plugin has stopped");
 	}
 
 }

@@ -45,12 +45,14 @@ pmd {
 
 // Define a set of custom properties which may or may not be useful, but should be inherited from the root project
 ext {
-	DEBUG             = rootProject.ext.has("DEBUG")     ? project.DEBUG     : false
-	OPTIMIZED         = rootProject.ext.has("OPTIMIZED") ? project.OPTIMIZED : false
-	PLUGIN_ID         = 'ixgbe-ixy'
-	PLUGIN_VERSION    = project.version
-	PLUGIN_PROVIDER   = 'Esaú García Sánchez-Torija'
-	PLUGIN_ENTRYPOINT = 'de.tum.in.net.ixy.ixgbe.IxgbePlugin'
+	DEBUG              = rootProject.ext.has("DEBUG")     ? project.DEBUG     : false
+	OPTIMIZED          = rootProject.ext.has("OPTIMIZED") ? project.OPTIMIZED : false
+	PLUGIN_ENTRYPOINT  = 'de.tum.in.net.ixy.ixgbe.IxgbePlugin'
+	PLUGIN_ID          = 'ixy.ixgbe'
+	PLUGIN_VERSION     = project.version
+	PLUGIN_PROVIDER    = 'Esaú García Sánchez-Torija'
+	PLUGIN_DESCRIPTION = 'Plugin for Intel 10 GbE NICs (ixgbe family)'
+	PLUGIN_LICENSE     = 'BSD 3-Clause'
 }
 
 // Compute the package name without sequential repetition of the different package levels
@@ -76,10 +78,12 @@ buildConfig {
 // Configure the program manifest
 jar {
 	manifest {
-		attributes 'Plugin-Class':    "${project.PLUGIN_ENTRYPOINT}",
-				   'Plugin-Id':       "${project.PLUGIN_ID}",
-				   'Plugin-Version':  "${project.PLUGIN_VERSION}",
-				   'Plugin-Provider': "${project.PLUGIN_PROVIDER}"
+		attributes 'Plugin-Class':       "${project.PLUGIN_ENTRYPOINT}",
+				   'Plugin-Id':          "${project.PLUGIN_ID}",
+				   'Plugin-Version':     "${project.PLUGIN_VERSION}",
+				   'Plugin-Provider':    "${project.PLUGIN_PROVIDER}",
+				   'Plugin-Description': "${project.PLUGIN_DESCRIPTION}",
+				   'Plugin-License':     "${project.PLUGIN_LICENSE}"
 	}
 }
 
@@ -87,14 +91,13 @@ jar {
 dependencies {
 	compileOnly project(':ixy.generic')
 	compile(project(':ixy.pci')) {
-		exclude group: 'org.slf4j'
 		exclude module: project(':ixy.generic').name
-	}
-	compileOnly(group: 'org.pf4j', name: 'pf4j', version: '3.0.1') {
 		exclude group: 'org.slf4j'
 	}
-	compileOnly group: 'org.slf4j',     name: 'slf4j-api',   version: '1.8.0-beta4'
-	compileOnly group: 'org.jetbrains', name: 'annotations', version: '17.0.0'
+	compileOnly         group: 'org.pf4j',      name: 'pf4j',        version: '3.0.1'
+	annotationProcessor group: 'org.pf4j',      name: 'pf4j',        version: '3.0.1'
+	compileOnly         group: 'org.slf4j',     name: 'slf4j-api',   version: '1.8.0-beta4'
+	compileOnly         group: 'org.jetbrains', name: 'annotations', version: '17.0.0'
 
 	testRuntime        group: 'org.slf4j',         name: 'slf4j-nop',             version: '1.8.0-beta4'
 	testCompileOnly    group: 'org.jetbrains',     name: 'annotations',           version: '17.0.0'
@@ -160,7 +163,7 @@ test {
 		showPassed                 true
 		showSkipped                true
 		showFailed                 true
-		showStandardStreams        false
+		showStandardStreams        true
 		showPassedStandardStreams  true
 		showSkippedStandardStreams true
 		showFailedStandardStreams  true
