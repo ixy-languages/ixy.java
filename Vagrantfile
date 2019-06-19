@@ -41,7 +41,7 @@ Ixy is installed in ~/ixy, run with sudo, e.g. sudo ~/ixy/ixy-pktgen 0000:00:08.
 
   # Enable port forwarding to debug
 	config.vm.network "forwarded_port", guest: 5005, host: 5005, auto_correct: true
-	config.vm.usable_port_range = 5005..5006
+# config.vm.usable_port_range = 5005..5006
 
 	# Allocate some resources
 	config.vm.provider "virtualbox" do |vb|
