@@ -72,9 +72,10 @@ buildConfig {
 	buildConfigField 'boolean', 'OPTIMIZED', "${project.OPTIMIZED}"
 }
 
-// Configure the working directory
+// Configure the working directory and the standard input
 run {
 	workingDir = rootProject.projectDir
+	standardInput = System.in
 }
 
 // Configure the program binary with all the libraries
