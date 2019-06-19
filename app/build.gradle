@@ -72,6 +72,11 @@ buildConfig {
 	buildConfigField 'boolean', 'OPTIMIZED', "${project.OPTIMIZED}"
 }
 
+// Configure the working directory
+run {
+	workingDir = rootProject.projectDir
+}
+
 // Configure the program binary with all the libraries
 task uberjar(type: Jar, dependsOn: ["compileJava"]) {
 	zip64 = true
