@@ -28,26 +28,28 @@ Ixy is installed in ~/ixy, run with sudo, e.g. sudo ~/ixy/ixy-pktgen 0000:00:08.
 	# Configure Linux Huge Pages
 	config.vm.provision "shell", privileged: true, path: "hugetlbfs.sh"
 
-	# Copy the script that maps PCI devices to NICs
-	config.vm.provision "file", source: "pci2nic.sh", destination: "$HOME/bin/pci2nic"
+  # Copy the script that maps PCI devices to NICs (non-root)
+  config.vm.provision "file", source: "pci2nic.sh", destination: "$HOME/bin/pci2nic"
 
-  # Configure the environment variables that map the VirtIO PCI devices to the NICs (root)
-  config.vm.provision "shell", privileged: true, inline: <<-SHELL
-		echo ''                                                                                        >> /root/.profile
-		echo '# Execute the script that sets the OpenJDK installation'                                 >> /root/.profile
-		echo 'source /etc/profile.d/jdk.sh'                                                            >> /root/.profile
-		echo ''                                                                                        >> /root/.profile
-    echo '# Evaluating the output of this script allows us to map the NICs to the PCI bus devices' >> /root/.profile
-		echo 'eval "$(sh $HOME/bin/pci2nic)"'                                                          >> /root/.profile
-  SHELL
-
-	# Configure the environment variables that map the VirtIO PCI devices to the NICs (non-root)
-	config.vm.provision "shell", privileged: false, inline: <<-SHELL
+  # Configure the environment variables that map the VirtIO PCI devices to the NICs (non-root)
+  config.vm.provision "shell", privileged: false, inline: <<-SHELL
+    mkdir -p "$HOME/bin"
 		chmod +x "$HOME/bin/pci2nic"
 		echo ''                                                                                        >> ~/.profile
 		echo '# Evaluating the output of this script allows us to map the NICs to the PCI bus devices' >> ~/.profile
 		echo 'eval "$(sh $HOME/bin/pci2nic)"'                                                          >> ~/.profile
-	SHELL
+  SHELL
+
+  # Configure the environment variables that map the VirtIO PCI devices to the NICs (root)
+  config.vm.provision "shell", privileged: true, inline: <<-SHELL
+    cp "/home/vagrant/bin/pci2nic" "$HOME/bin/pci2nic"
+    echo ''                                                                                        >> /root/.bashrc
+		echo '# Execute the script that sets the OpenJDK installation'                                 >> /root/.bashrc
+		echo 'source /etc/profile.d/jdk.sh'                                                            >> /root/.bashrc
+		echo ''                                                                                        >> /root/.bashrc
+    echo '# Evaluating the output of this script allows us to map the NICs to the PCI bus devices' >> /root/.bashrc
+		echo 'eval "$(sh $HOME/bin/pci2nic)"'                                                          >> /root/.bashrc
+  SHELL
 
   # Enable port forwarding to debug
 	config.vm.network "forwarded_port", guest: 5005, host: 5005, auto_correct: true
