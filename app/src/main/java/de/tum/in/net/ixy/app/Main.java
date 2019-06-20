@@ -1,34 +1,26 @@
-package de.tum.in.net.ixy;
+package de.tum.in.net.ixy.app;
 
-import com.sun.source.tree.Tree;
 import de.tum.in.net.ixy.generic.IxyDriver;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.pf4j.DefaultPluginManager;
-import org.pf4j.ManifestPluginDescriptorFinder;
-import org.pf4j.PluginDescriptorFinder;
 import org.pf4j.PluginManager;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Scanner;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
@@ -41,13 +33,13 @@ import java.util.TreeSet;
 public final class Main {
 
 	/** The list of positional arguments. */
-	private static @NotNull List<String> argumentsList = new ArrayList<>();
+	private static final @NotNull List<String> argumentsList = new ArrayList<>(1);
 
 	/** The list of key-value arguments. */
-	private static @NotNull Map<String, String> argumentsKeyValue = new TreeMap<>();
+	private static final @NotNull Map<String, String> argumentsKeyValue = new TreeMap<>();
 
 	/** The list of optional arguments. */
-	private static @NotNull Set<String> argumentsOpt = new TreeSet<>();
+	private static final @NotNull Collection<String> argumentsOpt = new TreeSet<>();
 
 	/**
 	 * Entry point of the application.
@@ -91,6 +83,24 @@ public final class Main {
 	 */
 	private static void generate(@NotNull IxyDriver driver) {
 		log.info("Preparing generator application.");
+		val deviceName = argumentsList.isEmpty() ? "" : argumentsList.remove(0).trim();
+		if (deviceName.isBlank()) {
+			log.error("The device name is missing or wrong.");
+			return;
+		}
+		try (val device = driver.getDevice(deviceName, "ixgbe-pci")) {
+			if (!device.isMappable()) {
+				log.error("Legacy device cannot be memory mapped.");
+			} else if (!device.isSupported()) {
+				log.error("The selected device driver does not support this NIC.");
+			} else {
+				log.info("Everything works as expected.");
+			}
+		} catch (FileNotFoundException e) {
+			log.error("The device '{}' could not be found", deviceName, e);
+		} catch (IOException e) {
+			log.error("Unexpected I/O error", e);
+		}
 	}
 
 	/**
@@ -100,6 +110,32 @@ public final class Main {
 	 */
 	private static void forward(@NotNull IxyDriver driver) {
 		log.info("Preparing forwarder application.");
+		val firstNicName = argumentsList.isEmpty() ? "" : argumentsList.remove(0).trim();
+		if (firstNicName.isBlank()) {
+			log.error("The first device name is missing or wrong.");
+			return;
+		}
+		val secondNicName = argumentsList.isEmpty() ? "" : argumentsList.remove(0).trim();
+		if (secondNicName.isBlank()) {
+			log.error("The second device name is missing or wrong.");
+			return;
+		}
+		try (
+				val firstNic = driver.getDevice(firstNicName, "ixgbe-pci");
+				val secondNic = driver.getDevice(secondNicName, "ixgbe-pci")
+		) {
+			if (!firstNic.isMappable() || !secondNic.isMappable()) {
+				log.error("Legacy devices cannot be memory mapped.");
+			} else if (!firstNic.isSupported() || !secondNic.isSupported()) {
+				log.error("The selected device driver does not support one of these NICs.");
+			} else {
+				log.info("Everything works as expected.");
+			}
+		} catch (FileNotFoundException e) {
+			log.error("The device '{}' or '{}' could not be found", firstNicName, secondNicName, e);
+		} catch (IOException e) {
+			log.error("Unexpected I/O error", e);
+		}
 	}
 
 	/**
@@ -251,8 +287,8 @@ public final class Main {
 		var canonicalName = (String) null;
 		if (pluginsSize == 1) {
 			val entry = matchingPlugins.firstEntry();
-			val key = matchingPlugins.firstEntry().getKey();
-			val value = matchingPlugins.firstEntry().getValue().get(0);
+			val key = entry.getKey();
+			val value = entry.getValue().get(0);
 			canonicalName = value[1];
 			driverName = value[0];
 			pluginName = key;
@@ -314,6 +350,12 @@ public final class Main {
 
 		// Stop and unload the plugins that are not needed
 		stopAndUnload(pluginManager, nonMatchingPlugins);
+
+		// Update the parameters, just in case
+		argumentsKeyValue.put("--plugin", pluginName);
+		argumentsKeyValue.put("--p", pluginName);
+		argumentsKeyValue.put("--driver", driverName);
+		argumentsKeyValue.put("-d", driverName);
 
 		// Return the plugin instance, if more than one
 		val extensions = pluginManager.getExtensions(cls, pluginName);
