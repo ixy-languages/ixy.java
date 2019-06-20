@@ -73,6 +73,7 @@ configure_openjdk() {
 	rm -rf jdk-${1}
 	echo '#!/usr/bin/env sh'                    >  /etc/profile.d/jdk.sh
 	echo "export JAVA_HOME=/usr/local/jdk-${1}" >> /etc/profile.d/jdk.sh
+	echo "export JDK_HOME=/usr/local/jdk-${1}"  >> /etc/profile.d/jdk.sh
 	echo 'PATH=$JAVA_HOME/bin:$PATH'            >> /etc/profile.d/jdk.sh
 }
 
