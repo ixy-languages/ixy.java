@@ -3,7 +3,6 @@ package de.tum.in.net.ixy.ixgbe;
 import de.tum.in.net.ixy.generic.InvalidSizeException;
 import de.tum.in.net.ixy.generic.IxyMemoryManager;
 import de.tum.in.net.ixy.generic.IxyQueue;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +16,7 @@ import org.jetbrains.annotations.NotNull;
  * @author Esaú García Sánchez-Torija
  */
 @Slf4j
-@SuppressFBWarnings("PMD.BeanMembersShouldSerialize")
+@SuppressWarnings("PMD.BeanMembersShouldSerialize")
 abstract class IxgbeQueue implements IxyQueue {
 
 	/** The size of a descriptor address. */
@@ -63,7 +62,7 @@ abstract class IxgbeQueue implements IxyQueue {
 				throw new IllegalStateException("Cannot get descriptor address because the queue is not initialized");
 			}
 		}
-		return baseDescriptorAddress + index*DESCRIPTOR_SIZE;
+		return baseDescriptorAddress + index * DESCRIPTOR_SIZE;
 	}
 
 	/**
