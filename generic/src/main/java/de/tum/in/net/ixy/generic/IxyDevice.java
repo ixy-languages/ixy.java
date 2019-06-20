@@ -5,6 +5,8 @@ import lombok.val;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
+
 /**
  * Ixy's device specification.
  *
@@ -13,6 +15,14 @@ import org.jetbrains.annotations.NotNull;
 @Slf4j
 @SuppressWarnings("PMD.AvoidDuplicateLiterals")
 public abstract class IxyDevice implements IxyPciDevice {
+
+	/**
+	 * Checks whether the device being manipulated is supported or not.
+	 *
+	 * @return The support status.
+	 * @throws IOException If an I/O error occurs.
+	 */
+	public abstract boolean isSupported() throws IOException;
 
 	/**
 	 * Returns the value of an arbitrary register.

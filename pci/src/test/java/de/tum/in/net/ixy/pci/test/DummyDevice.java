@@ -6,12 +6,18 @@ import de.tum.in.net.ixy.pci.Device;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 /** Dummy class extending {@link Device}. */
 final class DummyDevice extends Device {
 
 	DummyDevice(@NotNull String name, @NotNull String driver) throws FileNotFoundException {
 		super(name, driver);
+	}
+
+	@Override
+	public boolean isSupported() throws IOException {
+		return false;
 	}
 
 	@Override
