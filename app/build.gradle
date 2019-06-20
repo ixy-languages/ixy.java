@@ -12,7 +12,7 @@ plugins {
 }
 
 // Set the entry point of the application
-mainClassName = 'de.tum.in.net.ixy.Main'
+mainClassName = 'de.tum.in.net.ixy.app.Main'
 
 // Configure the group and version of the project, which should match the root project's
 group 'de.tum.in.net.ixy'
