@@ -9,6 +9,8 @@ import org.pf4j.Extension;
 import org.pf4j.Plugin;
 import org.pf4j.PluginWrapper;
 
+import java.io.FileNotFoundException;
+
 /**
  * Exposed plugin interface.
  *
@@ -43,8 +45,8 @@ public final class IxgbePlugin extends Plugin {
 
 		@Override
 		@Contract(value = "null, _ -> fail; _, null -> fail; !null, !null -> new", pure = true)
-		public @NotNull IxyDevice getDevice(@NotNull String device, @NotNull String driver) {
-			return null;
+		public @NotNull IxyDevice getDevice(@NotNull String device, @NotNull String driver) throws FileNotFoundException {
+			return new IxgbeDevice(device, driver);
 		}
 
 	}

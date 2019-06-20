@@ -4,6 +4,8 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.pf4j.ExtensionPoint;
 
+import java.io.FileNotFoundException;
+
 /**
  * Ixy's driver specification.
  *
@@ -25,8 +27,9 @@ public interface IxyDriver extends ExtensionPoint {
 	 * @param device The device name.
 	 * @param driver The driver name.
 	 * @return The device.
+	 * @throws FileNotFoundException If the device cannot be found.
 	 */
 	@Contract(value = "null, _ -> fail; _, null -> fail; !null, !null -> new", pure = true)
-	@NotNull IxyDevice getDevice(@NotNull String device, @NotNull String driver);
+	@NotNull IxyDevice getDevice(@NotNull String device, @NotNull String driver) throws FileNotFoundException;
 
 }
