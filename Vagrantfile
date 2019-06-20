@@ -33,12 +33,12 @@ Ixy is installed in ~/ixy, run with sudo, e.g. sudo ~/ixy/ixy-pktgen 0000:00:08.
 
   # Configure the environment variables that map the VirtIO PCI devices to the NICs (root)
   config.vm.provision "shell", privileged: true, inline: <<-SHELL
-		echo ''                                                                                        >> ~/.profile
-		echo '# Execute the script that sets the OpenJDK installation'                                 >> ~/.profile
-		echo 'source /etc/profile.d/jdk.sh'                                                            >> ~/.profile
-		echo ''                                                                                        >> ~/.profile
-    echo '# Evaluating the output of this script allows us to map the NICs to the PCI bus devices' >> ~/.profile
-		echo 'eval "$(sh $HOME/bin/pci2nic)"'                                                          >> ~/.profile
+		echo ''                                                                                        >> /root/.profile
+		echo '# Execute the script that sets the OpenJDK installation'                                 >> /root/.profile
+		echo 'source /etc/profile.d/jdk.sh'                                                            >> /root/.profile
+		echo ''                                                                                        >> /root/.profile
+    echo '# Evaluating the output of this script allows us to map the NICs to the PCI bus devices' >> /root/.profile
+		echo 'eval "$(sh $HOME/bin/pci2nic)"'                                                          >> /root/.profile
   SHELL
 
 	# Configure the environment variables that map the VirtIO PCI devices to the NICs (non-root)
