@@ -37,7 +37,7 @@ final class IxgbeDevice extends Device {
 	 * @throws FileNotFoundException If the device does not exist.
 	 */
 	IxgbeDevice(@NotNull String name, @NotNull String driver) throws FileNotFoundException {
-		super(name, "ixgbe-pci");
+		super(name, "ixgbe");
 		memory = map().orElse(null);
 	}
 

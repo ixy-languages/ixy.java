@@ -88,7 +88,7 @@ public final class Main {
 			log.error("The device name is missing or wrong.");
 			return;
 		}
-		try (val device = driver.getDevice(deviceName, "ixgbe-pci")) {
+		try (val device = driver.getDevice(deviceName, "virtio-pci")) {
 			if (!device.isMappable()) {
 				log.error("Legacy device cannot be memory mapped.");
 			} else if (!device.isSupported()) {
@@ -121,8 +121,8 @@ public final class Main {
 			return;
 		}
 		try (
-				val firstNic = driver.getDevice(firstNicName, "ixgbe-pci");
-				val secondNic = driver.getDevice(secondNicName, "ixgbe-pci")
+				val firstNic = driver.getDevice(firstNicName, "virtio-pci");
+				val secondNic = driver.getDevice(secondNicName, "virtio-pci")
 		) {
 			if (!firstNic.isMappable() || !secondNic.isMappable()) {
 				log.error("Legacy devices cannot be memory mapped.");
