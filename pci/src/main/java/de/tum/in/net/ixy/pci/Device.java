@@ -308,12 +308,12 @@ public abstract class Device extends IxyDevice {
 			val mmap = channel.map(FileChannel.MapMode.READ_WRITE, 0, channel.size());
 			return Optional.of((MappedByteBuffer) mmap.order(ByteOrder.nativeOrder()));
 		} catch (FileNotFoundException e) {
-			log.debug("The resource 'resource0' does not exist", e);
+			log.debug("The resource 'resource0' does not exist.", e);
 		} catch (IOException e) {
 			if (Objects.equals(e.getMessage(), "Invalid argument")) {
-				log.error("The PCI device is a legacy device and cannot be mapped", e);
+				log.error("The PCI device is a legacy device and cannot be mapped.", e);
 			} else {
-				log.error("Error while mapping the device memory", e);
+				log.error("Error while mapping the device memory.", e);
 			}
 		}
 		return Optional.empty();
