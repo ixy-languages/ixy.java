@@ -45,7 +45,7 @@ final class IxgbeDevice extends Device {
 
 	@Override
 	public boolean isSupported() throws IOException {
-		if (getDeviceId() != IxgbeDefs.INTEL_VENDOR_ID) return false;
+		if (getVendorId() != IxgbeDefs.INTEL_VENDOR_ID) return false;
 		switch (getDeviceId()) {
 			case IxgbeDefs.DEV_ID_82598:
 			case IxgbeDefs.DEV_ID_82598_BX:
