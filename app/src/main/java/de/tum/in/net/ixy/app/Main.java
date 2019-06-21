@@ -89,6 +89,9 @@ public final class Main {
 			return;
 		}
 		try (val device = driver.getDevice(deviceName, "virtio-pci")) {
+			log.info("Vendor id: {}", Integer.toHexString(Short.toUnsignedInt(device.getVendorId())));
+			log.info("Device id: {}", Integer.toHexString(Short.toUnsignedInt(device.getDeviceId())));
+			log.info("Class id: {}", Integer.toHexString(Byte.toUnsignedInt(device.getClassId())));
 			if (!device.isMappable()) {
 				log.error("Legacy device cannot be memory mapped.");
 			} else if (!device.isSupported()) {
@@ -124,6 +127,12 @@ public final class Main {
 				val firstNic = driver.getDevice(firstNicName, "virtio-pci");
 				val secondNic = driver.getDevice(secondNicName, "virtio-pci")
 		) {
+			log.info("[1] Vendor id: {}", Integer.toHexString(Short.toUnsignedInt(firstNic.getVendorId())));
+			log.info("[1] Device id: {}", Integer.toHexString(Short.toUnsignedInt(firstNic.getDeviceId())));
+			log.info("[1] Class id: {}", Integer.toHexString(Byte.toUnsignedInt(firstNic.getClassId())));
+			log.info("[2] Vendor id: {}", Integer.toHexString(Short.toUnsignedInt(secondNic.getVendorId())));
+			log.info("[2] Device id: {}", Integer.toHexString(Short.toUnsignedInt(secondNic.getDeviceId())));
+			log.info("[2] Class id: {}", Integer.toHexString(Byte.toUnsignedInt(secondNic.getClassId())));
 			if (!firstNic.isMappable() || !secondNic.isMappable()) {
 				log.error("Legacy devices cannot be memory mapped.");
 			} else if (!firstNic.isSupported() || !secondNic.isSupported()) {
