@@ -225,14 +225,13 @@ public abstract class Device extends IxyDevice {
 	@Contract(pure = true)
 	public byte getClassId() throws IOException {
 		if (BuildConfig.DEBUG) log.debug("Reading class id of PCI device {}", name);
-		val pos = buffer.position();
 		if (BuildConfig.DEBUG) {
 			val bytes = config.position(POSITION_CLASS).read(buffer.clear().limit(BYTES_CLASS));
 			if (bytes < BYTES_CLASS) log.warn("Could't read the exact amount of bytes needed to read the class id");
 		} else {
 			config.position(POSITION_CLASS).read(buffer.clear().limit(BYTES_CLASS));
 		}
-		return (buffer.order() == ByteOrder.BIG_ENDIAN) ? buffer.get(pos) : buffer.get(pos + 2);
+		return (buffer.order() == ByteOrder.BIG_ENDIAN) ? buffer.get(0) : buffer.get(2);
 	}
 
 	@Override
