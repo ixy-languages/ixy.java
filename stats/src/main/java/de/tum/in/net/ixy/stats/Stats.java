@@ -11,6 +11,10 @@ import lombok.val;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+
 /**
  * Simple implementation of Ixy's stats specification.
  *
@@ -21,6 +25,67 @@ import org.jetbrains.annotations.NotNull;
 @ToString(onlyExplicitlyIncluded = true, doNotUseGetters = true)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, doNotUseGetters = true)
 public final class Stats implements IxyStats {
+
+	////////////////////////////////////////////////// STATIC MEMBERS //////////////////////////////////////////////////
+
+	/** Maximum length of an integer. */
+	private static final int MAX_LENGTH_INTEGER = 10;
+
+	/** Maximum length of a long. */
+	private static final int MAX_LENGTH_LONG = 20;
+
+	/** Maximum length of a double. */
+	private static final int MAX_LENGTH_DOUBLE = 1079;
+
+	/** The text used to print RX statistics. */
+	private static final @NotNull String RX = " RX: ";
+
+	/** The length of the text used to print RX statistics. */
+	private static final int RX_LENGTH = RX.length();
+
+	/** The text used to print TX statistics. */
+	private static final @NotNull String TX = " TX: ";
+
+	/** The length of the text used to print TX statistics. */
+	private static final int TX_LENGTH = TX.length();
+
+	/** The text used to print the number of packets. */
+	private static final @NotNull String PACKETS = " packets | ";
+
+	/** The length of the text used to print the number of packets. */
+	private static final int PACKETS_LENGTH = PACKETS.length();
+
+	/** The text used to print the mega packets per second. */
+	private static final @NotNull String MPPS = " Mpps | ";
+
+	/** The length of the text used to print the mega packets per second. */
+	private static final int MPPS_LENGTH = MPPS.length();
+
+	/** The text used to print the number of bytes. */
+	private static final @NotNull String BYTES = " bytes";
+
+	/** The length of the text used to print the number of bytes. */
+	private static final int BYTES_LENGTH = BYTES.length();
+
+	/** The text used to print the megabits per second. */
+	private static final @NotNull String MBPS = " Mbit/s";
+
+	/** The length of the text used to print the megabits per second. */
+	private static final int MBPS_LENGTH = MBPS.length();
+
+	/** The line separator used when writing the statistics. */
+	private static final @NotNull String ENDL = System.lineSeparator();
+
+	/** The size of the line separator used when writing the statistics. */
+	private static final int ENDL_LENGTH = ENDL.length();
+
+	/** Factor used to convert from/to nanoseconds. */
+	private static final double NANO_FACTOR = 1_000_000_000.0;
+
+	/** Factor used to convert from/to mega. */
+	private static final double MEGA_FACTOR = 1_000_000.0;
+
+	////////////////////////////////////////////////// STATIC METHODS //////////////////////////////////////////////////
 
 	/**
 	 * Sums two integers while protecting from unsigned overflow.
@@ -106,6 +171,49 @@ public final class Stats implements IxyStats {
 		txPackets = 0;
 		rxBytes = 0;
 		txBytes = 0;
+	}
+
+	@Override
+	public void writeStats(@NotNull OutputStream out) throws IOException {
+		if (BuildConfig.DEBUG) log.debug("Writing statistics to an output stream.");
+		if (!BuildConfig.OPTIMIZED && out == null) throw new InvalidNullParameterException("out");
+		val address = device.getName();
+		val strRxPackets = Integer.toUnsignedString(rxPackets);
+		val strTxPackets = Integer.toUnsignedString(txPackets);
+		val strRxBytes = Long.toUnsignedString(rxBytes);
+		val strTxBytes = Long.toUnsignedString(txBytes);
+		val lineMaxSize = address.length() + Math.max(RX_LENGTH, TX_LENGTH) + MAX_LENGTH_INTEGER + PACKETS_LENGTH + MAX_LENGTH_LONG + BYTES_LENGTH + ENDL_LENGTH;
+		val builder = new StringBuilder(lineMaxSize * 2);
+		builder.append(address).append(RX).append(strRxPackets).append(PACKETS).append(strRxBytes).append(BYTES).append(ENDL)
+				.append(address).append(TX).append(strTxPackets).append(PACKETS).append(strTxBytes).append(BYTES).append(ENDL);
+		out.write(builder.toString().getBytes(StandardCharsets.UTF_8));
+	}
+
+	@Override
+	public void writeStats(@NotNull OutputStream out, @NotNull IxyStats stats, long nanos) throws IOException {
+		if (!BuildConfig.OPTIMIZED) {
+			if (out == null) throw new InvalidNullParameterException("out");
+			if (stats == null) throw new InvalidNullParameterException("stats");
+			if (nanos <= 0) throw new InvalidSizeException("nanos");
+		}
+		val address = device.getName();
+		val seconds = nanos / NANO_FACTOR;
+		val diffRxPackets = rxPackets - stats.getRxPackets();
+		val rxMpps = diffRxPackets / seconds / MEGA_FACTOR;
+		val diffRxBytes = (rxBytes - stats.getRxBytes());
+		val rxThroughput = (diffRxBytes / MEGA_FACTOR / seconds) * Byte.SIZE;
+		val rxMbit = rxThroughput + rxMpps * 20 * Byte.SIZE;
+		val diffTxPackets = txPackets - stats.getTxPackets();
+		val txMpps = diffTxPackets / seconds / MEGA_FACTOR;
+		val diffTxBytes = (txBytes - stats.getTxBytes());
+		val txThroughput = (diffTxBytes / MEGA_FACTOR / seconds) * Byte.SIZE;
+		val txMbit = txThroughput + txMpps * 20 * Byte.SIZE;
+		var endl = System.lineSeparator();
+		val lineMaxSize = address.length() + Math.max(RX_LENGTH, TX_LENGTH) + MAX_LENGTH_DOUBLE + MPPS_LENGTH + MAX_LENGTH_DOUBLE + MBPS_LENGTH + ENDL_LENGTH;
+		val builder = new StringBuilder(lineMaxSize * 2);
+		builder.append(address).append(RX).append(rxMpps).append(MPPS).append(rxMbit).append(MBPS).append(endl)
+				.append(address).append(TX).append(txMpps).append(MPPS).append(txMbit).append(MBPS).append(endl);
+		out.write(builder.toString().getBytes(StandardCharsets.UTF_8));
 	}
 
 }
