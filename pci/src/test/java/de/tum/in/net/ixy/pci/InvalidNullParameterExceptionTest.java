@@ -3,6 +3,8 @@ package de.tum.in.net.ixy.pci;
 import lombok.val;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
@@ -15,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
  *
  * @author Esaú García Sánchez-Torija
  */
+@Execution(ExecutionMode.CONCURRENT)
 @DisplayName("InvalidNullParameterException")
 final class InvalidNullParameterExceptionTest {
 

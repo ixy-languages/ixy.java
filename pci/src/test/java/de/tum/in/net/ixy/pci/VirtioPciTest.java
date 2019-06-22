@@ -10,6 +10,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.api.parallel.ResourceAccessMode;
 import org.junit.jupiter.api.parallel.ResourceLock;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -36,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
  */
 @EnabledOnOs(OS.LINUX)
 @DisplayName("Device (VirtIO)")
+@Execution(ExecutionMode.CONCURRENT)
 final class VirtioPciTest {
 
 	/** The name of the environment variable that counts how many VirtIO PCI devices exist. */
