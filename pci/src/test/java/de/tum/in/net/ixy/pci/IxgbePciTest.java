@@ -7,6 +7,7 @@ import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
@@ -101,19 +102,26 @@ final class IxgbePciTest {
 		});
 	}
 
-	@Test
-	@DisplayName("Construction fails with wrong parameters")
-	void Pci_exceptions() {
-		String[] wrong = {null, "", " ", File.separator};
-		for (val device : wrong) {
-			for (val driver : wrong) {
-				if (Objects.equals(device, File.separator) && Objects.equals(driver, File.separator)) {
-					assertThatExceptionOfType(FileNotFoundException.class).isThrownBy(() -> new DummyDevice(device, driver));
-				} else {
-					assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new DummyDevice(device, driver));
+	@Nested
+	@DisabledIfOptimized
+	@DisplayName("Device (Ixgbe) (Parameters)")
+	final class Parameters {
+
+		@Test
+		@DisplayName("Construction fails with wrong parameters")
+		void Pci_exceptions() {
+			String[] wrong = {null, "", " ", File.separator};
+			for (val device : wrong) {
+				for (val driver : wrong) {
+					if (Objects.equals(device, File.separator) && Objects.equals(driver, File.separator)) {
+						assertThatExceptionOfType(FileNotFoundException.class).isThrownBy(() -> new DummyDevice(device, driver));
+					} else {
+						assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new DummyDevice(device, driver));
+					}
 				}
 			}
 		}
+
 	}
 
 	@ResourceLock(value = BuildConfig.LOCK_CONFIG, mode = ResourceAccessMode.READ)

@@ -2,6 +2,7 @@ package de.tum.in.net.ixy.pci;
 
 import lombok.val;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
@@ -21,12 +22,19 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 @DisplayName("InvalidNullParameterException")
 final class InvalidNullParameterExceptionTest {
 
-	@Test
+	@Nested
 	@DisabledIfOptimized
-	@DisplayName("Null or blank constructor fails")
-	void exceptions() {
-		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new InvalidNullParameterException(null));
-		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new InvalidNullParameterException(""));
+	@DisplayName("InvalidNullParameterException (Parameters)")
+	final class Parameters {
+
+		@Test
+		@DisabledIfOptimized
+		@DisplayName("Null or blank constructor fails")
+		void exceptions() {
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new InvalidNullParameterException(null));
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new InvalidNullParameterException(""));
+		}
+
 	}
 
 	@Test
