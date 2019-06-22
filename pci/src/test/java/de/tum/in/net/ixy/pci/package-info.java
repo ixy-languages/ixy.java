@@ -3,4 +3,4 @@
  *
  * @author Esaú García Sánchez-Torija
  */
-package de.tum.in.net.ixy.pci.test;
+package de.tum.in.net.ixy.pci;

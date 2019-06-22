@@ -1,6 +1,5 @@
-package de.tum.in.net.ixy.pci.test;
+package de.tum.in.net.ixy.pci;
 
-import de.tum.in.net.ixy.pci.InvalidNullParameterException;
 import lombok.val;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

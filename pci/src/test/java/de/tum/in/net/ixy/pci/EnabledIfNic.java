@@ -1,4 +1,4 @@
-package de.tum.in.net.ixy.pci.test;
+package de.tum.in.net.ixy.pci;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.extension.ExtendWith;

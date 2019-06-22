@@ -1,4 +1,4 @@
-package de.tum.in.net.ixy.pci.test;
+package de.tum.in.net.ixy.pci;
 
 import de.tum.in.net.ixy.pci.Device;
 import lombok.val;

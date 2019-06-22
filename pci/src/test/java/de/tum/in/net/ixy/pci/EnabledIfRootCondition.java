@@ -1,4 +1,4 @@
-package de.tum.in.net.ixy.pci.test;
+package de.tum.in.net.ixy.pci;
 
 import lombok.val;
 import org.jetbrains.annotations.Contract;

@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
  *
  * @author Esaú García Sánchez-Torija
  */
-public final class InvalidNullParameterException extends IllegalArgumentException {
+final class InvalidNullParameterException extends IllegalArgumentException {
 
 	/** Serial used for serialization purposes. */
 	private static final long serialVersionUID = -3293281601704857183L;
@@ -19,7 +19,7 @@ public final class InvalidNullParameterException extends IllegalArgumentExceptio
 	 * @param parameter The name of the parameter that is wrong.
 	 */
 	@Contract("null -> fail")
-	public InvalidNullParameterException(@NotNull String parameter) {
+	InvalidNullParameterException(@NotNull String parameter) {
 		super(String.format("The parameter '%s' is null", parameter));
 		if (!BuildConfig.OPTIMIZED && (parameter == null || parameter.isBlank())) {
 			throw new IllegalArgumentException("The exception message could not be constructed correctly");

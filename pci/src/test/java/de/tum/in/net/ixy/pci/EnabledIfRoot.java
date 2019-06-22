@@ -1,4 +1,6 @@
-package de.tum.in.net.ixy.pci.test;
+package de.tum.in.net.ixy.pci;
+
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -6,11 +8,11 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Enables a JUnit tests if there are VirtIO cards available.
+ * JUnit annotation that allows the execution of a test case if the user name is {@code root} or the user id {@code 0}.
  *
  * @author Esaú García Sánchez-Torija
  */
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
-@EnabledIfNic(driver = "VIRTIO")
-@interface EnabledIfVirtio { }
+@ExtendWith(EnabledIfRootCondition.class)
+@interface EnabledIfRoot { }

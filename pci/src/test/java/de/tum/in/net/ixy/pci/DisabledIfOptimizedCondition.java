@@ -1,6 +1,5 @@
-package de.tum.in.net.ixy.pci.test;
+package de.tum.in.net.ixy.pci;
 
-import de.tum.in.net.ixy.pci.BuildConfig;
 import lombok.val;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;

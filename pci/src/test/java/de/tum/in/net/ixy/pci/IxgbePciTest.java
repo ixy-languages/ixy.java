@@ -1,7 +1,5 @@
-package de.tum.in.net.ixy.pci.test;
+package de.tum.in.net.ixy.pci;
 
-import de.tum.in.net.ixy.pci.BuildConfig;
-import de.tum.in.net.ixy.pci.Device;
 import lombok.NonNull;
 import lombok.val;
 import org.jetbrains.annotations.NotNull;
@@ -37,26 +35,42 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
  * @author Esaú García Sánchez-Torija
  */
 @EnabledOnOs(OS.LINUX)
-@DisplayName("Device (VirtIO)")
-final class VirtioPciTest {
+@DisplayName("Device (Ixgbe)")
+final class IxgbePciTest {
 
-	/** The name of the environment variable that counts how many VirtIO PCI devices exist. */
-	private static final @NotNull String ENV_KEY_NIC_COUNT = "IXY_VIRTIO_COUNT";
+	/** The name of the environment variable that counts how many Ixgbe PCI devices exist. */
+	private static final @NotNull String ENV_KEY_NIC_COUNT = "IXY_IXGBE_COUNT";
 
-	/** The name of the environment variable that holds the address of a VirtIO PCI device. */
-	private static final @NotNull String ENV_KEY_NIC_ADDR = "IXY_VIRTIO_ADDR_";
+	/** The name of the environment variable that holds the address of a Ixgbe PCI device. */
+	private static final @NotNull String ENV_KEY_NIC_ADDR = "IXY_IXGBE_ADDR_";
 
 	/** The name of the driver the PCI devices should use. */
-	private static final @NotNull String DRIVER = "virtio-pci";
+	private static final @NotNull String DRIVER = "ixgbe";
 
 	/** The pattern a PCI device must match. */
 	private static final @NotNull Pattern PCI_NAME_PATTERN = Pattern.compile("^\\d{4}:\\d{2}:\\d{2}\\.\\d$");
 
 	/** The expected vendor identifier. */
-	private static final short EXPECTED_VENDOR = 0x1af4;
+	private static final short EXPECTED_VENDOR = (short) 0x8086;
 
 	/** The expected device identifiers. */
-	private static final Set<Short> EXPECTED_DEVICES = Set.of((short) 0x1000);
+	private static final Set<Short> EXPECTED_DEVICES = Set.of(
+			// Physical devices
+			(short) 0x10B6, (short) 0x1508, (short) 0x10C6, (short) 0x10C7,
+			(short) 0x10C8, (short) 0x150B, (short) 0x10DB, (short) 0x10DD,
+			(short) 0x10EC, (short) 0x10F1, (short) 0x10E1, (short) 0x10F4,
+			(short) 0x10F7, (short) 0x1514, (short) 0x1517, (short) 0x10F8,
+			(short) 0x000C, (short) 0x10F9, (short) 0x10FB, (short) 0x11A9,
+			(short) 0x1F72, (short) 0x17D0, (short) 0x0470, (short) 0x152A,
+			(short) 0x1529, (short) 0x1507, (short) 0x154D, (short) 0x154A,
+			(short) 0x1558, (short) 0x1557, (short) 0x10FC, (short) 0x151C,
+			(short) 0x154F, (short) 0x1528, (short) 0x1560, (short) 0x15AC,
+			(short) 0x15AD, (short) 0x15AE, (short) 0x1563, (short) 0x15AA,
+			(short) 0x15AB,
+			// Virtual devices
+			(short) 0x10ED, (short) 0x152E, (short) 0x1515, (short) 0x1530,
+			(short) 0x1564, (short) 0x1565, (short) 0x15A8, (short) 0x15A9
+	);
 
 	/** The expected class. */
 	private static final byte EXPECTED_CLASS = 0x02;
@@ -103,7 +117,7 @@ final class VirtioPciTest {
 	@ResourceLock(value = BuildConfig.LOCK_NIC, mode = ResourceAccessMode.READ)
 	@ParameterizedTest(name = "[{0}] The vendor id should be correct")
 	@MethodSource("pciSource")
-	@EnabledIfVirtio
+	@EnabledIfIxgbe
 	@EnabledIfRoot
 	void getVendorId(Device device) {
 		CommonPciTest.getVendorId(device, EXPECTED_VENDOR);
@@ -113,7 +127,7 @@ final class VirtioPciTest {
 	@ResourceLock(value = BuildConfig.LOCK_NIC, mode = ResourceAccessMode.READ)
 	@ParameterizedTest(name = "[{0}] The device id should be correct")
 	@MethodSource("pciSource")
-	@EnabledIfVirtio
+	@EnabledIfIxgbe
 	@EnabledIfRoot
 	void getDeviceId(Device device) {
 		CommonPciTest.getDeviceId(device, EXPECTED_DEVICES);
@@ -123,7 +137,7 @@ final class VirtioPciTest {
 	@ResourceLock(value = BuildConfig.LOCK_NIC, mode = ResourceAccessMode.READ)
 	@ParameterizedTest(name = "[{0}] The class id should be correct")
 	@MethodSource("pciSource")
-	@EnabledIfVirtio
+	@EnabledIfIxgbe
 	@EnabledIfRoot
 	void getClassId(Device device) {
 		CommonPciTest.getClassId(device, EXPECTED_CLASS);
@@ -133,7 +147,7 @@ final class VirtioPciTest {
 	@ResourceLock(value = BuildConfig.LOCK_NIC, mode = ResourceAccessMode.READ_WRITE)
 	@ParameterizedTest(name = "[{0}] DMA status can be true")
 	@MethodSource("pciSource")
-	@EnabledIfVirtio
+	@EnabledIfIxgbe
 	@EnabledIfRoot
 	void isDmaEnabled(Device device) {
 		assertThat(device).isNotNull();
@@ -145,7 +159,7 @@ final class VirtioPciTest {
 	@ResourceLock(value = BuildConfig.LOCK_NIC, mode = ResourceAccessMode.READ_WRITE)
 	@ParameterizedTest(name = "[{0}] DMA status can be false")
 	@MethodSource("pciSource")
-	@EnabledIfVirtio
+	@EnabledIfIxgbe
 	@EnabledIfRoot
 	void isDmaDisabled(Device device) {
 		assertThat(device).isNotNull();
@@ -157,7 +171,7 @@ final class VirtioPciTest {
 	@ResourceLock(value = BuildConfig.LOCK_NIC, mode = ResourceAccessMode.READ)
 	@ParameterizedTest(name = "[{0}] Can be mapped to memory")
 	@MethodSource("pciSource")
-	@EnabledIfVirtio
+	@EnabledIfIxgbe
 	@EnabledIfRoot
 	void map(Device device) {
 		CommonPciTest.map(device);
@@ -167,7 +181,7 @@ final class VirtioPciTest {
 	@ResourceLock(value = BuildConfig.LOCK_NIC, mode = ResourceAccessMode.READ)
 	@ParameterizedTest(name = "[{0}] Can be closed")
 	@MethodSource("pciSource")
-	@EnabledIfVirtio
+	@EnabledIfIxgbe
 	@EnabledIfRoot
 	void close(Device device) {
 		CommonPciTest.close(device);
@@ -177,7 +191,7 @@ final class VirtioPciTest {
 	@ResourceLock(value = BuildConfig.LOCK_NIC, mode = ResourceAccessMode.READ)
 	@ParameterizedTest(name = "[{0}] Manipulating the device after close fails")
 	@MethodSource("pciSource")
-	@EnabledIfVirtio
+	@EnabledIfIxgbe
 	@EnabledIfRoot
 	void close_exceptions(Device device) {
 		CommonPciTest.close_exceptions(device);
@@ -187,7 +201,7 @@ final class VirtioPciTest {
 	@ResourceLock(value = BuildConfig.LOCK_CONFIG, mode = ResourceAccessMode.READ)
 	@ParameterizedTest(name = "[{0}] Binding when already bound fails")
 	@MethodSource("pciSource")
-	@EnabledIfVirtio
+	@EnabledIfIxgbe
 	@EnabledIfRoot
 	void bindunbind(Device device) {
 		CommonPciTest.bindunbind(device);
@@ -217,15 +231,15 @@ final class VirtioPciTest {
 	 */
 	private static @NotNull Stream<Device> pciSource() {
 		if (ixyCount() > 0) {
-			val original = addressSource().map(VirtioPciTest::newPci).filter(Optional::isPresent).map(Optional::get);
-			val count = addressSource().map(VirtioPciTest::newPci).filter(Optional::isPresent).count();
+			val original = addressSource().map(IxgbePciTest::newPci).filter(Optional::isPresent).map(Optional::get);
+			val count = addressSource().map(IxgbePciTest::newPci).filter(Optional::isPresent).count();
 			return (count > 0) ? original : Stream.concat(original, Stream.of((Device) null));
 		}
 		return Stream.of((Device) null);
 	}
 
 	/**
-	 * Source of {@code VirtIO} PCI devices.
+	 * Source of {@code Ixgbe} PCI devices.
 	 *
 	 * @return The PCI devices.
 	 */
@@ -263,7 +277,7 @@ final class VirtioPciTest {
 	/**
 	 * Parses the environment variable {@link #ENV_KEY_NIC_COUNT} into an {@code int}.
 	 *
-	 * @return The number of VirtIO devices available.
+	 * @return The number of Ixgbe devices available.
 	 */
 	private static int ixyCount() {
 		val count = System.getenv(ENV_KEY_NIC_COUNT);

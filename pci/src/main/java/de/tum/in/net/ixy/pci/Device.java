@@ -1,6 +1,5 @@
 package de.tum.in.net.ixy.pci;
 
-import de.tum.in.net.ixy.generic.InvalidOffsetException;
 import de.tum.in.net.ixy.generic.IxyDevice;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -9,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.FileNotFoundException;
