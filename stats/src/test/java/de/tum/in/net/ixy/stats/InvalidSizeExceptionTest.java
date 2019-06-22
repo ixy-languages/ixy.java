@@ -28,7 +28,6 @@ final class InvalidSizeExceptionTest {
 	final class Parameters {
 
 		@Test
-		@DisabledIfOptimized
 		@DisplayName("Null or blank constructor fails")
 		void exceptions() {
 			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new InvalidSizeException(null));

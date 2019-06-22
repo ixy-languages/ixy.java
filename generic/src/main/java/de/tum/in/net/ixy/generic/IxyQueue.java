@@ -1,5 +1,7 @@
 package de.tum.in.net.ixy.generic;
 
+import org.jetbrains.annotations.Contract;
+
 /**
  * Ixy's queue specification.
  *
@@ -12,6 +14,7 @@ public interface IxyQueue {
 	 *
 	 * @return The capacity of the queue.
 	 */
+	@Contract(pure = true)
 	int getCapacity();
 
 	/**
@@ -19,6 +22,7 @@ public interface IxyQueue {
 	 *
 	 * @return The index of the queue.
 	 */
+	@Contract(pure = true)
 	int getIndex();
 
 }

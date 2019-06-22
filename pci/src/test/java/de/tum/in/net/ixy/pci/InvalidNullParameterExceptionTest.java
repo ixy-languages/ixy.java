@@ -28,7 +28,6 @@ final class InvalidNullParameterExceptionTest {
 	final class Parameters {
 
 		@Test
-		@DisabledIfOptimized
 		@DisplayName("Null or blank constructor fails")
 		void exceptions() {
 			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new InvalidNullParameterException(null));
