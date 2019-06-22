@@ -170,7 +170,6 @@ public abstract class Device extends IxyDevice {
 	 * @param driver The driver.
 	 * @throws FileNotFoundException If the device does not exist.
 	 */
-	@Contract("null, _ -> fail; _, null -> fail")
 	protected Device(@NotNull String name, @NotNull String driver) throws FileNotFoundException {
 		if (!BuildConfig.OPTIMIZED) {
 			if (name == null) throw new InvalidNullParameterException("name");

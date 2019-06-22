@@ -174,6 +174,7 @@ public final class Stats implements IxyStats {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public void writeStats(@NotNull OutputStream out) throws IOException {
 		if (BuildConfig.DEBUG) log.debug("Writing statistics to an output stream.");
 		if (!BuildConfig.OPTIMIZED && out == null) throw new InvalidNullParameterException("out");
@@ -190,6 +191,7 @@ public final class Stats implements IxyStats {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public void writeStats(@NotNull OutputStream out, @NotNull IxyStats stats, long nanos) throws IOException {
 		if (!BuildConfig.OPTIMIZED) {
 			if (out == null) throw new InvalidNullParameterException("out");

@@ -88,6 +88,7 @@ public interface IxyStats {
 	 *
 	 * @param out The output stream.
 	 */
+	@Contract(pure = true)
 	void writeStats(@NotNull OutputStream out) throws IOException;
 
 	/**
@@ -99,6 +100,7 @@ public interface IxyStats {
 	 * @param stats The initial stats.
 	 * @param nanos The delta of time in nanoseconds.
 	 */
+	@Contract(pure = true)
 	void writeStats(@NotNull OutputStream out, @NotNull IxyStats stats, long nanos) throws IOException;
 
 }
