@@ -335,6 +335,64 @@ Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1put_1byte_1volatile(const JNIE
 	*((volatile jbyte *) address) = value;
 }
 
+JNIEXPORT jbyte JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1and_1put_1byte(const JNIEnv *env, const jclass klass, const jlong address, const jbyte value) {
+	jbyte *addr = (jbyte *) address;
+	jbyte val = *addr;
+	*addr = value;
+	return val;
+}
+
+JNIEXPORT jbyte JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1and_1put_1byte_1volatile(const JNIEnv *env, const jclass klass, const jlong address, const jbyte value) {
+	volatile jbyte *addr = (volatile jbyte *) address;
+	jbyte val = *addr;
+	*addr = value;
+	return val;
+}
+
+JNIEXPORT void JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1add_1byte(const JNIEnv *env, const jclass klass, const jlong address, const jbyte value) {
+	*((jbyte *) address) += value;
+}
+
+JNIEXPORT void JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1add_1byte_1volatile(const JNIEnv *env, const jclass klass, const jlong address, const jbyte value) {
+	*((volatile jbyte *) address) += value;
+}
+
+JNIEXPORT jbyte JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1and_1add_1byte(const JNIEnv *env, const jclass klass, const jlong address, const jbyte value) {
+	jbyte *addr = (jbyte *) address;
+	jbyte val = *addr;
+	*addr += value;
+	return val;
+}
+
+JNIEXPORT jbyte JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1and_1add_1byte_1volatile(const JNIEnv *env, const jclass klass, const jlong address, const jbyte value) {
+	volatile jbyte *addr = (volatile jbyte *) address;
+	jbyte val = *addr;
+	*addr += value;
+	return val;
+}
+
+JNIEXPORT jbyte JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1add_1and_1get_1byte(const JNIEnv *env, const jclass klass, const jlong address, const jbyte value) {
+	jbyte *addr = (jbyte *) address;
+	jbyte val = *addr + value;
+	*addr = val;
+	return val;
+}
+
+JNIEXPORT jbyte JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1add_1and_1get_1byte_1volatile(const JNIEnv *env, const jclass klass, const jlong address, const jbyte value) {
+	volatile jbyte *addr = (volatile jbyte *) address;
+	jbyte val = *addr + value;
+	*addr = val;
+	return val;
+}
+
 JNIEXPORT jshort JNICALL
 Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1short(const JNIEnv *env, const jclass klass, const jlong address) {
 	return *((jshort *) address);
@@ -355,6 +413,64 @@ Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1put_1short_1volatile(const JNI
 	*((volatile jshort *) address) = value;
 }
 
+JNIEXPORT jshort JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1and_1put_1short(const JNIEnv *env, const jclass klass, const jlong address, const jshort value) {
+	jshort *addr = (jshort *) address;
+	jshort val = *addr;
+	*addr = value;
+	return val;
+}
+
+JNIEXPORT jshort JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1and_1put_1short_1volatile(const JNIEnv *env, const jclass klass, const jlong address, const jshort value) {
+	volatile jshort *addr = (volatile jshort *) address;
+	jshort val = *addr;
+	*addr = value;
+	return val;
+}
+
+JNIEXPORT void JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1add_1short(const JNIEnv *env, const jclass klass, const jlong address, const jshort value) {
+	*((jshort *) address) += value;
+}
+
+JNIEXPORT void JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1add_1short_1volatile(const JNIEnv *env, const jclass klass, const jlong address, const jshort value) {
+	*((volatile jshort *) address) += value;
+}
+
+JNIEXPORT jshort JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1and_1add_1short(const JNIEnv *env, const jclass klass, const jlong address, const jshort value) {
+	jshort *addr = (jshort *) address;
+	jshort val = *addr;
+	*addr += value;
+	return val;
+}
+
+JNIEXPORT jshort JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1and_1add_1short_1volatile(const JNIEnv *env, const jclass klass, const jlong address, const jshort value) {
+	volatile jshort *addr = (volatile jshort *) address;
+	jshort val = *addr;
+	*addr += value;
+	return val;
+}
+
+JNIEXPORT jshort JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1add_1and_1get_1short(const JNIEnv *env, const jclass klass, const jlong address, const jshort value) {
+	jshort *addr = (jshort *) address;
+	jshort val = *addr + value;
+	*addr = val;
+	return val;
+}
+
+JNIEXPORT jshort JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1add_1and_1get_1short_1volatile(const JNIEnv *env, const jclass klass, const jlong address, const jshort value) {
+	volatile jshort *addr = (volatile jshort *) address;
+	jshort val = *addr + value;
+	*addr = val;
+	return val;
+}
+
 JNIEXPORT jint JNICALL
 Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1int(const JNIEnv *env, const jclass klass, const jlong address) {
 	return *((jint *) address);
@@ -373,6 +489,64 @@ Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1put_1int(const JNIEnv *env, co
 JNIEXPORT void JNICALL
 Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1put_1int_1volatile(const JNIEnv *env, const jclass klass, const jlong address, const jint value) {
 	*((volatile jint *) address) = value;
+}
+
+JNIEXPORT jint JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1and_1put_1int(const JNIEnv *env, const jclass klass, const jlong address, const jint value) {
+	jint *addr = (jint *) address;
+	jint val = *addr;
+	*addr = value;
+	return val;
+}
+
+JNIEXPORT jint JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1and_1put_1int_1volatile(const JNIEnv *env, const jclass klass, const jlong address, const jint value) {
+	volatile jint *addr = (volatile jint *) address;
+	jint val = *addr;
+	*addr = value;
+	return val;
+}
+
+JNIEXPORT void JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1add_1int(const JNIEnv *env, const jclass klass, const jlong address, const jint value) {
+	*((jint *) address) += value;
+}
+
+JNIEXPORT void JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1add_1int_1volatile(const JNIEnv *env, const jclass klass, const jlong address, const jint value) {
+	*((volatile jint *) address) += value;
+}
+
+JNIEXPORT jint JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1and_1add_1int(const JNIEnv *env, const jclass klass, const jlong address, const jint value) {
+	jint *addr = (jint *) address;
+	jint val = *addr;
+	*addr += value;
+	return val;
+}
+
+JNIEXPORT jint JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1and_1add_1int_1volatile(const JNIEnv *env, const jclass klass, const jlong address, const jint value) {
+	volatile jint *addr = (volatile jint *) address;
+	jint val = *addr;
+	*addr += value;
+	return val;
+}
+
+JNIEXPORT jint JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1add_1and_1get_1int(const JNIEnv *env, const jclass klass, const jlong address, const jint value) {
+	jint *addr = (jint *) address;
+	jint val = *addr + value;
+	*addr = val;
+	return val;
+}
+
+JNIEXPORT jint JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1add_1and_1get_1int_1volatile(const JNIEnv *env, const jclass klass, const jlong address, const jint value) {
+	volatile jint *addr = (volatile jint *) address;
+	jint val = *addr + value;
+	*addr = val;
+	return val;
 }
 
 JNIEXPORT jlong JNICALL
@@ -400,6 +574,64 @@ Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get(JNIEnv *env, const jclass 
 	jbyte *dstptr = (*env)->GetByteArrayElements(env, dst, NULL);
 	memcpy((void *) (dstptr + offset), (void *) src, size);
 	(*env)->ReleaseByteArrayElements(env, dst, dstptr, 0);
+}
+
+JNIEXPORT jlong JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1and_1put_1long(const JNIEnv *env, const jclass klass, const jlong address, const jlong value) {
+	jlong *addr = (jlong *) address;
+	jlong val = *addr;
+	*addr = value;
+	return val;
+}
+
+JNIEXPORT jlong JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1and_1put_1long_1volatile(const JNIEnv *env, const jclass klass, const jlong address, const jlong value) {
+	volatile jlong *addr = (volatile jlong *) address;
+	jlong val = *addr;
+	*addr = value;
+	return val;
+}
+
+JNIEXPORT void JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1add_1long(const JNIEnv *env, const jclass klass, const jlong address, const jlong value) {
+	*((jlong *) address) += value;
+}
+
+JNIEXPORT void JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1add_1long_1volatile(const JNIEnv *env, const jclass klass, const jlong address, const jlong value) {
+	*((volatile jlong *) address) += value;
+}
+
+JNIEXPORT jlong JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1and_1add_1long(const JNIEnv *env, const jclass klass, const jlong address, const jlong value) {
+	jlong *addr = (jlong *) address;
+	jlong val = *addr;
+	*addr += value;
+	return val;
+}
+
+JNIEXPORT jlong JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1and_1add_1long_1volatile(const JNIEnv *env, const jclass klass, const jlong address, const jlong value) {
+	volatile jlong *addr = (volatile jlong *) address;
+	jlong val = *addr;
+	*addr += value;
+	return val;
+}
+
+JNIEXPORT jlong JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1add_1and_1get_1long(const JNIEnv *env, const jclass klass, const jlong address, const jlong value) {
+	jlong *addr = (jlong *) address;
+	jlong val = *addr + value;
+	*addr = val;
+	return val;
+}
+
+JNIEXPORT jlong JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1add_1and_1get_1long_1volatile(const JNIEnv *env, const jclass klass, const jlong address, const jlong value) {
+	volatile jlong *addr = (volatile jlong *) address;
+	jlong val = *addr + value;
+	*addr = val;
+	return val;
 }
 
 JNIEXPORT void JNICALL

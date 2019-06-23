@@ -220,6 +220,56 @@ final class UnsafeMemoryManagerTest extends AbstractMemoryTest {
 				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.putByteVolatile(0L, (byte) 0));
 				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.putByteVolatile(0L, (byte) 0));
 			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndPutByte(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndPutByte(0L, (byte) 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.getAndPutByte(0L, (byte) 0));
+			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndPutByteVolatile(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndPutByteVolatile(0L, (byte) 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.getAndPutByteVolatile(0L, (byte) 0));
+			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for addByte(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.addByte(0L, (byte) 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.addByte(0L, (byte) 0));
+			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for addByteVolatile(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.addByteVolatile(0L, (byte) 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.addByteVolatile(0L, (byte) 0));
+			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndAddByte(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndAddByte(0L, (byte) 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.getAndAddByte(0L, (byte) 0));
+			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndAddByteVolatile(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndAddByteVolatile(0L, (byte) 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.getAndAddByteVolatile(0L, (byte) 0));
+			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndAddByte(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndAddByte(0L, (byte) 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.getAndAddByte(0L, (byte) 0));
+			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndAddByteVolatile(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndAddByteVolatile(0L, (byte) 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.getAndAddByteVolatile(0L, (byte) 0));
+			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for addAndGetByte(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.addAndGetByte(0L, (byte) 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.addAndGetByte(0L, (byte) 0));
+			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for addAndGetByteVolatile(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.addAndGetByteVolatile(0L, (byte) 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.addAndGetByteVolatile(0L, (byte) 0));
+			}));
 			// For shorts
 			tests.add(DynamicTest.dynamicTest("Parameters are checked for getShort(0)", () -> {
 				assumeThat(mmanager).isNotNull();
@@ -240,6 +290,56 @@ final class UnsafeMemoryManagerTest extends AbstractMemoryTest {
 				assumeThat(mmanager).isNotNull();
 				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.putShortVolatile(0L, (short) 0));
 				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.putShortVolatile(0L, (short) 0));
+			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndPutShort(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndPutShort(0L, (short) 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.getAndPutShort(0L, (short) 0));
+			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndPutShortVolatile(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndPutShortVolatile(0L, (short) 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.getAndPutShortVolatile(0L, (short) 0));
+			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for addShort(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.addShort(0L, (short) 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.addShort(0L, (short) 0));
+			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for addShortVolatile(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.addShortVolatile(0L, (short) 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.addShortVolatile(0L, (short) 0));
+			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndAddShort(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndAddShort(0L, (short) 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.getAndAddShort(0L, (short) 0));
+			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndAddShortVolatile(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndAddShortVolatile(0L, (short) 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.getAndAddShortVolatile(0L, (short) 0));
+			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndAddShort(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndAddShort(0L, (short) 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.getAndAddShort(0L, (short) 0));
+			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndAddShortVolatile(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndAddShortVolatile(0L, (short) 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.getAndAddShortVolatile(0L, (short) 0));
+			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for addAndGetShort(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.addAndGetShort(0L, (short) 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.addAndGetShort(0L, (short) 0));
+			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for addAndGetShortVolatile(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.addAndGetShortVolatile(0L, (short) 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.addAndGetShortVolatile(0L, (short) 0));
 			}));
 			// For ints
 			tests.add(DynamicTest.dynamicTest("Parameters are checked for getInt(0)", () -> {
@@ -262,6 +362,56 @@ final class UnsafeMemoryManagerTest extends AbstractMemoryTest {
 				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.putIntVolatile(0L, 0));
 				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.putIntVolatile(0L, 0));
 			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndPutInt(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndPutInt(0L, 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.getAndPutInt(0L, 0));
+			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndPutIntVolatile(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndPutIntVolatile(0L, 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.getAndPutIntVolatile(0L, 0));
+			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for addInt(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.addInt(0L, 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.addInt(0L, 0));
+			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for addIntVolatile(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.addIntVolatile(0L, 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.addIntVolatile(0L, 0));
+			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndAddInt(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndAddInt(0L, 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.getAndAddInt(0L, 0));
+			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndAddIntVolatile(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndAddIntVolatile(0L, 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.getAndAddIntVolatile(0L, 0));
+			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndAddInt(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndAddInt(0L, 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.getAndAddInt(0L, 0));
+			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndAddIntVolatile(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndAddIntVolatile(0L, 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.getAndAddIntVolatile(0L, 0));
+			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for addAndGetInt(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.addAndGetInt(0L, 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.addAndGetInt(0L, 0));
+			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for addAndGetIntVolatile(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.addAndGetIntVolatile(0L, 0));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.addAndGetIntVolatile(0L, 0));
+			}));
 			// For longs
 			tests.add(DynamicTest.dynamicTest("Parameters are checked for getLong(0)", () -> {
 				assumeThat(mmanager).isNotNull();
@@ -282,6 +432,56 @@ final class UnsafeMemoryManagerTest extends AbstractMemoryTest {
 				assumeThat(mmanager).isNotNull();
 				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.putLongVolatile(0L, 0L));
 				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.putLongVolatile(0L, 0L));
+			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndPutLong(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndPutLong(0L, 0L));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.getAndPutLong(0L, 0L));
+			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndPutLongVolatile(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndPutLongVolatile(0L, 0L));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.getAndPutLongVolatile(0L, 0L));
+			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for addLong(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.addLong(0L, 0L));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.addLong(0L, 0L));
+			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for addLongVolatile(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.addLongVolatile(0L, 0L));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.addLongVolatile(0L, 0L));
+			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndAddLong(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndAddLong(0L, 0L));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.getAndAddLong(0L, 0L));
+			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndAddLongVolatile(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndAddLongVolatile(0L, 0L));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.getAndAddLongVolatile(0L, 0L));
+			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndAddLong(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndAddLong(0L, 0L));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.getAndAddLong(0L, 0L));
+			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndAddLongVolatile(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndAddLongVolatile(0L, 0L));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.getAndAddLongVolatile(0L, 0L));
+			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for addAndGetLong(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.addAndGetLong(0L, 0L));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.addAndGetLong(0L, 0L));
+			}));
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for addAndGetLongVolatile(0, 0)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.addAndGetLongVolatile(0L, 0L));
+				assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> mmanagerClone.addAndGetLongVolatile(0L, 0L));
 			}));
 			return tests;
 		}
@@ -365,58 +565,58 @@ final class UnsafeMemoryManagerTest extends AbstractMemoryTest {
 
 	@Test
 	@DisplayName("Arbitrary bytes can be written and read")
-	void getputByte() {
+	void getputaddByte() {
 		val number = (byte) random.nextInt(Byte.MAX_VALUE + 1);
-		commonTest_getputByte(number, false);
+		commonTest_getputaddByte(number, false);
 	}
 
 	@Test
 	@DisplayName("Arbitrary bytes can be written and read (volatile)")
-	void getputByteVolatile() {
+	void getputaddByteVolatile() {
 		val number = (byte) random.nextInt(Byte.MAX_VALUE + 1);
-		commonTest_getputByte(number, true);
+		commonTest_getputaddByte(number, true);
 	}
 
 	@Test
 	@DisplayName("Arbitrary shorts can be written and read")
-	void getputShort() {
+	void getputaddShort() {
 		val number = (short) random.nextInt(Short.MAX_VALUE + 1);
-		commonTest_getputShort(number, false);
+		commonTest_getputaddShort(number, false);
 	}
 
 	@Test
 	@DisplayName("Arbitrary shorts can be written and read (volatile)")
-	void getputShortVolatile() {
+	void getputaddShortVolatile() {
 		val number = (short) random.nextInt(Short.MAX_VALUE + 1);
-		commonTest_getputShort(number, true);
+		commonTest_getputaddShort(number, true);
 	}
 
 	@Test
 	@DisplayName("Arbitrary ints can be written and read")
-	void getputInt() {
+	void getputaddInt() {
 		val number = random.nextInt();
-		commonTest_getputInt(number, false);
+		commonTest_getputaddInt(number, false);
 	}
 
 	@Test
 	@DisplayName("Arbitrary ints can be written and read (volatile)")
-	void getputIntVolatile() {
+	void getputaddIntVolatile() {
 		val number = random.nextInt();
-		commonTest_getputInt(number, true);
+		commonTest_getputaddInt(number, true);
 	}
 
 	@Test
 	@DisplayName("Arbitrary long can be written and read")
 	void getputLong() {
 		val number = random.nextLong();
-		commonTest_getputLong(number, false);
+		commonTest_getputaddLong(number, false);
 	}
 
 	@Test
 	@DisplayName("Arbitrary long can be written and read (volatile)")
-	void getputLongVolatile() {
+	void getputaddLongVolatile() {
 		val number = random.nextLong();
-		commonTest_getputLong(number, true);
+		commonTest_getputaddLong(number, true);
 	}
 
 	@Test

@@ -1,5 +1,7 @@
 package de.tum.in.net.ixy.generic;
 
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -9,7 +11,9 @@ import org.jetbrains.annotations.Nullable;
  *
  * @author Esaú García Sánchez-Torija
  */
-public interface IxyMempool {
+@Slf4j
+@SuppressWarnings("PMD.AvoidDuplicateLiterals")
+public abstract class IxyMempool {
 
 	/**
 	 * Returns the identifier of the memory pool.
@@ -17,7 +21,7 @@ public interface IxyMempool {
 	 * @return The memory pool identifier.
 	 */
 	@Contract(pure = true)
-	int getId();
+	public abstract int getId();
 
 	/**
 	 * Returns the number of packets slots this memory pool has.
@@ -25,33 +29,15 @@ public interface IxyMempool {
 	 * @return The capacity of the memory pool.
 	 */
 	@Contract(pure = true)
-	int getCapacity();
+	public abstract int getCapacity();
 
 	/**
-	 * Returns the number of packets slots this memory pool has filled.
+	 * Returns the number of free packets this memory pool has available.
 	 *
-	 * @return The size of the memory pool.
+	 * @return The number of free packets.
 	 */
 	@Contract(pure = true)
-	int getSize();
-
-	/**
-	 * Returns the number of packets this memory pool needs to reach its maximum capacity.
-	 *
-	 * @return The number of remaining packet buffer slots.
-	 */
-	@Contract(pure = true)
-	default int getRemaining() {
-		return getCapacity() - getSize();
-	}
-
-	/**
-	 * Returns the size of a packet.
-	 *
-	 * @return The size of a packet.
-	 */
-	@Contract(pure = true)
-	int getPacketSize();
+	public abstract int getSize();
 
 	/**
 	 * Returns a free packet.
@@ -60,7 +46,57 @@ public interface IxyMempool {
 	 *
 	 * @return A free packet.
 	 */
-	@Nullable IxyPacketBuffer get();
+	public abstract @Nullable IxyPacketBuffer get();
+
+	/**
+	 * Populates the given array with the given amount of packets (if possible) starting at the given offset.
+	 *
+	 * @param buffer The array where the packets will be saved.
+	 * @param offset The position to start extracting packets to.
+	 * @param size   The amount of packets to extract.
+	 * @return The number of packet buffers.
+	 */
+	@Contract(value = "null, _, _ -> fail", mutates = "param1")
+	public int get(@Nullable IxyPacketBuffer[] buffer, int offset, int size) {
+		if (!BuildConfig.OPTIMIZED) {
+			if (buffer == null) throw new InvalidNullParameterException("buffer");
+			if (offset < 0 || offset >= buffer.length) throw new InvalidOffsetException("offset");
+			if (size < 0) throw new InvalidSizeException("size");
+			size = Math.min(buffer.length - offset, size);
+		}
+		if (BuildConfig.DEBUG) log.debug("Extracting {} packets starting at index {}", size, offset);
+		val max = Math.min(size, getSize());
+		var i = 0;
+		while (i < max) {
+			buffer[i++] = get();
+		}
+		return i;
+	}
+
+	/**
+	 * Populates the given array with the maximum amount of packets (if possible) starting at the given offset.
+	 *
+	 * @param buffer The array where the packets will be saved.
+	 * @param offset The position to start extracting packets to.
+	 * @return The number of packet buffers.
+	 */
+	@Contract(value = "null, _ -> fail", mutates = "param1")
+	public int get(@Nullable IxyPacketBuffer[] buffer, int offset) {
+		if (!BuildConfig.OPTIMIZED && buffer == null) throw new InvalidNullParameterException("buffer");
+		return get(buffer, offset, buffer.length - offset);
+	}
+
+	/**
+	 * Populates the given array with the maximum amount of packets (if possible).
+	 *
+	 * @param buffer The array where the packets will be saved.
+	 * @return The number of packet buffers.
+	 */
+	@Contract(value = "null -> fail", mutates = "param1")
+	public int get(@Nullable IxyPacketBuffer[] buffer) {
+		if (!BuildConfig.OPTIMIZED && buffer == null) throw new InvalidNullParameterException("buffer");
+		return get(buffer, 0, buffer.length);
+	}
 
 	/**
 	 * Frees a packet.
@@ -69,15 +105,82 @@ public interface IxyMempool {
 	 *
 	 * @param packet The packet to free.
 	 */
-	@Contract("null -> fail")
-	void free(@NotNull IxyPacketBuffer packet);
+	public abstract void free(@NotNull IxyPacketBuffer packet);
+
+	/**
+	 * Frees the given amount of packets (if possible) starting from the given offset.
+	 * <p>
+	 * This does not free the memory allocated to the packets, but registers it as free so that it can be reused again.
+	 *
+	 * @param packets The packet to free.
+	 */
+	@SuppressWarnings("PMD.NullAssignment")
+	@Contract(value = "null, _, _ -> fail", mutates = "param1")
+	public int free(@Nullable IxyPacketBuffer[] packets, int offset, int size) {
+		if (!BuildConfig.OPTIMIZED) {
+			if (packets == null) throw new InvalidNullParameterException("packets");
+			if (offset < 0 || offset >= packets.length) throw new InvalidOffsetException("offset");
+			if (size < 0) throw new InvalidSizeException("size");
+			size = Math.min(packets.length - offset, size);
+		}
+		if (BuildConfig.DEBUG) log.debug("Freeing {} packets starting at index {}", size, offset);
+		val end = offset + Math.min(size, getCapacity() - getSize());
+		if (BuildConfig.OPTIMIZED) {
+			var i = offset;
+			while (i < end) {
+				free(packets[i]);
+				packets[i++] = null;
+			}
+			return i - offset;
+		} else {
+			var count = 0;
+			for (var i = offset; i < end; i += 1) {
+				val packet = packets[i];
+				if (packet != null) {
+					free(packet);
+					count += 1;
+				}
+				packets[i] = null;
+			}
+			return count;
+		}
+	}
+
+	/**
+	 * Frees the maximum amount of packets starting from the given offset.
+	 * <p>
+	 * This does not free the memory allocated to the packets, but registers it as free so that it can be reused again.
+	 *
+	 * @param packets The packet to free.
+	 */
+	@Contract(value = "null, _ -> fail", mutates = "param1")
+	public int free(@Nullable IxyPacketBuffer[] packets, int offset) {
+		if (!BuildConfig.OPTIMIZED && packets == null) throw new InvalidNullParameterException("packets");
+		return free(packets, offset, packets.length - offset);
+	}
+
+	/**
+	 * Frees the maximum amount of packets.
+	 * <p>
+	 * This does not free the memory allocated to the packets, but registers it as free so that it can be reused again.
+	 *
+	 * @param packets The packet to free.
+	 */
+	@Contract(value = "null -> fail", mutates = "param1")
+	public int free(@Nullable IxyPacketBuffer[] packets) {
+		if (!BuildConfig.OPTIMIZED && packets == null) throw new InvalidNullParameterException("packets");
+		return free(packets, 0, packets.length);
+	}
 
 	/**
 	 * Registers the memory pool.
 	 * <p>
 	 * Idempotently registers the memory pool in the system.
 	 */
-	void register();
+	public abstract void register();
+
+	/** Deregisters the memory pool. */
+	public abstract void deregister();
 
 	/**
 	 * Finds a memory pool given its identifier.
@@ -86,7 +189,7 @@ public interface IxyMempool {
 	 * @return The memory pool.
 	 */
 	@Contract(pure = true)
-	@Nullable IxyMempool find(int id);
+	public abstract @Nullable IxyMempool find(int id);
 
 	/**
 	 * Finds the memory pool that owns a packet.
@@ -94,8 +197,8 @@ public interface IxyMempool {
 	 * @param packet The packet whose memory pool will be searched.
 	 * @return The memory pool that owns a packet.
 	 */
-	@Contract(pure = true)
-	default @Nullable IxyMempool find(@Nullable IxyPacketBuffer packet) {
+	@Contract(value = "null -> null", pure = true)
+	public @Nullable IxyMempool find(@Nullable IxyPacketBuffer packet) {
 		return packet == null ? null : find(packet.getMemoryPoolId());
 	}
 

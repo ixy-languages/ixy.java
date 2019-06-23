@@ -130,7 +130,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
-	@Contract(value = "_, null, _ -> fail; _, _, null -> fail", pure = true)
+	@Contract(pure = true)
 	public long allocate(long bytes, @NotNull AllocationType allocationType, @NotNull LayoutType layoutType) {
 		// Stop if anything is wrong
 		if (!BuildConfig.OPTIMIZED) {
@@ -166,7 +166,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
-	@Contract(value = "_, _, null -> fail", pure = true)
+	@Contract(pure = true)
 	public boolean free(long address, long bytes, @NotNull AllocationType allocationType) {
 		// Stop if anything is wrong
 		if (!BuildConfig.OPTIMIZED) {
@@ -390,6 +390,38 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	@Override
 	@Contract(pure = true)
 	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
+	public int getAndPutInt(long address, int value) {
+		if (BuildConfig.DEBUG) {
+			val xvalue = Integer.toHexString(value);
+			val xdest = Long.toHexString(address);
+			log.debug("Replacing int 0x{} @ 0x{} using the Unsafe object", xvalue, xdest);
+		}
+		if (!BuildConfig.OPTIMIZED) {
+			checkUnsafe();
+			if (address == 0L) throw new InvalidMemoryAddressException("address");
+		}
+		return unsafe.getAndSetInt(null, address, value);
+	}
+
+	@Override
+	@Contract(pure = true)
+	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
+	public int getAndAddInt(long address, int value) {
+		if (BuildConfig.DEBUG) {
+			val xvalue = Integer.toHexString(value);
+			val xdest = Long.toHexString(address);
+			log.debug("Adding int 0x{} @ 0x{} using the Unsafe object", xvalue, xdest);
+		}
+		if (!BuildConfig.OPTIMIZED) {
+			checkUnsafe();
+			if (address == 0L) throw new InvalidMemoryAddressException("address");
+		}
+		return unsafe.getAndAddInt(null, address, value);
+	}
+
+	@Override
+	@Contract(pure = true)
+	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
 	public long getLong(long address) {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(address);
@@ -447,6 +479,38 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 			if (address == 0L) throw new InvalidMemoryAddressException("address");
 		}
 		unsafe.putLongVolatile(null, address, value);
+	}
+
+	@Override
+	@Contract(pure = true)
+	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
+	public long getAndPutLong(long address, long value) {
+		if (BuildConfig.DEBUG) {
+			val xvalue = Long.toHexString(value);
+			val xdest = Long.toHexString(address);
+			log.debug("Replacing long 0x{} @ 0x{} using the Unsafe object", xvalue, xdest);
+		}
+		if (!BuildConfig.OPTIMIZED) {
+			checkUnsafe();
+			if (address == 0L) throw new InvalidMemoryAddressException("address");
+		}
+		return unsafe.getAndSetLong(null, address, value);
+	}
+
+	@Override
+	@Contract(pure = true)
+	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
+	public long getAndAddLong(long address, long value) {
+		if (BuildConfig.DEBUG) {
+			val xvalue = Long.toHexString(value);
+			val xdest = Long.toHexString(address);
+			log.debug("Adding long 0x{} @ 0x{} using the Unsafe object", xvalue, xdest);
+		}
+		if (!BuildConfig.OPTIMIZED) {
+			checkUnsafe();
+			if (address == 0L) throw new InvalidMemoryAddressException("address");
+		}
+		return unsafe.getAndAddLong(null, address, value);
 	}
 
 	@Override

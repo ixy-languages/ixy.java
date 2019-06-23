@@ -209,58 +209,58 @@ final class JniMemoryManagerTest extends AbstractMemoryTest {
 
 	@Test
 	@DisplayName("Arbitrary bytes can be written and read")
-	void getputByte() {
+	void getputaddByte() {
 		val number = (byte) random.nextInt(Byte.MAX_VALUE + 1);
-		commonTest_getputByte(number, false);
+		commonTest_getputaddByte(number, false);
 	}
 
 	@Test
 	@DisplayName("Arbitrary bytes can be written and read (volatile)")
-	void getputByteVolatile() {
+	void getputaddByteVolatile() {
 		val number = (byte) random.nextInt(Byte.MAX_VALUE + 1);
-		commonTest_getputByte(number, true);
+		commonTest_getputaddByte(number, true);
 	}
 
 	@Test
 	@DisplayName("Arbitrary shorts can be written and read")
-	void getputShort() {
+	void getputaddShort() {
 		val number = (short) random.nextInt(Short.MAX_VALUE + 1);
-		commonTest_getputShort(number, false);
+		commonTest_getputaddShort(number, false);
 	}
 
 	@Test
 	@DisplayName("Arbitrary shorts can be written and read (volatile)")
-	void getputShortVolatile() {
+	void getputaddShortVolatile() {
 		val number = (short) random.nextInt(Short.MAX_VALUE + 1);
-		commonTest_getputShort(number, true);
+		commonTest_getputaddShort(number, true);
 	}
 
 	@Test
 	@DisplayName("Arbitrary ints can be written and read")
-	void getputInt() {
+	void getputaddInt() {
 		val number = random.nextInt();
-		commonTest_getputInt(number, false);
+		commonTest_getputaddInt(number, false);
 	}
 
 	@Test
 	@DisplayName("Arbitrary ints can be written and read (volatile)")
-	void getputIntVolatile() {
+	void getputaddIntVolatile() {
 		val number = random.nextInt();
-		commonTest_getputInt(number, true);
+		commonTest_getputaddInt(number, true);
 	}
 
 	@Test
 	@DisplayName("Arbitrary long can be written and read")
-	void getputLong() {
+	void getputaddLong() {
 		val number = random.nextLong();
-		commonTest_getputLong(number, false);
+		commonTest_getputaddLong(number, false);
 	}
 
 	@Test
 	@DisplayName("Arbitrary long can be written and read (volatile)")
-	void getputLongVolatile() {
+	void getputaddLongVolatile() {
 		val number = random.nextLong();
-		commonTest_getputLong(number, true);
+		commonTest_getputaddLong(number, true);
 	}
 
 	@Test

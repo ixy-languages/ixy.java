@@ -158,6 +158,46 @@ abstract class AbstractMemoryTest {
 			assumeThat(mmanager).isNotNull();
 			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.putByteVolatile(0L, (byte) 0));
 		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndPutByte(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndPutByte(0L, (byte) 0));
+		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndPutByteVolatile(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndPutByteVolatile(0L, (byte) 0));
+		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for addByte(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.addByte(0L, (byte) 0));
+		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for addByteVolatile(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.addByteVolatile(0L, (byte) 0));
+		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndAddByte(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndAddByte(0L, (byte) 0));
+		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndAddByteVolatile(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndAddByteVolatile(0L, (byte) 0));
+		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndAddByte(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndAddByte(0L, (byte) 0));
+		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndAddByteVolatile(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndAddByteVolatile(0L, (byte) 0));
+		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for addAndGetByte(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.addAndGetByte(0L, (byte) 0));
+		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for addAndGetByteVolatile(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.addAndGetByteVolatile(0L, (byte) 0));
+		}));
 		// For shorts
 		tests.add(DynamicTest.dynamicTest("Parameters are checked for getShort(0)", () -> {
 			assumeThat(mmanager).isNotNull();
@@ -174,6 +214,46 @@ abstract class AbstractMemoryTest {
 		tests.add(DynamicTest.dynamicTest("Parameters are checked for putShortVolatile(0)", () -> {
 			assumeThat(mmanager).isNotNull();
 			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.putShortVolatile(0L, (short) 0));
+		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndPutShort(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndPutShort(0L, (short) 0));
+		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndPutShortVolatile(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndPutShortVolatile(0L, (short) 0));
+		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for addShort(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.addShort(0L, (short) 0));
+		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for addShortVolatile(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.addShortVolatile(0L, (short) 0));
+		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndAddShort(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndAddShort(0L, (short) 0));
+		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndAddShortVolatile(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndAddShortVolatile(0L, (short) 0));
+		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndAddShort(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndAddShort(0L, (short) 0));
+		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndAddShortVolatile(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndAddShortVolatile(0L, (short) 0));
+		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for addAndGetShort(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.addAndGetShort(0L, (short) 0));
+		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for addAndGetShortVolatile(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.addAndGetShortVolatile(0L, (short) 0));
 		}));
 		// For ints
 		tests.add(DynamicTest.dynamicTest("Parameters are checked for getInt(0)", () -> {
@@ -192,6 +272,46 @@ abstract class AbstractMemoryTest {
 			assumeThat(mmanager).isNotNull();
 			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.putIntVolatile(0L, 0));
 		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndPutInt(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndPutInt(0L, 0));
+		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndPutIntVolatile(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndPutIntVolatile(0L, 0));
+		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for addInt(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.addInt(0L, 0));
+		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for addIntVolatile(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.addIntVolatile(0L, 0));
+		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndAddInt(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndAddInt(0L, 0));
+		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndAddIntVolatile(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndAddIntVolatile(0L, 0));
+		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndAddInt(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndAddInt(0L, 0));
+		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndAddIntVolatile(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndAddIntVolatile(0L, 0));
+		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for addAndGetInt(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.addAndGetInt(0L, 0));
+		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for addAndGetIntVolatile(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.addAndGetIntVolatile(0L, 0));
+		}));
 		// For longs
 		tests.add(DynamicTest.dynamicTest("Parameters are checked for getLong(0)", () -> {
 			assumeThat(mmanager).isNotNull();
@@ -209,7 +329,46 @@ abstract class AbstractMemoryTest {
 			assumeThat(mmanager).isNotNull();
 			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.putLongVolatile(0L, 0L));
 		}));
-
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndPutLong(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndPutLong(0L, 0L));
+		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndPutLongVolatile(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndPutLongVolatile(0L, 0L));
+		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for addLong(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.addLong(0L, 0L));
+		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for addLongVolatile(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.addLongVolatile(0L, 0L));
+		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndAddLong(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndAddLong(0L, 0L));
+		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndAddLongVolatile(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndAddLongVolatile(0L, 0L));
+		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndAddLong(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndAddLong(0L, 0L));
+		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for getAndAddLongVolatile(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.getAndAddLongVolatile(0L, 0L));
+		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for addAndGetLong(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.addAndGetLong(0L, 0L));
+		}));
+		tests.add(DynamicTest.dynamicTest("Parameters are checked for addAndGetLongVolatile(0, 0)", () -> {
+			assumeThat(mmanager).isNotNull();
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.addAndGetLongVolatile(0L, 0L));
+		}));
 		return tests;
 	}
 
@@ -244,79 +403,147 @@ abstract class AbstractMemoryTest {
 	}
 
 	/**
-	 * Tests the method {@link IxyMemoryManager#getByte(long)} and {@link IxyMemoryManager#putByte(long, byte)}, or
-	 * {@link IxyMemoryManager#getByteVolatile(long)}} and {@link IxyMemoryManager#putByteVolatile(long, byte)}.
+	 * Tests the method {@link IxyMemoryManager#getByte(long)}, {@link IxyMemoryManager#putByte(long, byte)}, {@link
+	 * IxyMemoryManager#getAndPutByte(long, byte)}, {@link IxyMemoryManager#addByte(long, byte)}, {@link
+	 * IxyMemoryManager#getAndAddByte(long, byte)} and {@link IxyMemoryManager#addAndGetByte(long, byte)}, or
+	 * {@link IxyMemoryManager#getByteVolatile(long)}, {@link IxyMemoryManager#putByteVolatile(long, byte)}, {@link
+	 * IxyMemoryManager#getAndPutByteVolatile(long, byte)}, {@link IxyMemoryManager#addByteVolatile(long, byte)}, {@link
+	 * IxyMemoryManager#getAndAddByteVolatile(long, byte)} and {@link
+	 * IxyMemoryManager#addAndGetByteVolatile(long, byte)}.
 	 *
 	 * @param number      The data sample.
 	 * @param useVolatile Whether to use volatile methods or not.
 	 */
 	@Contract(pure = true)
-	final void commonTest_getputByte(byte number, boolean useVolatile) {
+	final void commonTest_getputaddByte(byte number, boolean useVolatile) {
 		val address = assumeAllocate(Byte.BYTES);
 		// Write the data
 		if (useVolatile) mmanager.putByte(address, number);
 		else mmanager.putByteVolatile(address, number);
 		// Release the memory and verify the contents
 		val value = useVolatile ? mmanager.getByteVolatile(address) : mmanager.getByte(address);
+		if (useVolatile) mmanager.addByteVolatile(address, (byte) 1);
+		else mmanager.addByte(address, (byte) 1);
+		val added = useVolatile ? mmanager.getByteVolatile(address) : mmanager.getByte(address);
+		val postadded = useVolatile ? mmanager.getAndAddByteVolatile(address, (byte) 1) : mmanager.getAndAddByte(address, (byte) 1);
+		val preadded = useVolatile ? mmanager.addAndGetByteVolatile(address, (byte) 1) : mmanager.addAndGetByte(address, (byte) 1);
+		val replaced = useVolatile ? mmanager.getAndPutByteVolatile(address, value) : mmanager.getAndPutByte(address, value);
+		val lastValue = useVolatile ? mmanager.getByteVolatile(address) : mmanager.getByte(address);
 		mmanager.free(address, Byte.BYTES, AllocationType.STANDARD);
 		assertThat(value).as("Read").isEqualTo(number);
+		assertThat(added).as("Read").isEqualTo((byte) (value + 1));
+		assertThat(postadded).as("Read").isEqualTo(added);
+		assertThat(preadded).as("Read").isEqualTo((byte) (postadded + 2));
+		assertThat(replaced).as("Read").isEqualTo(preadded);
+		assertThat(lastValue).as("Read").isEqualTo(number);
 	}
 
 	/**
-	 * Tests the method {@link IxyMemoryManager#getShort(long)} and {@link IxyMemoryManager#putShort(long, short)}, or
-	 * {@link IxyMemoryManager#getShortVolatile(long)}} and {@link IxyMemoryManager#putShortVolatile(long, short)}.
+	 * Tests the method {@link IxyMemoryManager#getShort(long)}, {@link IxyMemoryManager#putShort(long, short)}, {@link
+	 * IxyMemoryManager#getAndPutShort(long, short)}, {@link IxyMemoryManager#addShort(long, short)}, {@link
+	 * IxyMemoryManager#getAndAddShort(long, short)} and {@link IxyMemoryManager#addAndGetShort(long, short)}, or
+	 * {@link IxyMemoryManager#getShortVolatile(long)}, {@link IxyMemoryManager#putShortVolatile(long, short)}, {@link
+	 * IxyMemoryManager#getAndPutShortVolatile(long, short)}, {@link IxyMemoryManager#addShortVolatile(long, short)}, {@link
+	 * IxyMemoryManager#getAndAddShortVolatile(long, short)} and {@link
+	 * IxyMemoryManager#addAndGetShortVolatile(long, short)}.
 	 *
 	 * @param number      The data sample.
 	 * @param useVolatile Whether to use volatile methods or not.
 	 */
 	@Contract(pure = true)
-	final void commonTest_getputShort(short number, boolean useVolatile) {
+	final void commonTest_getputaddShort(short number, boolean useVolatile) {
 		val address = assumeAllocate(Short.BYTES);
 		// Write the data
 		if (useVolatile) mmanager.putShort(address, number);
 		else mmanager.putShortVolatile(address, number);
 		// Release the memory and verify the contents
 		val value = useVolatile ? mmanager.getShortVolatile(address) : mmanager.getShort(address);
+		if (useVolatile) mmanager.addShortVolatile(address, (short) 1);
+		else mmanager.addShort(address, (short) 1);
+		val added = useVolatile ? mmanager.getShortVolatile(address) : mmanager.getShort(address);
+		val postadded = useVolatile ? mmanager.getAndAddShortVolatile(address, (short) 1) : mmanager.getAndAddShort(address, (short) 1);
+		val preadded = useVolatile ? mmanager.addAndGetShortVolatile(address, (short) 1) : mmanager.addAndGetShort(address, (short) 1);
+		val replaced = useVolatile ? mmanager.getAndPutShortVolatile(address, value) : mmanager.getAndPutShort(address, value);
+		val lastValue = useVolatile ? mmanager.getShortVolatile(address) : mmanager.getShort(address);
 		mmanager.free(address, Short.BYTES, AllocationType.STANDARD);
 		assertThat(value).as("Read").isEqualTo(number);
+		assertThat(added).as("Read").isEqualTo((short) (value + 1));
+		assertThat(postadded).as("Read").isEqualTo(added);
+		assertThat(preadded).as("Read").isEqualTo((short) (postadded + 2));
+		assertThat(replaced).as("Read").isEqualTo(preadded);
+		assertThat(lastValue).as("Read").isEqualTo(number);
 	}
 
 	/**
-	 * Tests the method {@link IxyMemoryManager#getInt(long)} and {@link IxyMemoryManager#putInt(long, int)}, or {@link
-	 * IxyMemoryManager#getIntVolatile(long)}} and {@link IxyMemoryManager#putIntVolatile(long, int)}.
+	 * Tests the method {@link IxyMemoryManager#getInt(long)}, {@link IxyMemoryManager#putInt(long, int)}, {@link
+	 * IxyMemoryManager#getAndPutInt(long, int)}, {@link IxyMemoryManager#addInt(long, int)}, {@link
+	 * IxyMemoryManager#getAndAddInt(long, int)} and {@link IxyMemoryManager#addAndGetInt(long, int)}, or
+	 * {@link IxyMemoryManager#getIntVolatile(long)}, {@link IxyMemoryManager#putIntVolatile(long, int)}, {@link
+	 * IxyMemoryManager#getAndPutIntVolatile(long, int)}, {@link IxyMemoryManager#addIntVolatile(long, int)}, {@link
+	 * IxyMemoryManager#getAndAddIntVolatile(long, int)} and {@link
+	 * IxyMemoryManager#addAndGetIntVolatile(long, int)}.
 	 *
 	 * @param number      The data sample.
 	 * @param useVolatile Whether to use volatile methods or not.
 	 */
 	@Contract(pure = true)
-	final void commonTest_getputInt(int number, boolean useVolatile) {
+	final void commonTest_getputaddInt(int number, boolean useVolatile) {
 		val address = assumeAllocate(Integer.BYTES);
 		// Write the data
 		if (useVolatile) mmanager.putInt(address, number);
 		else mmanager.putIntVolatile(address, number);
 		// Release the memory and verify the contents
 		val value = useVolatile ? mmanager.getIntVolatile(address) : mmanager.getInt(address);
+		if (useVolatile) mmanager.addIntVolatile(address, 1);
+		else mmanager.addInt(address, 1);
+		val added = useVolatile ? mmanager.getIntVolatile(address) : mmanager.getInt(address);
+		val postadded = useVolatile ? mmanager.getAndAddIntVolatile(address, 1) : mmanager.getAndAddInt(address, 1);
+		val preadded = useVolatile ? mmanager.addAndGetIntVolatile(address, 1) : mmanager.addAndGetInt(address, 1);
+		val replaced = useVolatile ? mmanager.getAndPutIntVolatile(address, value) : mmanager.getAndPutInt(address, value);
+		val lastValue = useVolatile ? mmanager.getIntVolatile(address) : mmanager.getInt(address);
 		mmanager.free(address, Integer.BYTES, AllocationType.STANDARD);
 		assertThat(value).as("Read").isEqualTo(number);
+		assertThat(added).as("Read").isEqualTo(value + 1);
+		assertThat(postadded).as("Read").isEqualTo(added);
+		assertThat(preadded).as("Read").isEqualTo((int) (postadded + 2));
+		assertThat(replaced).as("Read").isEqualTo(preadded);
+		assertThat(lastValue).as("Read").isEqualTo(number);
 	}
 
 	/**
-	 * Tests the method {@link IxyMemoryManager#getLong(long)} and {@link IxyMemoryManager#putLong(long, long)}, or
-	 * {@link IxyMemoryManager#getLongVolatile(long)}} and {@link IxyMemoryManager#putLongVolatile(long, long)}.
+	 * Tests the method {@link IxyMemoryManager#getLong(long)}, {@link IxyMemoryManager#putLong(long, long)}, {@link
+	 * IxyMemoryManager#getAndPutLong(long, long)}, {@link IxyMemoryManager#addLong(long, long)}, {@link
+	 * IxyMemoryManager#getAndAddLong(long, long)} and {@link IxyMemoryManager#addAndGetLong(long, long)}, or
+	 * {@link IxyMemoryManager#getLongVolatile(long)}, {@link IxyMemoryManager#putLongVolatile(long, long)}, {@link
+	 * IxyMemoryManager#getAndPutLongVolatile(long, long)}, {@link IxyMemoryManager#addLongVolatile(long, long)}, {@link
+	 * IxyMemoryManager#getAndAddLongVolatile(long, long)} and {@link
+	 * IxyMemoryManager#addAndGetLongVolatile(long, long)}.
 	 *
 	 * @param number      The data sample.
 	 * @param useVolatile Whether to use volatile methods or not.
 	 */
 	@Contract(pure = true)
-	final void commonTest_getputLong(long number, boolean useVolatile) {
+	final void commonTest_getputaddLong(long number, boolean useVolatile) {
 		val address = assumeAllocate(Long.BYTES);
 		// Write the data
 		if (useVolatile) mmanager.putLong(address, number);
 		else mmanager.putLongVolatile(address, number);
 		// Release the memory and verify the contents
 		val value = useVolatile ? mmanager.getLongVolatile(address) : mmanager.getLong(address);
+		if (useVolatile) mmanager.addLongVolatile(address, 1);
+		else mmanager.addLong(address, 1);
+		val added = useVolatile ? mmanager.getLongVolatile(address) : mmanager.getLong(address);
+		val postadded = useVolatile ? mmanager.getAndAddLongVolatile(address, 1) : mmanager.getAndAddLong(address, 1);
+		val preadded = useVolatile ? mmanager.addAndGetLongVolatile(address, 1) : mmanager.addAndGetLong(address, 1);
+		val replaced = useVolatile ? mmanager.getAndPutLongVolatile(address, value) : mmanager.getAndPutLong(address, value);
+		val lastValue = useVolatile ? mmanager.getLongVolatile(address) : mmanager.getLong(address);
 		mmanager.free(address, Long.BYTES, AllocationType.STANDARD);
 		assertThat(value).as("Read").isEqualTo(number);
+		assertThat(added).as("Read").isEqualTo(value + 1);
+		assertThat(postadded).as("Read").isEqualTo(added);
+		assertThat(preadded).as("Read").isEqualTo((long) (postadded + 2));
+		assertThat(replaced).as("Read").isEqualTo(preadded);
+		assertThat(lastValue).as("Read").isEqualTo(number);
 	}
 
 	/**

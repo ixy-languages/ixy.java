@@ -179,6 +179,100 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	private static native void c_put_byte_volatile(long dest, byte value);
 
 	/**
+	 * Replaces a {@code byte} from an arbitrary memory address and returns the old value.
+	 * <p>
+	 * If the memory address is {@code 0}, the behaviour is undefined.
+	 *
+	 * @param dest  The memory address to write to.
+	 * @param value The {@code byte} to write.
+	 * @return The old value.
+	 */
+	@Contract(pure = true)
+	private static native byte c_get_and_put_byte(long dest, byte value);
+
+	/**
+	 * Replaces a {@code byte} from an arbitrary volatile memory address and returns the old value.
+	 * <p>
+	 * If the memory address is {@code 0}, the behaviour is undefined.
+	 *
+	 * @param dest  The volatile memory address to write to.
+	 * @param value The {@code byte} to write.
+	 * @return The old value.
+	 */
+	@Contract(pure = true)
+	private static native byte c_get_and_put_byte_volatile(long dest, byte value);
+
+	/**
+	 * Adds a {@code byte} to an arbitrary memory address.
+	 * <p>
+	 * If the memory address is {@code 0}, the behaviour is undefined.
+	 *
+	 * @param dest  The memory address to write to.
+	 * @param value The {@code byte} to add.
+	 */
+	@Contract(pure = true)
+	private static native void c_add_byte(long dest, byte value);
+
+	/**
+	 * Adds a {@code byte} to an arbitrary volatile memory address.
+	 * <p>
+	 * If the memory address is {@code 0}, the behaviour is undefined.
+	 *
+	 * @param dest  The volatile memory address to write to.
+	 * @param value The {@code byte} to add.
+	 */
+	@Contract(pure = true)
+	private static native void c_add_byte_volatile(long dest, byte value);
+
+	/**
+	 * Adds a {@code byte} to an arbitrary memory address and returns the old value.
+	 * <p>
+	 * If the memory address is {@code 0}, the behaviour is undefined.
+	 *
+	 * @param dest  The memory address to write to.
+	 * @param value The {@code byte} to add.
+	 * @return The old value.
+	 */
+	@Contract(pure = true)
+	private static native byte c_get_and_add_byte(long dest, byte value);
+
+	/**
+	 * Adds a {@code byte} to an arbitrary volatile memory address and returns the old value.
+	 * <p>
+	 * If the memory address is {@code 0}, the behaviour is undefined.
+	 *
+	 * @param dest  The volatile memory address to write to.
+	 * @param value The {@code byte} to add.
+	 * @return The old value.
+	 */
+	@Contract(pure = true)
+	private static native byte c_get_and_add_byte_volatile(long dest, byte value);
+
+	/**
+	 * Adds a {@code byte} to an arbitrary memory address and returns the new value.
+	 * <p>
+	 * If the memory address is {@code 0}, the behaviour is undefined.
+	 *
+	 * @param dest  The memory address to write to.
+	 * @param value The {@code byte} to add.
+	 * @return The new value.
+	 */
+	@Contract(pure = true)
+	private static native byte c_add_and_get_byte(long dest, byte value);
+
+	/**
+	 * Adds a {@code byte} to an arbitrary volatile memory address and returns the new value.
+	 * <p>
+	 * If the memory address is {@code 0}, the behaviour is undefined.
+	 *
+	 * @param dest  The volatile memory address to write to.
+	 * @param value The {@code byte} to add.
+	 * @return The new value.
+	 */
+	@Contract(pure = true)
+	private static native byte c_add_and_get_byte_volatile(long dest, byte value);
+
+	/**
 	 * Reads a {@code short} from an arbitrary memory address.
 	 * <p>
 	 * If the memory address is {@code 0}, the behaviour is undefined.
@@ -221,6 +315,100 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 */
 	@Contract(pure = true)
 	private static native void c_put_short_volatile(long dest, short value);
+
+	/**
+	 * Replaces a {@code short} from an arbitrary memory address and returns the old value.
+	 * <p>
+	 * If the memory address is {@code 0}, the behaviour is undefined.
+	 *
+	 * @param dest  The memory address to write to.
+	 * @param value The {@code short} to write.
+	 * @return The old value.
+	 */
+	@Contract(pure = true)
+	private static native short c_get_and_put_short(long dest, short value);
+
+	/**
+	 * Replaces a {@code short} from an arbitrary volatile memory address and returns the old value.
+	 * <p>
+	 * If the memory address is {@code 0}, the behaviour is undefined.
+	 *
+	 * @param dest  The volatile memory address to write to.
+	 * @param value The {@code short} to write.
+	 * @return The old value.
+	 */
+	@Contract(pure = true)
+	private static native short c_get_and_put_short_volatile(long dest, short value);
+
+	/**
+	 * Adds a {@code short} to an arbitrary memory address.
+	 * <p>
+	 * If the memory address is {@code 0}, the behaviour is undefined.
+	 *
+	 * @param dest  The memory address to write to.
+	 * @param value The {@code short} to add.
+	 */
+	@Contract(pure = true)
+	private static native void c_add_short(long dest, short value);
+
+	/**
+	 * Adds a {@code short} to an arbitrary volatile memory address.
+	 * <p>
+	 * If the memory address is {@code 0}, the behaviour is undefined.
+	 *
+	 * @param dest  The volatile memory address to write to.
+	 * @param value The {@code short} to add.
+	 */
+	@Contract(pure = true)
+	private static native void c_add_short_volatile(long dest, short value);
+
+	/**
+	 * Adds a {@code short} to an arbitrary memory address and returns the old value.
+	 * <p>
+	 * If the memory address is {@code 0}, the behaviour is undefined.
+	 *
+	 * @param dest  The memory address to write to.
+	 * @param value The {@code short} to add.
+	 * @return The old value.
+	 */
+	@Contract(pure = true)
+	private static native short c_get_and_add_short(long dest, short value);
+
+	/**
+	 * Adds a {@code short} to an arbitrary volatile memory address and returns the old value.
+	 * <p>
+	 * If the memory address is {@code 0}, the behaviour is undefined.
+	 *
+	 * @param dest  The volatile memory address to write to.
+	 * @param value The {@code short} to add.
+	 * @return The old value.
+	 */
+	@Contract(pure = true)
+	private static native short c_get_and_add_short_volatile(long dest, short value);
+
+	/**
+	 * Adds a {@code short} to an arbitrary memory address and returns the new value.
+	 * <p>
+	 * If the memory address is {@code 0}, the behaviour is undefined.
+	 *
+	 * @param dest  The memory address to write to.
+	 * @param value The {@code short} to add.
+	 * @return The new value.
+	 */
+	@Contract(pure = true)
+	private static native short c_add_and_get_short(long dest, short value);
+
+	/**
+	 * Adds a {@code short} to an arbitrary volatile memory address and returns the new value.
+	 * <p>
+	 * If the memory address is {@code 0}, the behaviour is undefined.
+	 *
+	 * @param dest  The volatile memory address to write to.
+	 * @param value The {@code short} to add.
+	 * @return The new value.
+	 */
+	@Contract(pure = true)
+	private static native short c_add_and_get_short_volatile(long dest, short value);
 
 	/**
 	 * Reads a {@code int} from an arbitrary memory address.
@@ -267,6 +455,100 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	private static native void c_put_int_volatile(long dest, int value);
 
 	/**
+	 * Replaces a {@code int} from an arbitrary memory address and returns the old value.
+	 * <p>
+	 * If the memory address is {@code 0}, the behaviour is undefined.
+	 *
+	 * @param dest  The memory address to write to.
+	 * @param value The {@code int} to write.
+	 * @return The old value.
+	 */
+	@Contract(pure = true)
+	private static native int c_get_and_put_int(long dest, int value);
+
+	/**
+	 * Replaces a {@code int} from an arbitrary volatile memory address and returns the old value.
+	 * <p>
+	 * If the memory address is {@code 0}, the behaviour is undefined.
+	 *
+	 * @param dest  The volatile memory address to write to.
+	 * @param value The {@code int} to write.
+	 * @return The old value.
+	 */
+	@Contract(pure = true)
+	private static native int c_get_and_put_int_volatile(long dest, int value);
+
+	/**
+	 * Adds a {@code int} to an arbitrary memory address.
+	 * <p>
+	 * If the memory address is {@code 0}, the behaviour is undefined.
+	 *
+	 * @param dest  The memory address to write to.
+	 * @param value The {@code int} to add.
+	 */
+	@Contract(pure = true)
+	private static native void c_add_int(long dest, int value);
+
+	/**
+	 * Adds a {@code int} to an arbitrary volatile memory address.
+	 * <p>
+	 * If the memory address is {@code 0}, the behaviour is undefined.
+	 *
+	 * @param dest  The volatile memory address to write to.
+	 * @param value The {@code int} to add.
+	 */
+	@Contract(pure = true)
+	private static native void c_add_int_volatile(long dest, int value);
+
+	/**
+	 * Adds a {@code int} to an arbitrary memory address and returns the old value.
+	 * <p>
+	 * If the memory address is {@code 0}, the behaviour is undefined.
+	 *
+	 * @param dest  The memory address to write to.
+	 * @param value The {@code int} to add.
+	 * @return The old value.
+	 */
+	@Contract(pure = true)
+	private static native int c_get_and_add_int(long dest, int value);
+
+	/**
+	 * Adds a {@code int} to an arbitrary volatile memory address and returns the old value.
+	 * <p>
+	 * If the memory address is {@code 0}, the behaviour is undefined.
+	 *
+	 * @param dest  The volatile memory address to write to.
+	 * @param value The {@code int} to add.
+	 * @return The old value.
+	 */
+	@Contract(pure = true)
+	private static native int c_get_and_add_int_volatile(long dest, int value);
+
+	/**
+	 * Adds a {@code int} to an arbitrary memory address and returns the new value.
+	 * <p>
+	 * If the memory address is {@code 0}, the behaviour is undefined.
+	 *
+	 * @param dest  The memory address to write to.
+	 * @param value The {@code int} to add.
+	 * @return The new value.
+	 */
+	@Contract(pure = true)
+	private static native int c_add_and_get_int(long dest, int value);
+
+	/**
+	 * Adds a {@code int} to an arbitrary volatile memory address and returns the new value.
+	 * <p>
+	 * If the memory address is {@code 0}, the behaviour is undefined.
+	 *
+	 * @param dest  The volatile memory address to write to.
+	 * @param value The {@code int} to add.
+	 * @return The new value.
+	 */
+	@Contract(pure = true)
+	private static native int c_add_and_get_int_volatile(long dest, int value);
+
+	/**
 	 * Reads a {@code long} from an arbitrary memory address.
 	 * <p>
 	 * If the memory address is {@code 0}, the behaviour is undefined.
@@ -309,6 +591,100 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 */
 	@Contract(pure = true)
 	private static native void c_put_long_volatile(long dest, long value);
+
+	/**
+	 * Replaces a {@code long} from an arbitrary memory address and returns the old value.
+	 * <p>
+	 * If the memory address is {@code 0}, the behaviour is undefined.
+	 *
+	 * @param dest  The memory address to write to.
+	 * @param value The {@code long} to write.
+	 * @return The old value.
+	 */
+	@Contract(pure = true)
+	private static native long c_get_and_put_long(long dest, long value);
+
+	/**
+	 * Replaces a {@code long} from an arbitrary volatile memory address and returns the old value.
+	 * <p>
+	 * If the memory address is {@code 0}, the behaviour is undefined.
+	 *
+	 * @param dest  The volatile memory address to write to.
+	 * @param value The {@code long} to write.
+	 * @return The old value.
+	 */
+	@Contract(pure = true)
+	private static native long c_get_and_put_long_volatile(long dest, long value);
+
+	/**
+	 * Adds a {@code long} to an arbitrary memory address.
+	 * <p>
+	 * If the memory address is {@code 0}, the behaviour is undefined.
+	 *
+	 * @param dest  The memory address to write to.
+	 * @param value The {@code long} to add.
+	 */
+	@Contract(pure = true)
+	private static native void c_add_long(long dest, long value);
+
+	/**
+	 * Adds a {@code long} to an arbitrary volatile memory address.
+	 * <p>
+	 * If the memory address is {@code 0}, the behaviour is undefined.
+	 *
+	 * @param dest  The volatile memory address to write to.
+	 * @param value The {@code long} to add.
+	 */
+	@Contract(pure = true)
+	private static native void c_add_long_volatile(long dest, long value);
+
+	/**
+	 * Adds a {@code long} to an arbitrary memory address and returns the old value.
+	 * <p>
+	 * If the memory address is {@code 0}, the behaviour is undefined.
+	 *
+	 * @param dest  The memory address to write to.
+	 * @param value The {@code long} to add.
+	 * @return The old value.
+	 */
+	@Contract(pure = true)
+	private static native long c_get_and_add_long(long dest, long value);
+
+	/**
+	 * Adds a {@code long} to an arbitrary volatile memory address and returns the old value.
+	 * <p>
+	 * If the memory address is {@code 0}, the behaviour is undefined.
+	 *
+	 * @param dest  The volatile memory address to write to.
+	 * @param value The {@code long} to add.
+	 * @return The old value.
+	 */
+	@Contract(pure = true)
+	private static native long c_get_and_add_long_volatile(long dest, long value);
+
+	/**
+	 * Adds a {@code long} to an arbitrary memory address and returns the new value.
+	 * <p>
+	 * If the memory address is {@code 0}, the behaviour is undefined.
+	 *
+	 * @param dest  The memory address to write to.
+	 * @param value The {@code long} to add.
+	 * @return The new value.
+	 */
+	@Contract(pure = true)
+	private static native long c_add_and_get_long(long dest, long value);
+
+	/**
+	 * Adds a {@code long} to an arbitrary volatile memory address and returns the new value.
+	 * <p>
+	 * If the memory address is {@code 0}, the behaviour is undefined.
+	 *
+	 * @param dest  The volatile memory address to write to.
+	 * @param value The {@code long} to add.
+	 * @return The new value.
+	 */
+	@Contract(pure = true)
+	private static native long c_add_and_get_long_volatile(long dest, long value);
 
 	/**
 	 * Copies a memory region into a primitive byte array.
@@ -569,6 +945,94 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	public byte getAndPutByte(long address, byte value) {
+		if (BuildConfig.DEBUG) {
+			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
+			val xaddress = Long.toHexString(address);
+			log.debug("Replacing byte @ 0x{} with 0x{} using C", xaddress, xvalue);
+		}
+		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
+		return c_get_and_put_byte(address, value);
+	}
+
+	@Override
+	public byte getAndPutByteVolatile(long address, byte value) {
+		if (BuildConfig.DEBUG) {
+			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
+			val xaddress = Long.toHexString(address);
+			log.debug("Replacing volatile byte @ 0x{} with 0x{} using C", xaddress, xvalue);
+		}
+		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
+		return c_get_and_put_byte_volatile(address, value);
+	}
+
+	@Override
+	public void addByte(long address, byte value) {
+		if (BuildConfig.DEBUG) {
+			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
+			val xaddress = Long.toHexString(address);
+			log.debug("Adding byte 0x{} @ 0x{} using C", xvalue, xaddress);
+		}
+		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
+		c_add_byte(address, value);
+	}
+
+	@Override
+	public void addByteVolatile(long address, byte value) {
+		if (BuildConfig.DEBUG) {
+			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
+			val xaddress = Long.toHexString(address);
+			log.debug("Adding volatile byte 0x{} @ 0x{} using C", xvalue, xaddress);
+		}
+		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
+		c_add_byte_volatile(address, value);
+	}
+
+	@Override
+	public byte getAndAddByte(long address, byte value) {
+		if (BuildConfig.DEBUG) {
+			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
+			val xaddress = Long.toHexString(address);
+			log.debug("Adding byte 0x{} @ 0x{} using C", xvalue, xaddress);
+		}
+		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
+		return c_get_and_add_byte(address, value);
+	}
+
+	@Override
+	public byte getAndAddByteVolatile(long address, byte value) {
+		if (BuildConfig.DEBUG) {
+			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
+			val xaddress = Long.toHexString(address);
+			log.debug("Adding volatile byte 0x{} @ 0x{} using C", xvalue, xaddress);
+		}
+		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
+		return c_get_and_add_byte_volatile(address, value);
+	}
+
+	@Override
+	public byte addAndGetByte(long address, byte value) {
+		if (BuildConfig.DEBUG) {
+			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
+			val xaddress = Long.toHexString(address);
+			log.debug("Adding byte 0x{} @ 0x{} using C", xvalue, xaddress);
+		}
+		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
+		return c_add_and_get_byte(address, value);
+	}
+
+	@Override
+	public byte addAndGetByteVolatile(long address, byte value) {
+		if (BuildConfig.DEBUG) {
+			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
+			val xaddress = Long.toHexString(address);
+			log.debug("Adding volatile byte 0x{} @ 0x{} using C", xvalue, xaddress);
+		}
+		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
+		return c_add_and_get_byte_volatile(address, value);
+	}
+
+	@Override
 	@Contract(pure = true)
 	public short getShort(long address) {
 		if (BuildConfig.DEBUG) {
@@ -612,6 +1076,94 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		c_put_short_volatile(address, value);
+	}
+
+	@Override
+	public short getAndPutShort(long address, short value) {
+		if (BuildConfig.DEBUG) {
+			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
+			val xaddress = Long.toHexString(address);
+			log.debug("Replacing short @ 0x{} with 0x{} using C", xaddress, xvalue);
+		}
+		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
+		return c_get_and_put_short(address, value);
+	}
+
+	@Override
+	public short getAndPutShortVolatile(long address, short value) {
+		if (BuildConfig.DEBUG) {
+			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
+			val xaddress = Long.toHexString(address);
+			log.debug("Replacing volatile short @ 0x{} with 0x{} using C", xaddress, xvalue);
+		}
+		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
+		return c_get_and_put_short_volatile(address, value);
+	}
+
+	@Override
+	public void addShort(long address, short value) {
+		if (BuildConfig.DEBUG) {
+			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
+			val xaddress = Long.toHexString(address);
+			log.debug("Adding short 0x{} @ 0x{} using C", xvalue, xaddress);
+		}
+		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
+		c_add_short(address, value);
+	}
+
+	@Override
+	public void addShortVolatile(long address, short value) {
+		if (BuildConfig.DEBUG) {
+			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
+			val xaddress = Long.toHexString(address);
+			log.debug("Adding volatile short 0x{} @ 0x{} using C", xvalue, xaddress);
+		}
+		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
+		c_add_short_volatile(address, value);
+	}
+
+	@Override
+	public short getAndAddShort(long address, short value) {
+		if (BuildConfig.DEBUG) {
+			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
+			val xaddress = Long.toHexString(address);
+			log.debug("Adding short 0x{} @ 0x{} using C", xvalue, xaddress);
+		}
+		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
+		return c_get_and_add_short(address, value);
+	}
+
+	@Override
+	public short getAndAddShortVolatile(long address, short value) {
+		if (BuildConfig.DEBUG) {
+			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
+			val xaddress = Long.toHexString(address);
+			log.debug("Adding volatile short 0x{} @ 0x{} using C", xvalue, xaddress);
+		}
+		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
+		return c_get_and_add_short_volatile(address, value);
+	}
+
+	@Override
+	public short addAndGetShort(long address, short value) {
+		if (BuildConfig.DEBUG) {
+			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
+			val xaddress = Long.toHexString(address);
+			log.debug("Adding short 0x{} @ 0x{} using C", xvalue, xaddress);
+		}
+		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
+		return c_add_and_get_short(address, value);
+	}
+
+	@Override
+	public short addAndGetShortVolatile(long address, short value) {
+		if (BuildConfig.DEBUG) {
+			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
+			val xaddress = Long.toHexString(address);
+			log.debug("Adding volatile short 0x{} @ 0x{} using C", xvalue, xaddress);
+		}
+		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
+		return c_add_and_get_short_volatile(address, value);
 	}
 
 	@Override
@@ -661,6 +1213,94 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	public int getAndPutInt(long address, int value) {
+		if (BuildConfig.DEBUG) {
+			val xvalue = Integer.toHexString(value);
+			val xaddress = Long.toHexString(address);
+			log.debug("Replacing int @ 0x{} with 0x{} using C", xaddress, xvalue);
+		}
+		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
+		return c_get_and_put_int(address, value);
+	}
+
+	@Override
+	public int getAndPutIntVolatile(long address, int value) {
+		if (BuildConfig.DEBUG) {
+			val xvalue = Integer.toHexString(value);
+			val xaddress = Long.toHexString(address);
+			log.debug("Replacing volatile int @ 0x{} with 0x{} using C", xaddress, xvalue);
+		}
+		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
+		return c_get_and_put_int_volatile(address, value);
+	}
+
+	@Override
+	public void addInt(long address, int value) {
+		if (BuildConfig.DEBUG) {
+			val xvalue = Integer.toHexString(value);
+			val xaddress = Long.toHexString(address);
+			log.debug("Adding int 0x{} @ 0x{} using C", xvalue, xaddress);
+		}
+		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
+		c_add_int(address, value);
+	}
+
+	@Override
+	public void addIntVolatile(long address, int value) {
+		if (BuildConfig.DEBUG) {
+			val xvalue = Integer.toHexString(value);
+			val xaddress = Long.toHexString(address);
+			log.debug("Adding volatile int 0x{} @ 0x{} using C", xvalue, xaddress);
+		}
+		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
+		c_add_int_volatile(address, value);
+	}
+
+	@Override
+	public int getAndAddInt(long address, int value) {
+		if (BuildConfig.DEBUG) {
+			val xvalue = Integer.toHexString(value);
+			val xaddress = Long.toHexString(address);
+			log.debug("Adding int 0x{} @ 0x{} using C", xvalue, xaddress);
+		}
+		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
+		return c_get_and_add_int(address, value);
+	}
+
+	@Override
+	public int getAndAddIntVolatile(long address, int value) {
+		if (BuildConfig.DEBUG) {
+			val xvalue = Integer.toHexString(value);
+			val xaddress = Long.toHexString(address);
+			log.debug("Adding volatile int 0x{} @ 0x{} using C", xvalue, xaddress);
+		}
+		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
+		return c_get_and_add_int_volatile(address, value);
+	}
+
+	@Override
+	public int addAndGetInt(long address, int value) {
+		if (BuildConfig.DEBUG) {
+			val xvalue = Integer.toHexString(value);
+			val xaddress = Long.toHexString(address);
+			log.debug("Adding int 0x{} @ 0x{} using C", xvalue, xaddress);
+		}
+		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
+		return c_add_and_get_int(address, value);
+	}
+
+	@Override
+	public int addAndGetIntVolatile(long address, int value) {
+		if (BuildConfig.DEBUG) {
+			val xvalue = Integer.toHexString(value);
+			val xaddress = Long.toHexString(address);
+			log.debug("Adding volatile int 0x{} @ 0x{} using C", xvalue, xaddress);
+		}
+		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
+		return c_add_and_get_int_volatile(address, value);
+	}
+
+	@Override
 	@Contract(pure = true)
 	public long getLong(long address) {
 		if (BuildConfig.DEBUG) {
@@ -704,6 +1344,94 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		c_put_long_volatile(address, value);
+	}
+
+	@Override
+	public long getAndPutLong(long address, long value) {
+		if (BuildConfig.DEBUG) {
+			val xvalue = Long.toHexString(value);
+			val xaddress = Long.toHexString(address);
+			log.debug("Replacing long @ 0x{} with 0x{} using C", xaddress, xvalue);
+		}
+		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
+		return c_get_and_put_long(address, value);
+	}
+
+	@Override
+	public long getAndPutLongVolatile(long address, long value) {
+		if (BuildConfig.DEBUG) {
+			val xvalue = Long.toHexString(value);
+			val xaddress = Long.toHexString(address);
+			log.debug("Replacing volatile long @ 0x{} with 0x{} using C", xaddress, xvalue);
+		}
+		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
+		return c_get_and_put_long_volatile(address, value);
+	}
+
+	@Override
+	public void addLong(long address, long value) {
+		if (BuildConfig.DEBUG) {
+			val xvalue = Long.toHexString(value);
+			val xaddress = Long.toHexString(address);
+			log.debug("Adding long 0x{} @ 0x{} using C", xvalue, xaddress);
+		}
+		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
+		c_add_long(address, value);
+	}
+
+	@Override
+	public void addLongVolatile(long address, long value) {
+		if (BuildConfig.DEBUG) {
+			val xvalue = Long.toHexString(value);
+			val xaddress = Long.toHexString(address);
+			log.debug("Adding volatile long 0x{} @ 0x{} using C", xvalue, xaddress);
+		}
+		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
+		c_add_long_volatile(address, value);
+	}
+
+	@Override
+	public long getAndAddLong(long address, long value) {
+		if (BuildConfig.DEBUG) {
+			val xvalue = Long.toHexString(value);
+			val xaddress = Long.toHexString(address);
+			log.debug("Adding long 0x{} @ 0x{} using C", xvalue, xaddress);
+		}
+		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
+		return c_get_and_add_long(address, value);
+	}
+
+	@Override
+	public long getAndAddLongVolatile(long address, long value) {
+		if (BuildConfig.DEBUG) {
+			val xvalue = Long.toHexString(value);
+			val xaddress = Long.toHexString(address);
+			log.debug("Adding volatile long 0x{} @ 0x{} using C", xvalue, xaddress);
+		}
+		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
+		return c_get_and_add_long_volatile(address, value);
+	}
+
+	@Override
+	public long addAndGetLong(long address, long value) {
+		if (BuildConfig.DEBUG) {
+			val xvalue = Long.toHexString(value);
+			val xaddress = Long.toHexString(address);
+			log.debug("Adding long 0x{} @ 0x{} using C", xvalue, xaddress);
+		}
+		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
+		return c_add_and_get_long(address, value);
+	}
+
+	@Override
+	public long addAndGetLongVolatile(long address, long value) {
+		if (BuildConfig.DEBUG) {
+			val xvalue = Long.toHexString(value);
+			val xaddress = Long.toHexString(address);
+			log.debug("Adding volatile long 0x{} @ 0x{} using C", xvalue, xaddress);
+		}
+		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
+		return c_add_and_get_long_volatile(address, value);
 	}
 
 	@Override

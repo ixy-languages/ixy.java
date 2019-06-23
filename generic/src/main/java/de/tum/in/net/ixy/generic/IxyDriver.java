@@ -22,14 +22,23 @@ public interface IxyDriver extends ExtensionPoint {
 	@NotNull String getName();
 
 	/**
+	 * Returns a memory pool instance.
+	 *
+	 * @return A memory pool.
+	 */
+	@Contract(value = " -> new", pure = true)
+	@NotNull IxyMempool getMemoryPool();
+
+	/**
 	 * Returns the implementation of an Ixy device.
 	 *
-	 * @param device The device name.
-	 * @param driver The driver name.
+	 * @param device   The device name.
+	 * @param rxQueues The number of read queues.
+	 * @param txQueues The number of write queues.
 	 * @return The device.
 	 * @throws FileNotFoundException If the device cannot be found.
 	 */
-	@Contract(value = "null, _ -> fail; _, null -> fail; !null, !null -> new", pure = true)
-	@NotNull IxyDevice getDevice(@NotNull String device, @NotNull String driver) throws FileNotFoundException;
+	@Contract(value = "!null, _, _ -> new", pure = true)
+	@NotNull IxyDevice getDevice(@NotNull String device, int rxQueues, int txQueues) throws FileNotFoundException;
 
 }

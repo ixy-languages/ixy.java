@@ -281,6 +281,62 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@Contract(pure = true)
+	public byte getAndPutByte(long address, byte value) {
+		return BuildConfig.UNSAFE ? unsafe.getAndPutByte(address, value) : jni.getAndPutByte(address, value);
+	}
+
+	@Override
+	@Contract(pure = true)
+	public byte getAndPutByteVolatile(long address, byte value) {
+		return BuildConfig.UNSAFE ? unsafe.getAndPutByteVolatile(address, value) : jni.getAndPutByteVolatile(address, value);
+	}
+
+	@Override
+	@Contract(pure = true)
+	public void addByte(long address, byte value) {
+		if (BuildConfig.UNSAFE) {
+			unsafe.addByte(address, value);
+		} else {
+			jni.addByte(address, value);
+		}
+	}
+
+	@Override
+	@Contract(pure = true)
+	public void addByteVolatile(long address, byte value) {
+		if (BuildConfig.UNSAFE) {
+			unsafe.addByteVolatile(address, value);
+		} else {
+			jni.addByteVolatile(address, value);
+		}
+	}
+
+	@Override
+	@Contract(pure = true)
+	public byte getAndAddByte(long address, byte value) {
+		return BuildConfig.UNSAFE ? unsafe.getAndAddByte(address, value) : jni.getAndAddByte(address, value);
+	}
+
+	@Override
+	@Contract(pure = true)
+	public byte getAndAddByteVolatile(long address, byte value) {
+		return BuildConfig.UNSAFE ? unsafe.getAndAddByteVolatile(address, value) : jni.getAndAddByteVolatile(address, value);
+	}
+
+	@Override
+	@Contract(pure = true)
+	public byte addAndGetByte(long address, byte value) {
+		return BuildConfig.UNSAFE ? unsafe.addAndGetByte(address, value) : jni.addAndGetByte(address, value);
+	}
+
+	@Override
+	@Contract(pure = true)
+	public byte addAndGetByteVolatile(long address, byte value) {
+		return BuildConfig.UNSAFE ? unsafe.addAndGetByteVolatile(address, value) : jni.addAndGetByteVolatile(address, value);
+	}
+
+	@Override
+	@Contract(pure = true)
 	public short getShort(long address) {
 		return BuildConfig.UNSAFE ? unsafe.getShort(address) : jni.getShort(address);
 	}
@@ -309,6 +365,62 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 		} else {
 			jni.putShortVolatile(address, value);
 		}
+	}
+
+	@Override
+	@Contract(pure = true)
+	public short getAndPutShort(long address, short value) {
+		return BuildConfig.UNSAFE ? unsafe.getAndPutShort(address, value) : jni.getAndPutShort(address, value);
+	}
+
+	@Override
+	@Contract(pure = true)
+	public short getAndPutShortVolatile(long address, short value) {
+		return BuildConfig.UNSAFE ? unsafe.getAndPutShortVolatile(address, value) : jni.getAndPutShortVolatile(address, value);
+	}
+
+	@Override
+	@Contract(pure = true)
+	public void addShort(long address, short value) {
+		if (BuildConfig.UNSAFE) {
+			unsafe.addShort(address, value);
+		} else {
+			jni.addShort(address, value);
+		}
+	}
+
+	@Override
+	@Contract(pure = true)
+	public void addShortVolatile(long address, short value) {
+		if (BuildConfig.UNSAFE) {
+			unsafe.addShortVolatile(address, value);
+		} else {
+			jni.addShortVolatile(address, value);
+		}
+	}
+
+	@Override
+	@Contract(pure = true)
+	public short getAndAddShort(long address, short value) {
+		return BuildConfig.UNSAFE ? unsafe.getAndAddShort(address, value) : jni.getAndAddShort(address, value);
+	}
+
+	@Override
+	@Contract(pure = true)
+	public short getAndAddShortVolatile(long address, short value) {
+		return BuildConfig.UNSAFE ? unsafe.getAndAddShortVolatile(address, value) : jni.getAndAddShortVolatile(address, value);
+	}
+
+	@Override
+	@Contract(pure = true)
+	public short addAndGetShort(long address, short value) {
+		return BuildConfig.UNSAFE ? unsafe.addAndGetShort(address, value) : jni.addAndGetShort(address, value);
+	}
+
+	@Override
+	@Contract(pure = true)
+	public short addAndGetShortVolatile(long address, short value) {
+		return BuildConfig.UNSAFE ? unsafe.addAndGetShortVolatile(address, value) : jni.addAndGetShortVolatile(address, value);
 	}
 
 	@Override
@@ -345,6 +457,62 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@Contract(pure = true)
+	public int getAndPutInt(long address, int value) {
+		return BuildConfig.UNSAFE ? unsafe.getAndPutInt(address, value) : jni.getAndPutInt(address, value);
+	}
+
+	@Override
+	@Contract(pure = true)
+	public int getAndPutIntVolatile(long address, int value) {
+		return BuildConfig.UNSAFE ? unsafe.getAndPutIntVolatile(address, value) : jni.getAndPutIntVolatile(address, value);
+	}
+
+	@Override
+	@Contract(pure = true)
+	public void addInt(long address, int value) {
+		if (BuildConfig.UNSAFE) {
+			unsafe.addInt(address, value);
+		} else {
+			jni.addInt(address, value);
+		}
+	}
+
+	@Override
+	@Contract(pure = true)
+	public void addIntVolatile(long address, int value) {
+		if (BuildConfig.UNSAFE) {
+			unsafe.addIntVolatile(address, value);
+		} else {
+			jni.addIntVolatile(address, value);
+		}
+	}
+
+	@Override
+	@Contract(pure = true)
+	public int getAndAddInt(long address, int value) {
+		return BuildConfig.UNSAFE ? unsafe.getAndAddInt(address, value) : jni.getAndAddInt(address, value);
+	}
+
+	@Override
+	@Contract(pure = true)
+	public int getAndAddIntVolatile(long address, int value) {
+		return BuildConfig.UNSAFE ? unsafe.getAndAddIntVolatile(address, value) : jni.getAndAddIntVolatile(address, value);
+	}
+
+	@Override
+	@Contract(pure = true)
+	public int addAndGetInt(long address, int value) {
+		return BuildConfig.UNSAFE ? unsafe.addAndGetInt(address, value) : jni.addAndGetInt(address, value);
+	}
+
+	@Override
+	@Contract(pure = true)
+	public int addAndGetIntVolatile(long address, int value) {
+		return BuildConfig.UNSAFE ? unsafe.addAndGetIntVolatile(address, value) : jni.addAndGetIntVolatile(address, value);
+	}
+	
+	@Override
+	@Contract(pure = true)
 	public long getLong(long address) {
 		return BuildConfig.UNSAFE ? unsafe.getLong(address) : jni.getLong(address);
 	}
@@ -376,7 +544,63 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
-	@Contract(value = "_, _, null, _ -> fail", mutates = "param3")
+	@Contract(pure = true)
+	public long getAndPutLong(long address, long value) {
+		return BuildConfig.UNSAFE ? unsafe.getAndPutLong(address, value) : jni.getAndPutLong(address, value);
+	}
+
+	@Override
+	@Contract(pure = true)
+	public long getAndPutLongVolatile(long address, long value) {
+		return BuildConfig.UNSAFE ? unsafe.getAndPutLongVolatile(address, value) : jni.getAndPutLongVolatile(address, value);
+	}
+
+	@Override
+	@Contract(pure = true)
+	public void addLong(long address, long value) {
+		if (BuildConfig.UNSAFE) {
+			unsafe.addLong(address, value);
+		} else {
+			jni.addLong(address, value);
+		}
+	}
+
+	@Override
+	@Contract(pure = true)
+	public void addLongVolatile(long address, long value) {
+		if (BuildConfig.UNSAFE) {
+			unsafe.addLongVolatile(address, value);
+		} else {
+			jni.addLongVolatile(address, value);
+		}
+	}
+
+	@Override
+	@Contract(pure = true)
+	public long getAndAddLong(long address, long value) {
+		return BuildConfig.UNSAFE ? unsafe.getAndAddLong(address, value) : jni.getAndAddLong(address, value);
+	}
+
+	@Override
+	@Contract(pure = true)
+	public long getAndAddLongVolatile(long address, long value) {
+		return BuildConfig.UNSAFE ? unsafe.getAndAddLongVolatile(address, value) : jni.getAndAddLongVolatile(address, value);
+	}
+
+	@Override
+	@Contract(pure = true)
+	public long addAndGetLong(long address, long value) {
+		return BuildConfig.UNSAFE ? unsafe.addAndGetLong(address, value) : jni.addAndGetLong(address, value);
+	}
+
+	@Override
+	@Contract(pure = true)
+	public long addAndGetLongVolatile(long address, long value) {
+		return BuildConfig.UNSAFE ? unsafe.addAndGetLongVolatile(address, value) : jni.addAndGetLongVolatile(address, value);
+	}
+
+	@Override
+	@Contract(mutates = "param3")
 	public void get(long src, int bytes, @NotNull byte[] dest, int offset) {
 		if (BuildConfig.UNSAFE) {
 			unsafe.get(src, bytes, dest, offset);
@@ -386,7 +610,7 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
-	@Contract(value = "_, _, null, _ -> fail", mutates = "param3")
+	@Contract(mutates = "param3")
 	public void getVolatile(long src, int bytes, @NotNull byte[] dest, int offset) {
 		if (BuildConfig.UNSAFE) {
 			unsafe.getVolatile(src, bytes, dest, offset);
@@ -396,7 +620,7 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
-	@Contract(value = "_, _, null, _ -> fail", pure = true)
+	@Contract(pure = true)
 	public void put(long dest, int bytes, @NotNull byte[] src, int offset) {
 		if (BuildConfig.UNSAFE) {
 			unsafe.put(dest, bytes, src, offset);
@@ -406,7 +630,7 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
-	@Contract(value = "_, _, null, _ -> fail", pure = true)
+	@Contract(pure = true)
 	public void putVolatile(long dest, int bytes, @NotNull byte[] src, int offset) {
 		if (BuildConfig.UNSAFE) {
 			unsafe.putVolatile(dest, bytes, src, offset);

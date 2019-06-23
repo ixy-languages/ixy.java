@@ -1,5 +1,6 @@
 package de.tum.in.net.ixy.generic;
 
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.jetbrains.annotations.Contract;
@@ -13,6 +14,7 @@ import java.io.IOException;
  * @author Esaú García Sánchez-Torija
  */
 @Slf4j
+@NoArgsConstructor
 @SuppressWarnings("PMD.AvoidDuplicateLiterals")
 public abstract class IxyDevice implements IxyPciDevice {
 
@@ -72,20 +74,20 @@ public abstract class IxyDevice implements IxyPciDevice {
 	}
 
 	/**
-	 * Blocks the calling thread until the given {@code flags} are cleared.
+	 * Blocks the calling thread until the given {@code flags} are set.
 	 *
 	 * @param offset The offset to start reading from.
 	 * @param flags  The flags to check for.
 	 */
 	@Contract(pure = true)
-	protected void waitClearRegister(int offset, int flags) {
+	protected void waitSetFlags(int offset, int flags) {
 		if (BuildConfig.DEBUG) {
 			val xoffset = Integer.toHexString(offset);
 			val xflags = Integer.toBinaryString(flags);
 			log.debug("Waiting register at offset 0x{} for flags 0b{} to be cleared", xoffset, xflags);
 		}
 		var current = getRegister(offset);
-		while ((current & flags) != 0) {
+		while ((current & flags) != flags) {
 			try {
 				Thread.sleep(10);
 			} catch (InterruptedException e) {
@@ -98,20 +100,20 @@ public abstract class IxyDevice implements IxyPciDevice {
 	}
 
 	/**
-	 * Blocks the calling thread until the given {@code flags} are set.
+	 * Blocks the calling thread until the given {@code flags} are cleared.
 	 *
 	 * @param offset The offset to start reading from.
 	 * @param flags  The flags to check for.
 	 */
 	@Contract(pure = true)
-	protected void waitSetRegister(int offset, int flags) {
+	protected void waitClearFlags(int offset, int flags) {
 		if (BuildConfig.DEBUG) {
 			val xoffset = Integer.toHexString(offset);
 			val xflags = Integer.toBinaryString(flags);
 			log.debug("Waiting register at offset 0x{} for flags 0b{} to be cleared", xoffset, xflags);
 		}
 		var current = getRegister(offset);
-		while ((current & flags) != flags) {
+		while ((current & flags) != 0) {
 			try {
 				Thread.sleep(10);
 			} catch (InterruptedException e) {
@@ -173,7 +175,6 @@ public abstract class IxyDevice implements IxyPciDevice {
 			if (offset < 0) throw new InvalidOffsetException("offset");
 		}
 		val length = packets.length - offset;
-		if (length <= 0) return 0;
 		if (BuildConfig.DEBUG) log.debug("Delegate reading a batch of {} packets", length);
 		return rxBatch(queue, packets, offset, length);
 	}
@@ -188,10 +189,7 @@ public abstract class IxyDevice implements IxyPciDevice {
 	 */
 	@Contract(mutates = "param2")
 	public int rxBatch(int queue, @NotNull IxyPacketBuffer[] packets) {
-		if (!BuildConfig.OPTIMIZED) {
-			if (packets == null) throw new InvalidNullParameterException("packets");
-			if (packets.length == 0) return 0;
-		}
+		if (!BuildConfig.OPTIMIZED && packets == null) throw new InvalidNullParameterException("packets");
 		if (BuildConfig.DEBUG) log.debug("Delegate reading a whole batch of packets");
 		return rxBatch(queue, packets, 0, packets.length);
 	}
@@ -212,10 +210,8 @@ public abstract class IxyDevice implements IxyPciDevice {
 			length = Math.min(length, packets.length - offset);
 		}
 		if (BuildConfig.DEBUG) log.debug("Synchronously reading a batch of {} packets", length);
-		var received = 0;
-		while (received < length) {
+		while (length > 0) {
 			val processed = rxBatch(queue, packets, offset, length);
-			received += processed;
 			offset += processed;
 			length -= processed;
 		}
@@ -236,7 +232,6 @@ public abstract class IxyDevice implements IxyPciDevice {
 			if (offset < 0) throw new InvalidOffsetException("offset");
 		}
 		val length = packets.length - offset;
-		if (length <= 0) return;
 		if (BuildConfig.DEBUG) log.debug("Delegate synchronously reading a batch of {} packets", length);
 		rxBusyWait(queue, packets, offset, length);
 	}
@@ -250,10 +245,7 @@ public abstract class IxyDevice implements IxyPciDevice {
 	 */
 	@Contract(mutates = "param2")
 	public void rxBusyWait(int queue, @NotNull IxyPacketBuffer[] packets) {
-		if (!BuildConfig.OPTIMIZED) {
-			if (packets == null) throw new InvalidNullParameterException("packets");
-			if (packets.length == 0) return;
-		}
+		if (!BuildConfig.OPTIMIZED && packets == null) throw new InvalidNullParameterException("packets");
 		if (BuildConfig.DEBUG) log.debug("Delegate synchronously reading a whole batch of packets");
 		rxBusyWait(queue, packets, 0, packets.length);
 	}
@@ -286,7 +278,6 @@ public abstract class IxyDevice implements IxyPciDevice {
 			if (offset < 0) throw new InvalidOffsetException("offset");
 		}
 		val length = packets.length - offset;
-		if (length <= 0) return 0;
 		if (BuildConfig.DEBUG) log.debug("Delegate reading a batch of {} packets", length);
 		return txBatch(queue, packets, offset, length);
 	}
@@ -301,10 +292,7 @@ public abstract class IxyDevice implements IxyPciDevice {
 	 */
 	@Contract(mutates = "param2")
 	public int txBatch(int queue, @NotNull IxyPacketBuffer[] packets) {
-		if (!BuildConfig.OPTIMIZED) {
-			if (packets == null) throw new InvalidNullParameterException("packets");
-			if (packets.length == 0) return 0;
-		}
+		if (!BuildConfig.OPTIMIZED && packets == null) throw new InvalidNullParameterException("packets");
 		if (BuildConfig.DEBUG) log.debug("Delegate writing a whole batch of packets");
 		return txBatch(queue, packets, 0, packets.length);
 	}
@@ -325,10 +313,8 @@ public abstract class IxyDevice implements IxyPciDevice {
 			length = Math.min(length, packets.length - offset);
 		}
 		if (BuildConfig.DEBUG) log.debug("Synchronously writing a batch of {} packets", length);
-		var received = 0;
-		while (received < length) {
+		while (length > 0) {
 			val processed = txBatch(queue, packets, offset, length);
-			received += processed;
 			offset += processed;
 			length -= processed;
 		}
@@ -349,7 +335,6 @@ public abstract class IxyDevice implements IxyPciDevice {
 			if (offset < 0) throw new InvalidOffsetException("offset");
 		}
 		val length = packets.length - offset;
-		if (length <= 0) return;
 		if (BuildConfig.DEBUG) log.debug("Delegate synchronously writing a batch of {} packets", length);
 		txBusyWait(queue, packets, offset, length);
 	}
@@ -363,10 +348,7 @@ public abstract class IxyDevice implements IxyPciDevice {
 	 */
 	@Contract(mutates = "param2")
 	public void txBusyWait(int queue, @NotNull IxyPacketBuffer[] packets) {
-		if (!BuildConfig.OPTIMIZED) {
-			if (packets == null) throw new InvalidNullParameterException("packets");
-			if (packets.length == 0) return;
-		}
+		if (!BuildConfig.OPTIMIZED && packets == null) throw new InvalidNullParameterException("packets");
 		if (BuildConfig.DEBUG) log.debug("Delegate synchronously writing a whole batch of packets");
 		txBusyWait(queue, packets, 0, packets.length);
 	}

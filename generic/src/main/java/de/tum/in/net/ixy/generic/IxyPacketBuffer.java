@@ -99,6 +99,116 @@ public interface IxyPacketBuffer {
 	void putByteVolatile(int offset, byte value);
 
 	/**
+	 * Replaces a {@code byte} from the packet data.
+	 *
+	 * @param offset The offset to start writing to.
+	 * @param value  The {@code byte} to write.
+	 * @return The old value.
+	 */
+	@Contract(pure = true)
+	default byte getAndPutByte(int offset, byte value) {
+		val old = getByte(offset);
+		putByte(offset, value);
+		return old;
+	}
+
+	/**
+	 * Replaces a {@code byte} from the packet data using volatile memory addresses.
+	 *
+	 * @param offset The offset to start writing to.
+	 * @param value  The {@code byte} to write.
+	 * @return The old value.
+	 */
+	@Contract(pure = true)
+	default byte getAndPutByteVolatile(int offset, byte value) {
+		val old = getByteVolatile(offset);
+		putByteVolatile(offset, value);
+		return old;
+	}
+
+	/**
+	 * Adds a {@code byte} to the packet data.
+	 *
+	 * @param offset The offset to start writing to.
+	 * @param value  The {@code byte} to add.
+	 */
+	@Contract(pure = true)
+	default void addByte(int offset, byte value) {
+		val old = getByte(offset);
+		putByte(offset, (byte) (old + value));
+	}
+
+	/**
+	 * Adds a {@code byte} to the packet data using volatile memory addresses.
+	 *
+	 * @param offset The offset to start writing to.
+	 * @param value  The {@code byte} to add.
+	 */
+	@Contract(pure = true)
+	default void addByteVolatile(int offset, byte value) {
+		val old = getByteVolatile(offset);
+		putByteVolatile(offset, (byte) (old + value));
+	}
+
+	/**
+	 * Adds a {@code byte} to the packet data and returns the old value.
+	 *
+	 * @param offset The offset to start writing to.
+	 * @param value  The {@code byte} to add.
+	 * @return The old value.
+	 */
+	@Contract(pure = true)
+	default byte getAndAddByte(int offset, byte value) {
+		val old = getByte(offset);
+		putByte(offset, (byte) (old + value));
+		return old;
+	}
+
+	/**
+	 * Adds a {@code byte} to the packet data using volatile memory addresses and returns the old value.
+	 *
+	 * @param offset The offset to start writing to.
+	 * @param value  The {@code byte} to add.
+	 * @return The old value.
+	 */
+	@Contract(pure = true)
+	default byte getAndAddByteVolatile(int offset, byte value) {
+		val old = getByteVolatile(offset);
+		putByteVolatile(offset, (byte) (old + value));
+		return old;
+	}
+
+	/**
+	 * Adds a {@code byte} to the packet data and returns the new value.
+	 *
+	 * @param offset The offset to start writing to.
+	 * @param value  The {@code byte} to add.
+	 * @return The new value.
+	 */
+	@Contract(pure = true)
+	default byte addAndGetByte(int offset, byte value) {
+		val old = getByte(offset);
+		val neu = (byte) (old + value);
+		putByte(offset, neu);
+		return neu;
+	}
+
+	/**
+	 * Adds a {@code byte} to the packet data using volatile memory addresses and returns the new value.
+	 *
+	 * @param offset The offset to start writing to.
+	 * @param value  The {@code byte} to add.
+	 * @return The new value.
+	 */
+	@Contract(pure = true)
+	default byte addAndGetByteVolatile(int offset, byte value) {
+		val old = getByteVolatile(offset);
+		val neu = (byte) (old + value);
+		putByteVolatile(offset, neu);
+		return neu;
+	}
+
+	/**
 	 * Reads a {@code short} from the packet data.
 	 *
 	 * @param offset The offset to start reading from.
@@ -133,6 +243,116 @@ public interface IxyPacketBuffer {
 	 */
 	@Contract(pure = true)
 	void putShortVolatile(int offset, short value);
+
+	/**
+	 * Replaces a {@code short} from the packet data.
+	 *
+	 * @param offset The offset to start writing to.
+	 * @param value  The {@code short} to write.
+	 * @return The old value.
+	 */
+	@Contract(pure = true)
+	default short getAndPutShort(int offset, short value) {
+		val old = getShort(offset);
+		putShort(offset, value);
+		return old;
+	}
+
+	/**
+	 * Replaces a {@code short} from the packet data using volatile memory addresses.
+	 *
+	 * @param offset The offset to start writing to.
+	 * @param value  The {@code short} to write.
+	 * @return The old value.
+	 */
+	@Contract(pure = true)
+	default short getAndPutShortVolatile(int offset, short value) {
+		val old = getShortVolatile(offset);
+		putShortVolatile(offset, value);
+		return old;
+	}
+
+	/**
+	 * Adds a {@code short} to the packet data.
+	 *
+	 * @param offset The offset to start writing to.
+	 * @param value  The {@code short} to add.
+	 */
+	@Contract(pure = true)
+	default void addShort(int offset, short value) {
+		val old = getShort(offset);
+		putShort(offset, (short) (old + value));
+	}
+
+	/**
+	 * Adds a {@code short} to the packet data using volatile memory addresses.
+	 *
+	 * @param offset The offset to start writing to.
+	 * @param value  The {@code short} to add.
+	 */
+	@Contract(pure = true)
+	default void addShortVolatile(int offset, short value) {
+		val old = getShortVolatile(offset);
+		putShortVolatile(offset, (short) (old + value));
+	}
+
+	/**
+	 * Adds a {@code short} to the packet data and returns the old value.
+	 *
+	 * @param offset The offset to start writing to.
+	 * @param value  The {@code short} to add.
+	 * @return The old value.
+	 */
+	@Contract(pure = true)
+	default short getAndAddShort(int offset, short value) {
+		val old = getShort(offset);
+		putShort(offset, (short) (old + value));
+		return old;
+	}
+
+	/**
+	 * Adds a {@code short} to the packet data using volatile memory addresses and returns the old value.
+	 *
+	 * @param offset The offset to start writing to.
+	 * @param value  The {@code short} to add.
+	 * @return The old value.
+	 */
+	@Contract(pure = true)
+	default short getAndAddShortVolatile(int offset, short value) {
+		val old = getShortVolatile(offset);
+		putShortVolatile(offset, (short) (old + value));
+		return old;
+	}
+
+	/**
+	 * Adds a {@code short} to the packet data and returns the new value.
+	 *
+	 * @param offset The offset to start writing to.
+	 * @param value  The {@code short} to add.
+	 * @return The new value.
+	 */
+	@Contract(pure = true)
+	default short addAndGetShort(int offset, short value) {
+		val old = getShort(offset);
+		val neu = (short) (old + value);
+		putShort(offset, neu);
+		return neu;
+	}
+
+	/**
+	 * Adds a {@code short} to the packet data using volatile memory addresses and returns the new value.
+	 *
+	 * @param offset The offset to start writing to.
+	 * @param value  The {@code short} to add.
+	 * @return The new value.
+	 */
+	@Contract(pure = true)
+	default short addAndGetShortVolatile(int offset, short value) {
+		val old = getShortVolatile(offset);
+		val neu = (short) (old + value);
+		putShortVolatile(offset, neu);
+		return neu;
+	}
 	
 	/**
 	 * Reads a {@code int} from the packet data.
@@ -171,6 +391,116 @@ public interface IxyPacketBuffer {
 	void putIntVolatile(int offset, int value);
 
 	/**
+	 * Replaces a {@code int} from the packet data.
+	 *
+	 * @param offset The offset to start writing to.
+	 * @param value  The {@code int} to write.
+	 * @return The old value.
+	 */
+	@Contract(pure = true)
+	default int getAndPutInt(int offset, int value) {
+		val old = getInt(offset);
+		putInt(offset, value);
+		return old;
+	}
+
+	/**
+	 * Replaces a {@code int} from the packet data using volatile memory addresses.
+	 *
+	 * @param offset The offset to start writing to.
+	 * @param value  The {@code int} to write.
+	 * @return The old value.
+	 */
+	@Contract(pure = true)
+	default int getAndPutIntVolatile(int offset, int value) {
+		val old = getIntVolatile(offset);
+		putIntVolatile(offset, value);
+		return old;
+	}
+
+	/**
+	 * Adds a {@code int} to the packet data.
+	 *
+	 * @param offset The offset to start writing to.
+	 * @param value  The {@code int} to add.
+	 */
+	@Contract(pure = true)
+	default void addInt(int offset, int value) {
+		val old = getInt(offset);
+		putInt(offset, old + value);
+	}
+
+	/**
+	 * Adds a {@code int} to the packet data using volatile memory addresses.
+	 *
+	 * @param offset The offset to start writing to.
+	 * @param value  The {@code int} to add.
+	 */
+	@Contract(pure = true)
+	default void addIntVolatile(int offset, int value) {
+		val old = getIntVolatile(offset);
+		putIntVolatile(offset, old + value);
+	}
+
+	/**
+	 * Adds a {@code int} to the packet data and returns the old value.
+	 *
+	 * @param offset The offset to start writing to.
+	 * @param value  The {@code int} to add.
+	 * @return The old value.
+	 */
+	@Contract(pure = true)
+	default int getAndAddInt(int offset, int value) {
+		val old = getInt(offset);
+		putInt(offset, old + value);
+		return old;
+	}
+
+	/**
+	 * Adds a {@code int} to the packet data using volatile memory addresses and returns the old value.
+	 *
+	 * @param offset The offset to start writing to.
+	 * @param value  The {@code int} to add.
+	 * @return The old value.
+	 */
+	@Contract(pure = true)
+	default int getAndAddIntVolatile(int offset, int value) {
+		val old = getIntVolatile(offset);
+		putIntVolatile(offset, old + value);
+		return old;
+	}
+
+	/**
+	 * Adds a {@code int} to the packet data and returns the new value.
+	 *
+	 * @param offset The offset to start writing to.
+	 * @param value  The {@code int} to add.
+	 * @return The new value.
+	 */
+	@Contract(pure = true)
+	default int addAndGetInt(int offset, int value) {
+		val old = getInt(offset);
+		val neu = old + value;
+		putInt(offset, neu);
+		return neu;
+	}
+
+	/**
+	 * Adds a {@code int} to the packet data using volatile memory addresses and returns the new value.
+	 *
+	 * @param offset The offset to start writing to.
+	 * @param value  The {@code int} to add.
+	 * @return The new value.
+	 */
+	@Contract(pure = true)
+	default int addAndGetIntVolatile(int offset, int value) {
+		val old = getIntVolatile(offset);
+		val neu = old + value;
+		putIntVolatile(offset, neu);
+		return neu;
+	}
+
+	/**
 	 * Reads a {@code long} from the packet data.
 	 *
 	 * @param offset The offset to start reading from.
@@ -207,6 +537,116 @@ public interface IxyPacketBuffer {
 	void putLongVolatile(int offset, long value);
 
 	/**
+	 * Replaces a {@code long} from the packet data.
+	 *
+	 * @param offset The offset to start writing to.
+	 * @param value  The {@code long} to write.
+	 * @return The old value.
+	 */
+	@Contract(pure = true)
+	default long getAndPutLong(int offset, long value) {
+		val old = getLong(offset);
+		putLong(offset, value);
+		return old;
+	}
+
+	/**
+	 * Replaces a {@code long} from the packet data using volatile memory addresses.
+	 *
+	 * @param offset The offset to start writing to.
+	 * @param value  The {@code long} to write.
+	 * @return The old value.
+	 */
+	@Contract(pure = true)
+	default long getAndPutLongVolatile(int offset, long value) {
+		val old = getLongVolatile(offset);
+		putLongVolatile(offset, value);
+		return old;
+	}
+
+	/**
+	 * Adds a {@code long} to the packet data.
+	 *
+	 * @param offset The offset to start writing to.
+	 * @param value  The {@code long} to add.
+	 */
+	@Contract(pure = true)
+	default void addLong(int offset, long value) {
+		val old = getLong(offset);
+		putLong(offset, old + value);
+	}
+
+	/**
+	 * Adds a {@code long} to the packet data using volatile memory addresses.
+	 *
+	 * @param offset The offset to start writing to.
+	 * @param value  The {@code long} to add.
+	 */
+	@Contract(pure = true)
+	default void addLongVolatile(int offset, long value) {
+		val old = getLongVolatile(offset);
+		putLongVolatile(offset, old + value);
+	}
+
+	/**
+	 * Adds a {@code long} to the packet data and returns the old value.
+	 *
+	 * @param offset The offset to start writing to.
+	 * @param value  The {@code long} to add.
+	 * @return The old value.
+	 */
+	@Contract(pure = true)
+	default long getAndAddLong(int offset, long value) {
+		val old = getLong(offset);
+		putLong(offset, old + value);
+		return old;
+	}
+
+	/**
+	 * Adds a {@code long} to the packet data using volatile memory addresses and returns the old value.
+	 *
+	 * @param offset The offset to start writing to.
+	 * @param value  The {@code long} to add.
+	 * @return The old value.
+	 */
+	@Contract(pure = true)
+	default long getAndAddLongVolatile(int offset, long value) {
+		val old = getLongVolatile(offset);
+		putLongVolatile(offset, old + value);
+		return old;
+	}
+
+	/**
+	 * Adds a {@code long} to the packet data and returns the new value.
+	 *
+	 * @param offset The offset to start writing to.
+	 * @param value  The {@code long} to add.
+	 * @return The new value.
+	 */
+	@Contract(pure = true)
+	default long addAndGetLong(int offset, long value) {
+		val old = getLong(offset);
+		val neu = old + value;
+		putLong(offset, neu);
+		return neu;
+	}
+
+	/**
+	 * Adds a {@code long} to the packet data using volatile memory addresses and returns the new value.
+	 *
+	 * @param offset The offset to start writing to.
+	 * @param value  The {@code long} to add.
+	 * @return The new value.
+	 */
+	@Contract(pure = true)
+	default long addAndGetLongVolatile(int offset, long value) {
+		val old = getLongVolatile(offset);
+		val neu = old + value;
+		putLongVolatile(offset, neu);
+		return neu;
+	}
+
+	/**
 	 * Copies a segment of the packet.
 	 * <p>
 	 * This method is necessary for packet generation applications.
@@ -215,7 +655,7 @@ public interface IxyPacketBuffer {
 	 * @param bytes  The number of bytes to copy.
 	 * @param buffer The buffer to copy the data to.
 	 */
-	@Contract(value = "_, _, null -> fail", mutates = "param3")
+	@Contract(mutates = "param3")
 	void get(int offset, int bytes, @NotNull byte[] buffer);
 
 	/**

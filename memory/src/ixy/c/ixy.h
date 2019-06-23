@@ -90,6 +90,70 @@ Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1put_1byte_1volatile(const JNIE
 
 /*
  * Class:     de_tum_in_net_ixy_memory_JniMemoryManager
+ * Method:    c_get_and_put_byte
+ * Signature: (JB)B
+ */
+JNIEXPORT jbyte JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1and_1put_1byte(const JNIEnv *, const jclass, const jlong, const jbyte);
+
+/*
+ * Class:     de_tum_in_net_ixy_memory_JniMemoryManager
+ * Method:    c_get_and_put_byte_volatile
+ * Signature: (JB)B
+ */
+JNIEXPORT jbyte JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1and_1put_1byte_1volatile(const JNIEnv *, const jclass, const jlong, const jbyte);
+
+/*
+ * Class:     de_tum_in_net_ixy_memory_JniMemoryManager
+ * Method:    c_add_byte
+ * Signature: (JB)V
+ */
+JNIEXPORT void JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1add_1byte(const JNIEnv *, const jclass, const jlong, const jbyte);
+
+/*
+ * Class:     de_tum_in_net_ixy_memory_JniMemoryManager
+ * Method:    c_add_byte_volatile
+ * Signature: (JB)V
+ */
+JNIEXPORT void JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1add_1byte_1volatile(const JNIEnv *, const jclass, const jlong, const jbyte);
+
+/*
+ * Class:     de_tum_in_net_ixy_memory_JniMemoryManager
+ * Method:    c_get_and_add_byte
+ * Signature: (JB)B
+ */
+JNIEXPORT jbyte JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1and_1add_1byte(const JNIEnv *, const jclass, const jlong, const jbyte);
+
+/*
+ * Class:     de_tum_in_net_ixy_memory_JniMemoryManager
+ * Method:    c_get_and_add_byte_volatile
+ * Signature: (JB)B
+ */
+JNIEXPORT jbyte JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1and_1add_1byte_1volatile(const JNIEnv *, const jclass, const jlong, const jbyte);
+
+/*
+ * Class:     de_tum_in_net_ixy_memory_JniMemoryManager
+ * Method:    c_add_and_get_byte
+ * Signature: (JB)B
+ */
+JNIEXPORT jbyte JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1add_1and_1get_1byte(const JNIEnv *, const jclass, const jlong, const jbyte);
+
+/*
+ * Class:     de_tum_in_net_ixy_memory_JniMemoryManager
+ * Method:    c_add_and_get_byte_volatile
+ * Signature: (JB)B
+ */
+JNIEXPORT jbyte JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1add_1and_1get_1byte_1volatile(const JNIEnv *, const jclass, const jlong, const jbyte);
+
+/*
+ * Class:     de_tum_in_net_ixy_memory_JniMemoryManager
  * Method:    c_get_short
  * Signature: (J)S
  */
@@ -119,6 +183,70 @@ Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1put_1short(const JNIEnv *, con
  */
 JNIEXPORT void JNICALL
 Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1put_1short_1volatile(const JNIEnv *, const jclass, const jlong, const jshort);
+
+/*
+ * Class:     de_tum_in_net_ixy_memory_JniMemoryManager
+ * Method:    c_get_and_put_short
+ * Signature: (JS)S
+ */
+JNIEXPORT jshort JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1and_1put_1short(const JNIEnv *, const jclass, const jlong, const jshort);
+
+/*
+ * Class:     de_tum_in_net_ixy_memory_JniMemoryManager
+ * Method:    c_get_and_put_short_volatile
+ * Signature: (JS)S
+ */
+JNIEXPORT jshort JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1and_1put_1short_1volatile(const JNIEnv *, const jclass, const jlong, const jshort);
+
+/*
+ * Class:     de_tum_in_net_ixy_memory_JniMemoryManager
+ * Method:    c_add_short
+ * Signature: (JS)V
+ */
+JNIEXPORT void JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1add_1short(const JNIEnv *, const jclass, const jlong, const jshort);
+
+/*
+ * Class:     de_tum_in_net_ixy_memory_JniMemoryManager
+ * Method:    c_add_short_volatile
+ * Signature: (JS)V
+ */
+JNIEXPORT void JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1add_1short_1volatile(const JNIEnv *, const jclass, const jlong, const jshort);
+
+/*
+ * Class:     de_tum_in_net_ixy_memory_JniMemoryManager
+ * Method:    c_get_and_add_short
+ * Signature: (JS)S
+ */
+JNIEXPORT jshort JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1and_1add_1short(const JNIEnv *, const jclass, const jlong, const jshort);
+
+/*
+ * Class:     de_tum_in_net_ixy_memory_JniMemoryManager
+ * Method:    c_get_and_add_short_volatile
+ * Signature: (JS)S
+ */
+JNIEXPORT jshort JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1and_1add_1short_1volatile(const JNIEnv *, const jclass, const jlong, const jshort);
+
+/*
+ * Class:     de_tum_in_net_ixy_memory_JniMemoryManager
+ * Method:    c_add_and_get_short
+ * Signature: (JS)S
+ */
+JNIEXPORT jshort JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1add_1and_1get_1short(const JNIEnv *, const jclass, const jlong, const jshort);
+
+/*
+ * Class:     de_tum_in_net_ixy_memory_JniMemoryManager
+ * Method:    c_add_and_get_short_volatile
+ * Signature: (JS)S
+ */
+JNIEXPORT jshort JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1add_1and_1get_1short_1volatile(const JNIEnv *, const jclass, const jlong, const jshort);
 
 /*
  * Class:     de_tum_in_net_ixy_memory_JniMemoryManager
@@ -154,6 +282,70 @@ Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1put_1int_1volatile(const JNIEn
 
 /*
  * Class:     de_tum_in_net_ixy_memory_JniMemoryManager
+ * Method:    c_get_and_put_int
+ * Signature: (JI)I
+ */
+JNIEXPORT jint JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1and_1put_1int(const JNIEnv *, const jclass, const jlong, const jint);
+
+/*
+ * Class:     de_tum_in_net_ixy_memory_JniMemoryManager
+ * Method:    c_get_and_put_int_volatile
+ * Signature: (JI)I
+ */
+JNIEXPORT jint JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1and_1put_1int_1volatile(const JNIEnv *, const jclass, const jlong, const jint);
+
+/*
+ * Class:     de_tum_in_net_ixy_memory_JniMemoryManager
+ * Method:    c_add_int
+ * Signature: (JI)V
+ */
+JNIEXPORT void JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1add_1int(const JNIEnv *, const jclass, const jlong, const jint);
+
+/*
+ * Class:     de_tum_in_net_ixy_memory_JniMemoryManager
+ * Method:    c_add_int_volatile
+ * Signature: (JI)V
+ */
+JNIEXPORT void JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1add_1int_1volatile(const JNIEnv *, const jclass, const jlong, const jint);
+
+/*
+ * Class:     de_tum_in_net_ixy_memory_JniMemoryManager
+ * Method:    c_get_and_add_int
+ * Signature: (JI)I
+ */
+JNIEXPORT jint JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1and_1add_1int(const JNIEnv *, const jclass, const jlong, const jint);
+
+/*
+ * Class:     de_tum_in_net_ixy_memory_JniMemoryManager
+ * Method:    c_get_and_add_int_volatile
+ * Signature: (JI)I
+ */
+JNIEXPORT jint JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1and_1add_1int_1volatile(const JNIEnv *, const jclass, const jlong, const jint);
+
+/*
+ * Class:     de_tum_in_net_ixy_memory_JniMemoryManager
+ * Method:    c_add_and_get_int
+ * Signature: (JI)I
+ */
+JNIEXPORT jint JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1add_1and_1get_1int(const JNIEnv *, const jclass, const jlong, const jint);
+
+/*
+ * Class:     de_tum_in_net_ixy_memory_JniMemoryManager
+ * Method:    c_add_and_get_int_volatile
+ * Signature: (JI)I
+ */
+JNIEXPORT jint JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1add_1and_1get_1int_1volatile(const JNIEnv *, const jclass, const jlong, const jint);
+
+/*
+ * Class:     de_tum_in_net_ixy_memory_JniMemoryManager
  * Method:    c_get_long
  * Signature: (J)J
  */
@@ -183,6 +375,70 @@ Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1put_1long(const JNIEnv *, cons
  */
 JNIEXPORT void JNICALL
 Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1put_1long_1volatile(const JNIEnv *, const jclass, const jlong, const jlong);
+
+/*
+ * Class:     de_tum_in_net_ixy_memory_JniMemoryManager
+ * Method:    c_get_and_put_long
+ * Signature: (JJ)J
+ */
+JNIEXPORT jlong JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1and_1put_1long(const JNIEnv *, const jclass, const jlong, const jlong);
+
+/*
+ * Class:     de_tum_in_net_ixy_memory_JniMemoryManager
+ * Method:    c_get_and_put_long_volatile
+ * Signature: (JJ)J
+ */
+JNIEXPORT jlong JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1and_1put_1long_1volatile(const JNIEnv *, const jclass, const jlong, const jlong);
+
+/*
+ * Class:     de_tum_in_net_ixy_memory_JniMemoryManager
+ * Method:    c_add_long
+ * Signature: (JJ)V
+ */
+JNIEXPORT void JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1add_1long(const JNIEnv *, const jclass, const jlong, const jlong);
+
+/*
+ * Class:     de_tum_in_net_ixy_memory_JniMemoryManager
+ * Method:    c_add_long_volatile
+ * Signature: (JJ)V
+ */
+JNIEXPORT void JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1add_1long_1volatile(const JNIEnv *, const jclass, const jlong, const jlong);
+
+/*
+ * Class:     de_tum_in_net_ixy_memory_JniMemoryManager
+ * Method:    c_get_and_add_long
+ * Signature: (JJ)J
+ */
+JNIEXPORT jlong JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1and_1add_1long(const JNIEnv *, const jclass, const jlong, const jlong);
+
+/*
+ * Class:     de_tum_in_net_ixy_memory_JniMemoryManager
+ * Method:    c_get_and_add_long_volatile
+ * Signature: (JJ)J
+ */
+JNIEXPORT jlong JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1get_1and_1add_1long_1volatile(const JNIEnv *, const jclass, const jlong, const jlong);
+
+/*
+ * Class:     de_tum_in_net_ixy_memory_JniMemoryManager
+ * Method:    c_add_and_get_long
+ * Signature: (JJ)J
+ */
+JNIEXPORT jlong JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1add_1and_1get_1long(const JNIEnv *, const jclass, const jlong, const jlong);
+
+/*
+ * Class:     de_tum_in_net_ixy_memory_JniMemoryManager
+ * Method:    c_add_and_get_long_volatile
+ * Signature: (JJ)J
+ */
+JNIEXPORT jlong JNICALL
+Java_de_tum_in_net_ixy_memory_JniMemoryManager_c_1add_1and_1get_1long_1volatile(const JNIEnv *, const jclass, const jlong, const jlong);
 
 /*
  * Class:     de_tum_in_net_ixy_memory_JniMemoryManager

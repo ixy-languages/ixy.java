@@ -1,5 +1,6 @@
 package de.tum.in.net.ixy.app;
 
+import de.tum.in.net.ixy.generator.IxyGenerator;
 import de.tum.in.net.ixy.generic.IxyDriver;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -40,6 +41,15 @@ public final class Main {
 
 	/** The list of optional arguments. */
 	private static final @NotNull Collection<String> argumentsOpt = new TreeSet<>();
+
+	/** The batch size to use with the generator and forwarder. */
+	private static final int batchSize = 64;
+
+	/** The size of the packets to use with the generator and forwarder. */
+	private static final int packetSize = 60;
+
+	/** Memorizes whether the driver was already bound or not. */
+	private static @Nullable Boolean wasBound;
 
 	/**
 	 * Entry point of the application.
@@ -82,22 +92,41 @@ public final class Main {
 	 * @param driver The driver instance.
 	 */
 	private static void generate(@NotNull IxyDriver driver) {
+		// Guess whether the required arguments have been supplied or not
 		log.info("Preparing generator application.");
 		val deviceName = argumentsList.isEmpty() ? "" : argumentsList.remove(0).trim();
 		if (deviceName.isBlank()) {
 			log.error("The device name is missing or wrong.");
 			return;
 		}
-		try (val device = driver.getDevice(deviceName, "virtio-pci")) {
+		// Extract the device driver
+		try (val device = driver.getDevice(deviceName, 1, 1)) {
+			// Output some information about it
+			log.info("========== DEVICE INFORMATION ==========");
 			log.info("Vendor id: {}", Integer.toHexString(Short.toUnsignedInt(device.getVendorId())));
 			log.info("Device id: {}", Integer.toHexString(Short.toUnsignedInt(device.getDeviceId())));
 			log.info("Class id: {}", Integer.toHexString(Byte.toUnsignedInt(device.getClassId())));
+			log.info("========== DEVICE INFORMATION ==========");
+			// Guess whether the device can be used for packet generation
 			if (!device.isMappable()) {
 				log.error("Legacy device cannot be memory mapped.");
+				return;
 			} else if (!device.isSupported()) {
 				log.error("The selected device driver does not support this NIC.");
+				return;
+			}
+			// Memorize the bind status to restore it after use
+			wasBound = device.isBound();
+			log.info("Memorizing bind status: {}", wasBound);
+			// Create the packet generator
+			val mempool = driver.getMemoryPool();
+			val generator = new IxyGenerator(device, mempool, batchSize);
+			// Recover the bind status if needed
+			if (wasBound == null || !wasBound) {
+				log.info("Bind status unchanged.");
 			} else {
-				log.info("Everything works as expected.");
+				log.info("Recovering bind status: true");
+				device.bind();
 			}
 		} catch (FileNotFoundException e) {
 			log.error("The device '{}' could not be found", deviceName, e);
@@ -124,8 +153,8 @@ public final class Main {
 			return;
 		}
 		try (
-				val firstNic = driver.getDevice(firstNicName, "virtio-pci");
-				val secondNic = driver.getDevice(secondNicName, "virtio-pci")
+				val firstNic = driver.getDevice(firstNicName, 1, 1);
+				val secondNic = driver.getDevice(secondNicName, 1, 1)
 		) {
 			log.info("[1] Vendor id: {}", Integer.toHexString(Short.toUnsignedInt(firstNic.getVendorId())));
 			log.info("[1] Device id: {}", Integer.toHexString(Short.toUnsignedInt(firstNic.getDeviceId())));
