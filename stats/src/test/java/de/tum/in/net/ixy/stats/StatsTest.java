@@ -51,7 +51,6 @@ final class StatsTest {
 	}
 
 	@Nested
-	@DisabledIfOptimized
 	@DisplayName("Stats (Parameters)")
 	final class Parameters {
 
@@ -59,21 +58,33 @@ final class StatsTest {
 		@DisplayName("Parameters are checked for writeStats(OutputStream)")
 		void writeStats() {
 			assumeThat(stats).isNotNull();
-			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> stats.writeStats(null));
+			assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> stats.writeStats(null));
 		}
 
 		@Test
 		@DisplayName("Parameters are checked for writeStats(OutputStream, IxyStats, long)")
 		void writeStats2() {
 			assumeThat(stats).isNotNull();
+			// Gather all the different parameter types that could cause an exception
 			OutputStream[] streamsArr = {null, mock(OutputStream.class)};
 			IxyStats[] statsArr = {null, mock(IxyStats.class)};
 			long[] nanosArr = {-1, 0, 1};
+			// Do all possible combinations
 			for (val stream : streamsArr) {
 				for (val stat : statsArr) {
 					for (val nano : nanosArr) {
-						if (stream == null || stat == null || nano <= 0) {
-							assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> stats.writeStats(stream, stat, nano));
+						// Compute the exception class to be thrown, if any
+						Class<? extends RuntimeException> exceptionClass = null;
+						if (BuildConfig.OPTIMIZED) {
+							if (nano == 0) exceptionClass = ArithmeticException.class;
+							else if (stream == null || stat == null) exceptionClass = NullPointerException.class;
+						} else {
+							if (nano <= 0) exceptionClass = IllegalArgumentException.class;
+							else if (stream == null || stat == null) exceptionClass = NullPointerException.class;
+						}
+						// Check that it is actually thrown
+						if (exceptionClass != null) {
+							assertThatExceptionOfType(exceptionClass).isThrownBy(() -> stats.writeStats(stream, stat, nano));
 						}
 					}
 				}
@@ -181,7 +192,7 @@ final class StatsTest {
 		assertThat(stats.getTxPackets()).isNotZero();
 		assertThat(stats.getRxBytes()).isNotZero();
 		assertThat(stats.getTxBytes()).isNotZero();
-		val pattern = Pattern.compile("^\\d{4}:\\d{2}:\\d{2}.\\d (R|T)X: \\d+ packets \\| \\d+ bytes$");
+		val pattern = Pattern.compile("^\\d{4}:\\d{2}:\\d{2}.\\d [RT]X: \\d+ packets \\| \\d+ bytes$");
 		try (val bufferStream = new ByteArrayOutputStream(8 * 1024)) {
 			stats.writeStats(bufferStream);
 			val message = bufferStream.toString(StandardCharsets.UTF_8);
@@ -202,6 +213,7 @@ final class StatsTest {
 		val txPackets = random.nextInt(Integer.MAX_VALUE);
 		val rxBytes = random.nextLong();
 		val txBytes = random.nextLong();
+		val delta = Math.min(1, random.nextLong() & Long.MAX_VALUE);
 		stats.addRxPackets(rxPackets);
 		stats.addTxPackets(txPackets);
 		stats.addRxBytes(rxBytes);
@@ -210,9 +222,9 @@ final class StatsTest {
 		assertThat(stats.getTxPackets()).isNotZero();
 		assertThat(stats.getRxBytes()).isNotZero();
 		assertThat(stats.getTxBytes()).isNotZero();
-		val pattern = Pattern.compile("^\\d{4}:\\d{2}:\\d{2}.\\d (R|T)X: -?\\d+(\\.\\d+(E\\d+)?)? Mpps \\| -?\\d+(\\.\\d+(E\\d+)?)? Mbit/s$");
+		val pattern = Pattern.compile("^\\d{4}:\\d{2}:\\d{2}.\\d [RT]X: -?\\d+(\\.\\d+(E\\d+)?)? Mpps \\| -?\\d+(\\.\\d+(E\\d+)?)? Mbit/s$");
 		try (val bufferStream = new ByteArrayOutputStream(8 * 1024)) {
-			stats.writeStats(bufferStream, oldStats, 1_000_000_000);
+			stats.writeStats(bufferStream, oldStats, delta);
 			val message = bufferStream.toString(StandardCharsets.UTF_8);
 			for (val line : message.split(System.lineSeparator())) {
 				assertThat(line).matches(pattern);

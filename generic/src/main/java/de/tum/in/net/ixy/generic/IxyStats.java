@@ -98,9 +98,9 @@ public interface IxyStats {
 	 * delta of time between the two instances last updates.
 	 *
 	 * @param stats The initial stats.
-	 * @param nanos The delta of time in nanoseconds.
+	 * @param delta The delta of time in nanoseconds.
 	 */
 	@Contract(pure = true)
-	void writeStats(@NotNull OutputStream out, @NotNull IxyStats stats, long nanos) throws IOException;
+	void writeStats(@NotNull OutputStream out, @NotNull IxyStats stats, long delta) throws IOException;
 
 }
