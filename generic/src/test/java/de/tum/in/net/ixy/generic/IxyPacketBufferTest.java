@@ -30,11 +30,17 @@ import static org.mockito.Mockito.when;
  */
 @DisplayName("IxyPacketBuffer")
 @ExtendWith(MockitoExtension.class)
-@Execution(ExecutionMode.SAME_THREAD)
+@Execution(ExecutionMode.CONCURRENT)
 final class IxyPacketBufferTest {
 
 	/** A cached instance of a pseudo-random number generator. */
 	private static final Random random = new SecureRandom();
+
+	/** The maximum unsigned value a byte can have. */
+	private static final int MAX_BYTE = 0xFF;
+
+	/** The maximum unsigned value a short can have. */
+	private static final int MAX_SHORT = 0xFFFF;
 
 	/** A mocked instance of a packet. */
 	@Spy
@@ -42,9 +48,11 @@ final class IxyPacketBufferTest {
 
 	@Nested
 	@DisabledIfOptimized
+	@SuppressWarnings("InnerClassMayBeStatic")
 	@DisplayName("IxyPacketBuffer (Parameters)")
 	final class Parameters {
 
+		/** A mocked instance of a packet. */
 		@Spy
 		private IxyPacketBuffer packetParam;
 
@@ -71,8 +79,8 @@ final class IxyPacketBufferTest {
 	void getAndPutByte() {
 		assumeThat(packet).isNotNull();
 		val offset = random.nextInt(Integer.MAX_VALUE);
-		val value = (byte) (random.nextInt() & 0xFF);
-		val old = (byte) (random.nextInt() & 0xFF);
+		val value = (byte) (random.nextInt() & MAX_BYTE);
+		val old = (byte) (random.nextInt() & MAX_BYTE);
 		when(packet.getByte(offset)).thenReturn(old);
 		when(packet.getByteVolatile(offset)).thenReturn(old);
 		assertThat(packet.getAndPutByte(offset, value)).isEqualTo(old);
@@ -88,8 +96,8 @@ final class IxyPacketBufferTest {
 	void getAndPutShort() {
 		assumeThat(packet).isNotNull();
 		val offset = random.nextInt(Integer.MAX_VALUE);
-		val value = (short) (random.nextInt() & 0xFFFF);
-		val old = (short) (random.nextInt() & 0xFFFF);
+		val value = (short) (random.nextInt() & MAX_SHORT);
+		val old = (short) (random.nextInt() & MAX_SHORT);
 		when(packet.getShort(offset)).thenReturn(old);
 		when(packet.getShortVolatile(offset)).thenReturn(old);
 		assertThat(packet.getAndPutShort(offset, value)).isEqualTo(old);
@@ -139,8 +147,8 @@ final class IxyPacketBufferTest {
 	void getAndAddByte() {
 		assumeThat(packet).isNotNull();
 		val offset = random.nextInt(Integer.MAX_VALUE);
-		val value = (byte) (random.nextInt() & 0xFF);
-		val old = (byte) (random.nextInt() & 0xFF);
+		val value = (byte) (random.nextInt() & MAX_BYTE);
+		val old = (byte) (random.nextInt() & MAX_BYTE);
 		when(packet.getByte(offset)).thenReturn(old);
 		when(packet.getByteVolatile(offset)).thenReturn(old);
 		assertThat(packet.getAndAddByte(offset, value)).isEqualTo(old);
@@ -156,8 +164,8 @@ final class IxyPacketBufferTest {
 	void getAndAddShort() {
 		assumeThat(packet).isNotNull();
 		val offset = random.nextInt(Integer.MAX_VALUE);
-		val value = (short) (random.nextInt() & 0xFFFF);
-		val old = (short) (random.nextInt() & 0xFFFF);
+		val value = (short) (random.nextInt() & MAX_SHORT);
+		val old = (short) (random.nextInt() & MAX_SHORT);
 		when(packet.getShort(offset)).thenReturn(old);
 		when(packet.getShortVolatile(offset)).thenReturn(old);
 		assertThat(packet.getAndAddShort(offset, value)).isEqualTo(old);
@@ -207,8 +215,8 @@ final class IxyPacketBufferTest {
 	void addByte() {
 		assumeThat(packet).isNotNull();
 		val offset = random.nextInt(Integer.MAX_VALUE);
-		val value = (byte) (random.nextInt() & 0xFF);
-		val old = (byte) (random.nextInt() & 0xFF);
+		val value = (byte) (random.nextInt() & MAX_BYTE);
+		val old = (byte) (random.nextInt() & MAX_BYTE);
 		when(packet.getByte(offset)).thenReturn(old);
 		when(packet.getByteVolatile(offset)).thenReturn(old);
 		packet.addByte(offset, value);
@@ -224,8 +232,8 @@ final class IxyPacketBufferTest {
 	void addShort() {
 		assumeThat(packet).isNotNull();
 		val offset = random.nextInt(Integer.MAX_VALUE);
-		val value = (short) (random.nextInt() & 0xFFFF);
-		val old = (short) (random.nextInt() & 0xFFFF);
+		val value = (short) (random.nextInt() & MAX_SHORT);
+		val old = (short) (random.nextInt() & MAX_SHORT);
 		when(packet.getShort(offset)).thenReturn(old);
 		when(packet.getShortVolatile(offset)).thenReturn(old);
 		packet.addShort(offset, value);
@@ -275,8 +283,8 @@ final class IxyPacketBufferTest {
 	void addAndGetByte() {
 		assumeThat(packet).isNotNull();
 		val offset = random.nextInt(Integer.MAX_VALUE);
-		val value = (byte) (random.nextInt() & 0xFF);
-		val old = (byte) (random.nextInt() & 0xFF);
+		val value = (byte) (random.nextInt() & MAX_BYTE);
+		val old = (byte) (random.nextInt() & MAX_BYTE);
 		when(packet.getByte(offset)).thenReturn(old);
 		when(packet.getByteVolatile(offset)).thenReturn(old);
 		assertThat(packet.addAndGetByte(offset, value)).isEqualTo((byte) (value + old));
@@ -292,8 +300,8 @@ final class IxyPacketBufferTest {
 	void addAndGetShort() {
 		assumeThat(packet).isNotNull();
 		val offset = random.nextInt(Integer.MAX_VALUE);
-		val value = (short) (random.nextInt() & 0xFFFF);
-		val old = (short) (random.nextInt() & 0xFFFF);
+		val value = (short) (random.nextInt() & MAX_SHORT);
+		val old = (short) (random.nextInt() & MAX_SHORT);
 		when(packet.getShort(offset)).thenReturn(old);
 		when(packet.getShortVolatile(offset)).thenReturn(old);
 		assertThat(packet.addAndGetShort(offset, value)).isEqualTo((short) (value + old));

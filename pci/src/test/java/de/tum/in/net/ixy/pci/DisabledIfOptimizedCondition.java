@@ -29,7 +29,7 @@ final class DisabledIfOptimizedCondition implements ExecutionCondition {
 			: enabled("The OPTIMIZED flag is false");
 
 	@Override
-	@Contract(value = "null -> fail; !null -> !null", pure = true)
+	@Contract(pure = true)
 	public @NotNull ConditionEvaluationResult evaluateExecutionCondition(@NotNull ExtensionContext context) {
 		val optional = findAnnotation(context.getElement(), DisabledIfOptimized.class);
 		return optional.isEmpty() ? ENABLED_BY_DEFAULT : CACHED_RESULT;

@@ -26,6 +26,7 @@ final class InvalidBufferExceptionTest {
 	@DisplayName("Null or blank constructor fails")
 	void exceptions() {
 		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new InvalidBufferException(null));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new InvalidBufferException(" "));
 		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new InvalidBufferException(""));
 	}
 

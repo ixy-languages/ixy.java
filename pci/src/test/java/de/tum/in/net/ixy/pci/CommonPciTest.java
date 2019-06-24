@@ -29,7 +29,7 @@ enum CommonPciTest {
 		assertThat(vendorId).isEqualTo(vendor);
 	}
 
-	@Contract(value = "_, null -> fail", pure = true)
+	@Contract(pure = true)
 	static void getDeviceId(@Nullable Device device, @NotNull Iterable<Short> devices) {
 		assumeThat(device).isNotNull();
 		val deviceId = assertDoesNotThrow(device::getDeviceId);

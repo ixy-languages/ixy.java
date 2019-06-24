@@ -26,6 +26,7 @@ final class InvalidMemoryAddressExceptionTest {
 	@DisplayName("Null or blank constructor fails")
 	void exceptions() {
 		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new InvalidMemoryAddressException(null));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new InvalidMemoryAddressException(" "));
 		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new InvalidMemoryAddressException(""));
 	}
 

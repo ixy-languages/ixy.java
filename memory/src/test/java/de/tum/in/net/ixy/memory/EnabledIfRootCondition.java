@@ -21,7 +21,7 @@ import static org.junit.platform.commons.util.AnnotationUtils.findAnnotation;
  *
  * @author Esaú García Sánchez-Torija
  */
-@SuppressWarnings("AccessOfSystemProperties")
+@SuppressWarnings({"AccessOfSystemProperties", "CyclicClassDependency"})
 final class EnabledIfRootCondition implements ExecutionCondition {
 
 	/** Cached evaluation result used when the annotation {@code @EnabledIfRoot} is not present. */
@@ -64,7 +64,7 @@ final class EnabledIfRootCondition implements ExecutionCondition {
 	}
 
 	@Override
-	@Contract(value = "null -> fail; !null -> !null", pure = true)
+	@Contract(pure = true)
 	public @NotNull ConditionEvaluationResult evaluateExecutionCondition(@NotNull ExtensionContext context) {
 		val optional = findAnnotation(context.getElement(), EnabledIfRoot.class);
 		return optional.isEmpty() ? ENABLED_BY_DEFAULT : CACHED_RESULT;

@@ -24,6 +24,7 @@ final class InvalidNullParameterExceptionTest {
 
 	@Nested
 	@DisabledIfOptimized
+	@SuppressWarnings("InnerClassMayBeStatic")
 	@DisplayName("InvalidNullParameterException (Parameters)")
 	final class Parameters {
 
@@ -31,6 +32,7 @@ final class InvalidNullParameterExceptionTest {
 		@DisplayName("Null or blank constructor fails")
 		void exceptions() {
 			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new InvalidNullParameterException(null));
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new InvalidNullParameterException(" "));
 			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new InvalidNullParameterException(""));
 		}
 

@@ -721,7 +721,7 @@ public interface IxyPacketBuffer {
 	 * @param bytes  The number of bytes to copy.
 	 * @param buffer The buffer to copy the data to.
 	 */
-	@Contract(value = "_, _, null -> fail", pure = true)
+	@Contract(pure = true)
 	void put(int offset, int bytes, @NotNull byte[] buffer);
 
 	/**
@@ -733,7 +733,7 @@ public interface IxyPacketBuffer {
 	 * @param bytes  The number of bytes to copy.
 	 * @param buffer The buffer to copy the data to.
 	 */
-	@Contract(value = "_, _, null -> fail", pure = true)
+	@Contract(pure = true)
 	void putVolatile(int offset, int bytes, @NotNull byte[] buffer);
 
 }

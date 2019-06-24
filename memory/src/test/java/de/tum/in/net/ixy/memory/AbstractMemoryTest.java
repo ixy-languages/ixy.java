@@ -657,6 +657,7 @@ abstract class AbstractMemoryTest {
 	 * @param object The object sample.
 	 */
 	@Contract(pure = true)
+	@SuppressWarnings("SameParameterValue")
 	final void commonTest_obj2virt(@NotNull Object object) {
 		assumeThat(object).isNotNull();
 		assumeThat(mmanager).isNotNull();
@@ -814,8 +815,9 @@ abstract class AbstractMemoryTest {
 	 * @param obj   The object.
 	 * @return The field value.
 	 */
-	@Contract(value = "null, _ -> fail; _, null -> fail", pure = true)
-	static @Nullable Object fieldGet(@NotNull Field field, @NotNull Object obj) {
+	@Contract(pure = true)
+	@SuppressWarnings("SameParameterValue")
+	private static @Nullable Object fieldGet(@NotNull Field field, @NotNull Object obj) {
 		try {
 			return field.get(obj);
 		} catch (IllegalArgumentException | IllegalAccessException e) {
@@ -831,7 +833,8 @@ abstract class AbstractMemoryTest {
 	 * @param obj   The object.
 	 * @param value The value.
 	 */
-	@Contract(value = "null, _, _ -> fail; _, null, _ -> fail; _, _, null -> fail", mutates = "param2")
+	@Contract(mutates = "param2")
+	@SuppressWarnings("SameParameterValue")
 	static void fieldSet(@NotNull Field field, @NotNull Object obj, @NotNull Object value) {
 		try {
 			field.set(obj, value);

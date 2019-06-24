@@ -36,11 +36,14 @@ import static org.mockito.Mockito.when;
  */
 @DisplayName("PacketBuffer")
 @ExtendWith(MockitoExtension.class)
-@Execution(ExecutionMode.SAME_THREAD)
+@Execution(ExecutionMode.CONCURRENT)
 final class PacketBufferTest {
 
 	/** A cached instance of a pseudo-random number generator. */
 	private static final Random random = new SecureRandom();
+
+	/** The maximum hugepage size, which is usually 2MB. */
+	private static final int MAX_HUGEPAGE = 2 * 1024 * 1024;
 
 	/** Holds the virtual memory address. */
 	private long virtual;
@@ -65,7 +68,7 @@ final class PacketBufferTest {
 	void setUp() {
 		virtual = Math.max(2, random.nextLong());
 		physical = Math.max(2, random.nextLong());
-		size = random.nextInt(2 * 1024 * 1024 - PacketBuffer.HEADER_BYTES) + PacketBuffer.HEADER_BYTES;
+		size = random.nextInt(MAX_HUGEPAGE - PacketBuffer.HEADER_BYTES) + PacketBuffer.HEADER_BYTES;
 		pool = random.nextInt();
 		packetBuffer = PacketBuffer.builder().manager(mmanager)
 				.virtual(virtual).physical(physical)
@@ -118,6 +121,7 @@ final class PacketBufferTest {
 		}
 
 		@Test
+		@SuppressWarnings("HardcodedFileSeparator")
 		@DisplayName("The toString() method works as expected")
 		void ToString() {
 			val genericPattern = "^%s\\.%s\\(\\w*manager\\w*=%s, \\w*virt\\w*=%d, \\w*phys\\w*=%d, \\w*size\\w*=%d, \\w*pool\\w*=%d\\)$";

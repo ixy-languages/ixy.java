@@ -5,6 +5,8 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import java.security.SecureRandom;
 import java.util.Random;
@@ -19,6 +21,7 @@ import static org.assertj.core.api.Assumptions.assumeThat;
  * @author Esaú García Sánchez-Torija
  */
 @DisplayName("DmaMemory")
+@Execution(ExecutionMode.CONCURRENT)
 final class DmaMemoryTest {
 
 	/** A cached instance of a pseudo-random number generator. */

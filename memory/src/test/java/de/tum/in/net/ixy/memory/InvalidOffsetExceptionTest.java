@@ -26,6 +26,7 @@ final class InvalidOffsetExceptionTest {
 	@DisplayName("Null or blank constructor fails")
 	void exceptions() {
 		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new InvalidOffsetException(null));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new InvalidOffsetException(" "));
 		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new InvalidOffsetException(""));
 	}
 

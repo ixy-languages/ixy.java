@@ -56,10 +56,9 @@ public abstract class IxyMempool {
 	 * @param size   The amount of packets to extract.
 	 * @return The number of packet buffers.
 	 */
-	@Contract(value = "null, _, _ -> fail", mutates = "param1")
-	public int get(@Nullable IxyPacketBuffer[] buffer, int offset, int size) {
+	@Contract(mutates = "param1")
+	public int get(@NotNull IxyPacketBuffer[] buffer, int offset, int size) {
 		if (!BuildConfig.OPTIMIZED) {
-			if (buffer == null) throw new InvalidNullParameterException("buffer");
 			if (offset < 0 || offset >= buffer.length) throw new InvalidOffsetException("offset");
 			if (size < 0) throw new InvalidSizeException("size");
 			size = Math.min(buffer.length - offset, size);
@@ -80,9 +79,8 @@ public abstract class IxyMempool {
 	 * @param offset The position to start extracting packets to.
 	 * @return The number of packet buffers.
 	 */
-	@Contract(value = "null, _ -> fail", mutates = "param1")
-	public int get(@Nullable IxyPacketBuffer[] buffer, int offset) {
-		if (!BuildConfig.OPTIMIZED && buffer == null) throw new InvalidNullParameterException("buffer");
+	@Contract(mutates = "param1")
+	public int get(@NotNull IxyPacketBuffer[] buffer, int offset) {
 		return get(buffer, offset, buffer.length - offset);
 	}
 
@@ -92,9 +90,8 @@ public abstract class IxyMempool {
 	 * @param buffer The array where the packets will be saved.
 	 * @return The number of packet buffers.
 	 */
-	@Contract(value = "null -> fail", mutates = "param1")
-	public int get(@Nullable IxyPacketBuffer[] buffer) {
-		if (!BuildConfig.OPTIMIZED && buffer == null) throw new InvalidNullParameterException("buffer");
+	@Contract(mutates = "param1")
+	public int get(@NotNull IxyPacketBuffer[] buffer) {
 		return get(buffer, 0, buffer.length);
 	}
 
@@ -116,10 +113,9 @@ public abstract class IxyMempool {
 	 * @return The number of packets that have been freed.
 	 */
 	@SuppressWarnings("PMD.NullAssignment")
-	@Contract(value = "null, _, _ -> fail", mutates = "param1")
-	public int free(@Nullable IxyPacketBuffer[] packets, int offset, int size) {
+	@Contract(mutates = "param1")
+	public int free(@NotNull IxyPacketBuffer[] packets, int offset, int size) {
 		if (!BuildConfig.OPTIMIZED) {
-			if (packets == null) throw new InvalidNullParameterException("packets");
 			if (offset < 0 || offset >= packets.length) throw new InvalidOffsetException("offset");
 			if (size < 0) throw new InvalidSizeException("size");
 			size = Math.min(packets.length - offset, size);
@@ -155,9 +151,8 @@ public abstract class IxyMempool {
 	 * @param packets The packet to free.
 	 * @return The number of packets that have been freed.
 	 */
-	@Contract(value = "null, _ -> fail", mutates = "param1")
-	public int free(@Nullable IxyPacketBuffer[] packets, int offset) {
-		if (!BuildConfig.OPTIMIZED && packets == null) throw new InvalidNullParameterException("packets");
+	@Contract(mutates = "param1")
+	public int free(@NotNull IxyPacketBuffer[] packets, int offset) {
 		return free(packets, offset, packets.length - offset);
 	}
 
@@ -169,9 +164,8 @@ public abstract class IxyMempool {
 	 * @param packets The packet to free.
 	 * @return The number of packets that have been freed.
 	 */
-	@Contract(value = "null -> fail", mutates = "param1")
-	public int free(@Nullable IxyPacketBuffer[] packets) {
-		if (!BuildConfig.OPTIMIZED && packets == null) throw new InvalidNullParameterException("packets");
+	@Contract(mutates = "param1")
+	public int free(@NotNull IxyPacketBuffer[] packets) {
 		return free(packets, 0, packets.length);
 	}
 

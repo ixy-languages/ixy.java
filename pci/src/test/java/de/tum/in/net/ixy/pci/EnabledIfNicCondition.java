@@ -26,6 +26,7 @@ import static org.junit.platform.commons.util.AnnotationUtils.findAnnotation;
  *
  * @author Esaú García Sánchez-Torija
  */
+@SuppressWarnings("CyclicClassDependency")
 final class EnabledIfNicCondition implements ExecutionCondition {
 
 	/** Cached evaluation result used when the annotation {@code @EnabledIfNic} is not present. */
@@ -41,7 +42,7 @@ final class EnabledIfNicCondition implements ExecutionCondition {
 	private static final @NotNull Pattern PCI_ADDRESS_REGEX = Pattern.compile("^\\d{4}:\\d{2}\\d{2}.\\d$");
 
 	@Override
-	@Contract(value = "null -> fail", pure = true)
+	@Contract(pure = true)
 	public @NotNull ConditionEvaluationResult evaluateExecutionCondition(@NotNull ExtensionContext context) {
 		// Search our custom annotation
 		val optional = findAnnotation(context.getElement(), EnabledIfNic.class);

@@ -825,7 +825,6 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
-	@SuppressWarnings("Contract")
 	@Contract(pure = true)
 	public long allocate(long bytes, @NotNull AllocationType allocationType, @NotNull LayoutType layoutType) {
 		// Stop if anything is wrong

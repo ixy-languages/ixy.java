@@ -24,6 +24,7 @@ final class InvalidSizeExceptionTest {
 
 	@Nested
 	@DisabledIfOptimized
+	@SuppressWarnings("InnerClassMayBeStatic")
 	@DisplayName("InvalidSizeException (Parameters)")
 	final class Parameters {
 
@@ -31,6 +32,7 @@ final class InvalidSizeExceptionTest {
 		@DisplayName("Null or blank constructor fails")
 		void exceptions() {
 			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new InvalidSizeException(null));
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new InvalidSizeException(" "));
 			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new InvalidSizeException(""));
 		}
 

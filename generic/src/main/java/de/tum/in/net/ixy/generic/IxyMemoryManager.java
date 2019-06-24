@@ -573,7 +573,7 @@ public interface IxyMemoryManager {
 	@Contract(pure = true)
 	default void addInt(long address, int value) {
 		val old = getInt(address);
-		putInt(address, (int) (old + value));
+		putInt(address, old + value);
 	}
 
 	/**
@@ -587,7 +587,7 @@ public interface IxyMemoryManager {
 	@Contract(pure = true)
 	default void addIntVolatile(long address, int value) {
 		val old = getIntVolatile(address);
-		putIntVolatile(address, (int) (old + value));
+		putIntVolatile(address, old + value);
 	}
 
 	/**
@@ -602,7 +602,7 @@ public interface IxyMemoryManager {
 	@Contract(pure = true)
 	default int getAndAddInt(long address, int value) {
 		val old = getInt(address);
-		putInt(address, (int) (old + value));
+		putInt(address, old + value);
 		return old;
 	}
 
@@ -618,7 +618,7 @@ public interface IxyMemoryManager {
 	@Contract(pure = true)
 	default int getAndAddIntVolatile(long address, int value) {
 		val old = getIntVolatile(address);
-		putIntVolatile(address, (int) (old + value));
+		putIntVolatile(address, old + value);
 		return old;
 	}
 
@@ -743,7 +743,7 @@ public interface IxyMemoryManager {
 	@Contract(pure = true)
 	default void addLong(long address, long value) {
 		val old = getLong(address);
-		putLong(address, (long) (old + value));
+		putLong(address, old + value);
 	}
 
 	/**
@@ -757,7 +757,7 @@ public interface IxyMemoryManager {
 	@Contract(pure = true)
 	default void addLongVolatile(long address, long value) {
 		val old = getLongVolatile(address);
-		putLongVolatile(address, (long) (old + value));
+		putLongVolatile(address, old + value);
 	}
 
 	/**
@@ -772,7 +772,7 @@ public interface IxyMemoryManager {
 	@Contract(pure = true)
 	default long getAndAddLong(long address, long value) {
 		val old = getLong(address);
-		putLong(address, (long) (old + value));
+		putLong(address, old + value);
 		return old;
 	}
 
@@ -788,7 +788,7 @@ public interface IxyMemoryManager {
 	@Contract(pure = true)
 	default long getAndAddLongVolatile(long address, long value) {
 		val old = getLongVolatile(address);
-		putLongVolatile(address, (long) (old + value));
+		putLongVolatile(address, old + value);
 		return old;
 	}
 

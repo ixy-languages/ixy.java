@@ -98,6 +98,7 @@ public interface IxyStats {
 	 * In order to compute the connection stats, a copy of the instance from a previous time is needed, along with the
 	 * delta of time between the two instances last updates.
 	 *
+	 * @param out The output stream.
 	 * @param stats The initial stats.
 	 * @param delta The delta of time in nanoseconds.
 	 * @throws IOException If an I/O error occurs.

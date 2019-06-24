@@ -31,7 +31,7 @@ import static org.mockito.Mockito.when;
  */
 @DisplayName("IxyMempool")
 @ExtendWith(MockitoExtension.class)
-@Execution(ExecutionMode.SAME_THREAD)
+@Execution(ExecutionMode.CONCURRENT)
 final class IxyMempoolTest {
 
 	/** A cached instance of a pseudo-random number generator. */
@@ -44,8 +44,10 @@ final class IxyMempoolTest {
 	@Nested
 	@DisabledIfOptimized
 	@DisplayName("IxyMempool (Parameters)")
+	@SuppressWarnings("InnerClassMayBeStatic")
 	final class Parameters {
 
+		/** A mocked instance of a memory pool. */
 		@Spy
 		private IxyMempool mempoolParam;
 
@@ -53,7 +55,7 @@ final class IxyMempoolTest {
 		@DisplayName("Parameters are checked for get(IxyPacketBuffer[])")
 		void get1() {
 			assumeThat(mempoolParam).isNotNull();
-			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mempoolParam.get(null));
+			assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> mempoolParam.get(null));
 		}
 
 		@Test
@@ -64,7 +66,9 @@ final class IxyMempoolTest {
 			int[] offsets = {-1, 0, 1};
 			for (val buffer : buffers) {
 				for (val offset : offsets) {
-					if (buffer == null || offset < 0 || offset >= buffer.length) {
+					if (buffer == null) {
+						assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> mempoolParam.get(buffer, offset));
+					} else if (offset < 0 || offset >= buffer.length) {
 						assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mempoolParam.get(buffer, offset));
 					}
 				}
@@ -80,10 +84,10 @@ final class IxyMempoolTest {
 			int[] sizes = {-1, 0, 1};
 			for (val buffer : buffers) {
 				for (val offset : offsets) {
-					for (val size : sizes) {
-						if (buffer == null || offset < 0 || offset >= buffer.length || size < 0) {
-							assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mempoolParam.get(buffer, offset, size));
-						}
+					if (buffer == null) {
+						assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> mempoolParam.get(buffer, offset));
+					} else if (offset < 0 || offset >= buffer.length) {
+						assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mempoolParam.get(buffer, offset));
 					}
 				}
 			}
@@ -93,7 +97,7 @@ final class IxyMempoolTest {
 		@DisplayName("Parameters are checked for free(IxyPacketBuffer[])")
 		void free1() {
 			assumeThat(mempoolParam).isNotNull();
-			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mempoolParam.free((IxyPacketBuffer[]) null));
+			assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> mempoolParam.free((IxyPacketBuffer[]) null));
 		}
 
 		@Test
@@ -104,7 +108,9 @@ final class IxyMempoolTest {
 			int[] offsets = {-1, 0, 1};
 			for (val buffer : buffers) {
 				for (val offset : offsets) {
-					if (buffer == null || offset < 0 || offset >= buffer.length) {
+					if (buffer == null) {
+						assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> mempoolParam.free(buffer, offset));
+					} else if (offset < 0 || offset >= buffer.length) {
 						assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mempoolParam.free(buffer, offset));
 					}
 				}
@@ -121,8 +127,18 @@ final class IxyMempoolTest {
 			for (val buffer : buffers) {
 				for (val offset : offsets) {
 					for (val size : sizes) {
-						if (buffer == null || offset < 0 || offset >= buffer.length || size < 0) {
-							assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mempoolParam.free(buffer, offset, size));
+						if (BuildConfig.OPTIMIZED) {
+							if (buffer == null) {
+								assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> mempoolParam.free(buffer, offset, size));
+							}
+						} else {
+							if (offset < 0) {
+								assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mempoolParam.free(buffer, offset, size));
+							} else if (buffer == null) {
+								assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> mempoolParam.free(buffer, offset, size));
+							} else if (offset >= buffer.length || size < 0) {
+								assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mempoolParam.free(buffer, offset, size));
+							}
 						}
 					}
 				}

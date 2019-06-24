@@ -24,6 +24,7 @@ final class InvalidOffsetExceptionTest {
 
 	@Nested
 	@DisabledIfOptimized
+	@SuppressWarnings("InnerClassMayBeStatic")
 	@DisplayName("InvalidOffsetException (Parameters)")
 	final class Parameters {
 
@@ -31,6 +32,7 @@ final class InvalidOffsetExceptionTest {
 		@DisplayName("Null or blank constructor fails")
 		void exceptions() {
 			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new InvalidOffsetException(null));
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new InvalidOffsetException(" "));
 			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new InvalidOffsetException(""));
 		}
 

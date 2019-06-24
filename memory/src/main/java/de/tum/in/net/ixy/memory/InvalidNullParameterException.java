@@ -1,6 +1,5 @@
 package de.tum.in.net.ixy.memory;
 
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -18,7 +17,6 @@ final class InvalidNullParameterException extends IllegalArgumentException {
 	 *
 	 * @param parameter The name of the parameter that is wrong.
 	 */
-	@Contract("null -> fail")
 	InvalidNullParameterException(@NotNull String parameter) {
 		super(String.format("The parameter '%s' is null", parameter));
 		if (!BuildConfig.OPTIMIZED && (parameter == null || parameter.isBlank())) {

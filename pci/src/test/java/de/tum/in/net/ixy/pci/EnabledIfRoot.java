@@ -12,7 +12,8 @@ import java.lang.annotation.Target;
  *
  * @author Esaú García Sánchez-Torija
  */
-@Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 @ExtendWith(EnabledIfRootCondition.class)
+@SuppressWarnings("CyclicClassDependency")
+@Target({ElementType.TYPE, ElementType.METHOD})
 @interface EnabledIfRoot { }

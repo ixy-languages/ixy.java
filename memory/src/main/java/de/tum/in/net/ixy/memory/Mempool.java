@@ -33,7 +33,7 @@ public final class Mempool extends IxyMempool implements Comparable<Mempool> {
 	private static final TreeMap<Integer, Mempool> pools = new TreeMap<>();
 
 	/** A variable that indicates if an overflow of {@link #pools} keys has been reached. */
-	private static boolean reversed = false;
+	private static boolean notOverflow = true;
 
 	/**
 	 * Computes an identifier that is not already being used by another memory pool.
@@ -43,17 +43,17 @@ public final class Mempool extends IxyMempool implements Comparable<Mempool> {
 	private static int getValidId() {
 		// By default increase the id until overflow, then change order because items are never removed
 		int id;
-		if (reversed) {
-			val first = pools.firstKey();
-			id = first - 1;
-			if (id > first) {
-				reversed = true;
+		if (notOverflow) {
+			val last = pools.lastKey();
+			id = last + 1;
+			if (id < last) {
+				notOverflow = false;
 				id = getValidId();
 			}
 		} else {
-			val last = pools.lastKey();
-			id = last + 1;
-			if (id < last) throw new RuntimeException("No more memory pool ids available");
+			val last = pools.firstKey();
+			id = last - 1;
+			if (id > last) throw new IllegalStateException("No more memory pool ids available");
 		}
 		if (BuildConfig.DEBUG) log.trace("Found valid memory pool id {}", id);
 		return id;
@@ -115,10 +115,9 @@ public final class Mempool extends IxyMempool implements Comparable<Mempool> {
 	}
 
 	@Override
-	@Contract(value = "null, _, _ -> fail", mutates = "param1")
-	public int get(@Nullable IxyPacketBuffer[] buffer, int offset, int size) {
+	@Contract(mutates = "param1")
+	public int get(@NotNull IxyPacketBuffer[] buffer, int offset, int size) {
 		if (!BuildConfig.OPTIMIZED) {
-			if (buffer == null) throw new InvalidNullParameterException("buffer");
 			if (offset < 0) throw new InvalidOffsetException("offset");
 			if (size < 0) throw new InvalidSizeException("size");
 			size = Math.min(buffer.length - offset, size);
@@ -133,12 +132,9 @@ public final class Mempool extends IxyMempool implements Comparable<Mempool> {
 	}
 
 	@Override
-	@Contract(value = "null, _ -> fail", mutates = "param1")
-	public int get(@Nullable IxyPacketBuffer[] buffer, int offset) {
-		if (!BuildConfig.OPTIMIZED) {
-			if (buffer == null) throw new InvalidNullParameterException("buffer");
-			if (offset < 0) throw new InvalidOffsetException("offset");
-		}
+	@Contract(mutates = "param1")
+	public int get(@NotNull IxyPacketBuffer[] buffer, int offset) {
+		if (!BuildConfig.OPTIMIZED && offset < 0) throw new InvalidOffsetException("offset");
 		val max = Math.min(buffer.length - offset, getSize());
 		if (BuildConfig.DEBUG) log.debug("Extracting {} packets starting at index {}", max, offset);
 		var i = 0;
@@ -148,9 +144,8 @@ public final class Mempool extends IxyMempool implements Comparable<Mempool> {
 		return i;
 	}
 
-	@Contract(value = "null -> fail", mutates = "param1")
-	public int get(@Nullable IxyPacketBuffer[] buffer) {
-		if (!BuildConfig.OPTIMIZED && buffer == null) throw new InvalidNullParameterException("buffer");
+	@Contract(mutates = "param1")
+	public int get(@NotNull IxyPacketBuffer[] buffer) {
 		val max = Math.min(buffer.length, getSize());
 		if (BuildConfig.DEBUG) log.debug("Extracting {} packets starting at index 0", max);
 		var i = 0;
@@ -166,16 +161,14 @@ public final class Mempool extends IxyMempool implements Comparable<Mempool> {
 		if (BuildConfig.OPTIMIZED) {
 			buffers.push(packet);
 		} else {
-			if (packet == null) throw new InvalidNullParameterException("packet");
 			if (buffers.size() < capacity) buffers.push(packet);
 		}
 	}
 
-	@SuppressWarnings("PMD.NullAssignment")
-	@Contract(value = "null, _, _ -> fail", mutates = "param1")
-	public int free(@Nullable IxyPacketBuffer[] packets, int offset, int size) {
+	@Contract(mutates = "param1")
+	@SuppressWarnings({"AssignmentToNull", "ConstantConditions", "PMD.NullAssignment"})
+	public int free(@NotNull IxyPacketBuffer[] packets, int offset, int size) {
 		if (!BuildConfig.OPTIMIZED) {
-			if (packets == null) throw new InvalidNullParameterException("packets");
 			if (offset < 0) throw new InvalidOffsetException("offset");
 			if (size < 0) throw new InvalidSizeException("size");
 			size = Math.min(packets.length - offset, size);
@@ -203,13 +196,10 @@ public final class Mempool extends IxyMempool implements Comparable<Mempool> {
 		}
 	}
 
-	@SuppressWarnings("PMD.NullAssignment")
-	@Contract(value = "null, _ -> fail", mutates = "param1")
-	public int free(@Nullable IxyPacketBuffer[] packets, int offset) {
-		if (!BuildConfig.OPTIMIZED) {
-			if (packets == null) throw new InvalidNullParameterException("packets");
-			if (offset < 0) throw new InvalidOffsetException("offset");
-		}
+	@Contract(mutates = "param1")
+	@SuppressWarnings({"AssignmentToNull", "ConstantConditions", "PMD.NullAssignment"})
+	public int free(@NotNull IxyPacketBuffer[] packets, int offset) {
+		if (!BuildConfig.OPTIMIZED && offset < 0) throw new InvalidOffsetException("offset");
 		val max = Math.min(packets.length - offset, getSize());
 		if (BuildConfig.DEBUG) log.debug("Pushing {} free packets starting at index {}", max, offset);
 		if (BuildConfig.OPTIMIZED) {
@@ -233,9 +223,9 @@ public final class Mempool extends IxyMempool implements Comparable<Mempool> {
 		}
 	}
 
-	@SuppressWarnings("PMD.NullAssignment")
-	@Contract(value = "null -> fail", mutates = "param1")
-	public int free(@Nullable IxyPacketBuffer[] packets) {
+	@Contract(mutates = "param1")
+	@SuppressWarnings({"AssignmentToNull", "ConstantConditions", "PMD.NullAssignment"})
+	public int free(@NotNull IxyPacketBuffer[] packets) {
 		if (!BuildConfig.OPTIMIZED && packets == null) throw new InvalidNullParameterException("packets");
 		val max = Math.min(packets.length, getSize());
 		if (BuildConfig.DEBUG) log.debug("Pushing {} free packets starting at index 0", max);
@@ -286,6 +276,7 @@ public final class Mempool extends IxyMempool implements Comparable<Mempool> {
 
 	@Override
 	@Contract(pure = true)
+	@SuppressWarnings("CompareToUsesNonFinalVariable")
 	public int compareTo(@NotNull Mempool o) {
 		if (BuildConfig.DEBUG) log.trace("Comparing with another Mempool.");
 		return Integer.compare(id, o.id);

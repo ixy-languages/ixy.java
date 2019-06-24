@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.mockito.Spy;
+import org.mockito.internal.matchers.Null;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.security.SecureRandom;
@@ -16,7 +17,6 @@ import java.util.Random;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assumptions.assumeThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
@@ -33,7 +33,7 @@ import static org.mockito.Mockito.when;
  */
 @DisplayName("IxyDevice")
 @ExtendWith(MockitoExtension.class)
-@Execution(ExecutionMode.SAME_THREAD)
+@Execution(ExecutionMode.CONCURRENT)
 final class IxyDeviceTest {
 
 	/** A cached instance of a pseudo-random number generator. */
@@ -46,6 +46,7 @@ final class IxyDeviceTest {
 	@Nested
 	@DisabledIfOptimized
 	@DisplayName("IxyDevice (Parameters)")
+	@SuppressWarnings("InnerClassMayBeStatic")
 	final class Parameters {
 
 		@Spy
@@ -59,8 +60,10 @@ final class IxyDeviceTest {
 			int[] offsets = {-1, 0};
 			for (val buffer : packets) {
 				for (val offset : offsets) {
-					if (buffer == null || offset < 0) {
+					if (offset < 0) {
 						assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> deviceParam.rxBatch(0, buffer, offset));
+					} else if (buffer == null) {
+						assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> deviceParam.rxBatch(0, buffer, offset));
 					}
 				}
 			}
@@ -70,7 +73,7 @@ final class IxyDeviceTest {
 		@DisplayName("Parameters are checked for rxBatch(int, IxyPacketBuffer[])")
 		void rxBatch2() {
 			assumeThat(deviceParam).isNotNull();
-			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> deviceParam.rxBatch(0, null));
+			assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> deviceParam.rxBatch(0, null));
 		}
 
 		@Test
@@ -81,8 +84,10 @@ final class IxyDeviceTest {
 			int[] offsets = {-1, 0};
 			for (val buffer : packets) {
 				for (val offset : offsets) {
-					if (buffer == null || offset < 0) {
+					if (offset < 0) {
 						assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> deviceParam.rxBusyWait(0, buffer, offset, 0));
+					} else if (buffer == null) {
+						assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> deviceParam.rxBusyWait(0, buffer, offset, 0));
 					}
 				}
 			}
@@ -96,8 +101,10 @@ final class IxyDeviceTest {
 			int[] offsets = {-1, 0};
 			for (val buffer : packets) {
 				for (val offset : offsets) {
-					if (buffer == null || offset < 0) {
+					if (offset < 0) {
 						assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> deviceParam.rxBusyWait(0, buffer, offset));
+					} else if (buffer == null) {
+						assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> deviceParam.rxBusyWait(0, buffer, offset));
 					}
 				}
 			}
@@ -107,7 +114,7 @@ final class IxyDeviceTest {
 		@DisplayName("Parameters are checked for rxBusyWait(int, IxyPacketBuffer[])")
 		void rxBusyWait2() {
 			assumeThat(deviceParam).isNotNull();
-			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> deviceParam.rxBusyWait(0, null));
+			assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> deviceParam.rxBusyWait(0, null));
 		}
 
 		@Test
@@ -118,8 +125,10 @@ final class IxyDeviceTest {
 			int[] offsets = {-1, 0};
 			for (val buffer : packets) {
 				for (val offset : offsets) {
-					if (buffer == null || offset < 0) {
+					if (offset < 0) {
 						assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> deviceParam.txBatch(0, buffer, offset));
+					} else if (buffer == null) {
+						assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> deviceParam.txBatch(0, buffer, offset));
 					}
 				}
 			}
@@ -129,7 +138,7 @@ final class IxyDeviceTest {
 		@DisplayName("Parameters are checked for txBatch(int, IxyPacketBuffer[])")
 		void txBatch2() {
 			assumeThat(deviceParam).isNotNull();
-			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> deviceParam.txBatch(0, null));
+			assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> deviceParam.txBatch(0, null));
 		}
 
 		@Test
@@ -140,8 +149,10 @@ final class IxyDeviceTest {
 			int[] offsets = {-1, 0};
 			for (val buffer : packets) {
 				for (val offset : offsets) {
-					if (buffer == null || offset < 0) {
+					if (offset < 0) {
 						assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> deviceParam.txBusyWait(0, buffer, offset, 0));
+					} else if (buffer == null) {
+						assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> deviceParam.txBusyWait(0, buffer, offset, 0));
 					}
 				}
 			}
@@ -155,8 +166,10 @@ final class IxyDeviceTest {
 			int[] offsets = {-1, 0};
 			for (val buffer : packets) {
 				for (val offset : offsets) {
-					if (buffer == null || offset < 0) {
+					if (offset < 0) {
 						assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> deviceParam.txBusyWait(0, buffer, offset));
+					} else if (buffer == null) {
+						assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> deviceParam.txBusyWait(0, buffer, offset));
 					}
 				}
 			}
@@ -166,7 +179,7 @@ final class IxyDeviceTest {
 		@DisplayName("Parameters are checked for txBusyWait(int, IxyPacketBuffer[])")
 		void txBusyWait2() {
 			assumeThat(deviceParam).isNotNull();
-			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> deviceParam.txBusyWait(0, null));
+			assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> deviceParam.txBusyWait(0, null));
 		}
 
 	}
@@ -204,7 +217,7 @@ final class IxyDeviceTest {
 		val offset = random.nextInt(Integer.MAX_VALUE);
 		val value = random.nextInt(Integer.MAX_VALUE);
 		val flags = random.nextInt();
-		final boolean[] first = {true};
+		boolean[] first = {true};
 		doAnswer(invocation -> {
 			if (first[0]) {
 				first[0] = false;
@@ -223,7 +236,7 @@ final class IxyDeviceTest {
 		val offset = random.nextInt(Integer.MAX_VALUE);
 		val value = random.nextInt(Integer.MAX_VALUE);
 		val flags = random.nextInt();
-		final boolean[] first = {true};
+		boolean[] first = {true};
 		doAnswer(invocation -> {
 			if (first[0]) {
 				first[0] = false;

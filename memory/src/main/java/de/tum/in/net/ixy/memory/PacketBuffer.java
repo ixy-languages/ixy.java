@@ -35,7 +35,7 @@ import org.jetbrains.annotations.Nullable;
 @Slf4j
 @ToString(onlyExplicitlyIncluded = true, doNotUseGetters = true)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, doNotUseGetters = true)
-@SuppressWarnings({"ConstantConditions", "PMD.AvoidDuplicateLiterals", "PMD.BeanMembersShouldSerialize"})
+@SuppressWarnings({"ConstantConditions", "CyclicClassDependency", "PMD.AvoidDuplicateLiterals", "PMD.BeanMembersShouldSerialize"})
 public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacketBuffer> {
 
 	/**
@@ -44,8 +44,8 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 	 * @author Esaú García Sánchez-Torija
 	 */
 	@Slf4j
-	@SuppressWarnings({"ConstantConditions", "PMD.AvoidDuplicateLiterals"})
 	@EqualsAndHashCode(onlyExplicitlyIncluded = true, doNotUseGetters = true)
+	@SuppressWarnings({"ConstantConditions", "CyclicClassDependency", "PMD.AvoidDuplicateLiterals"})
 	public static final class Builder {
 
 		/** The memory manager of the packet. */
@@ -192,8 +192,8 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 	/** The size of the memory pool index field. */
 	private static final int MPI_SIZE = Integer.SIZE;
 
-	/** The size of the packet size field. */
-	private static final int PKT_SIZE = Integer.SIZE;
+//	/** The size of the packet size field. */
+//	private static final int PKT_SIZE = Integer.SIZE;
 
 	/** The size of the packet buffer header. */
 	private static final int HEADER_SIZE = 64 * Byte.SIZE;
@@ -209,8 +209,8 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 	/** The bytes of the memory pool index field. */
 	private static final int MPI_BYTES = MPI_SIZE / Byte.SIZE;
 
-	/** The bytes of the packet size field. */
-	private static final int PKT_BYTES = PKT_SIZE / Byte.SIZE;
+//	/** The bytes of the packet size field. */
+//	private static final int PKT_BYTES = PKT_SIZE / Byte.SIZE;
 
 	/** The bytes of the packet buffer header. */
 	public static final int HEADER_BYTES = HEADER_SIZE / Byte.SIZE;

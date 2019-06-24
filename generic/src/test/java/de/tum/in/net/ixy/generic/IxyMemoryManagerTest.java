@@ -31,6 +31,12 @@ final class IxyMemoryManagerTest {
 	/** A cached instance of a pseudo-random number generator. */
 	private static final Random random = new SecureRandom();
 
+	/** The maximum unsigned value a byte can have. */
+	private static final int MAX_BYTE = 0xFF;
+
+	/** The maximum unsigned value a short can have. */
+	private static final int MAX_SHORT = 0xFFFF;
+
 	/** A mocked instance of a memory manager. */
 	@Spy
 	private IxyMemoryManager mmanager;
@@ -40,8 +46,8 @@ final class IxyMemoryManagerTest {
 	void getAndPutByte() {
 		assumeThat(mmanager).isNotNull();
 		val address = random.nextLong();
-		val value = (byte) (random.nextInt() & 0xFF);
-		val old = (byte) (random.nextInt() & 0xFF);
+		val value = (byte) (random.nextInt() & MAX_BYTE);
+		val old = (byte) (random.nextInt() & MAX_BYTE);
 		when(mmanager.getByte(address)).thenReturn(old);
 		when(mmanager.getByteVolatile(address)).thenReturn(old);
 		assertThat(mmanager.getAndPutByte(address, value)).isEqualTo(old);
@@ -57,8 +63,8 @@ final class IxyMemoryManagerTest {
 	void getAndPutShort() {
 		assumeThat(mmanager).isNotNull();
 		val address = random.nextLong();
-		val value = (short) (random.nextInt() & 0xFFFF);
-		val old = (short) (random.nextInt() & 0xFFFF);
+		val value = (short) (random.nextInt() & MAX_SHORT);
+		val old = (short) (random.nextInt() & MAX_SHORT);
 		when(mmanager.getShort(address)).thenReturn(old);
 		when(mmanager.getShortVolatile(address)).thenReturn(old);
 		assertThat(mmanager.getAndPutShort(address, value)).isEqualTo(old);
@@ -108,8 +114,8 @@ final class IxyMemoryManagerTest {
 	void getAndAddByte() {
 		assumeThat(mmanager).isNotNull();
 		val address = random.nextLong();
-		val value = (byte) (random.nextInt() & 0xFF);
-		val old = (byte) (random.nextInt() & 0xFF);
+		val value = (byte) (random.nextInt() & MAX_BYTE);
+		val old = (byte) (random.nextInt() & MAX_BYTE);
 		when(mmanager.getByte(address)).thenReturn(old);
 		when(mmanager.getByteVolatile(address)).thenReturn(old);
 		assertThat(mmanager.getAndAddByte(address, value)).isEqualTo(old);
@@ -125,8 +131,8 @@ final class IxyMemoryManagerTest {
 	void getAndAddShort() {
 		assumeThat(mmanager).isNotNull();
 		val address = random.nextLong();
-		val value = (short) (random.nextInt() & 0xFFFF);
-		val old = (short) (random.nextInt() & 0xFFFF);
+		val value = (short) (random.nextInt() & MAX_SHORT);
+		val old = (short) (random.nextInt() & MAX_SHORT);
 		when(mmanager.getShort(address)).thenReturn(old);
 		when(mmanager.getShortVolatile(address)).thenReturn(old);
 		assertThat(mmanager.getAndAddShort(address, value)).isEqualTo(old);
@@ -176,8 +182,8 @@ final class IxyMemoryManagerTest {
 	void addByte() {
 		assumeThat(mmanager).isNotNull();
 		val address = random.nextLong();
-		val value = (byte) (random.nextInt() & 0xFF);
-		val old = (byte) (random.nextInt() & 0xFF);
+		val value = (byte) (random.nextInt() & MAX_BYTE);
+		val old = (byte) (random.nextInt() & MAX_BYTE);
 		when(mmanager.getByte(address)).thenReturn(old);
 		when(mmanager.getByteVolatile(address)).thenReturn(old);
 		mmanager.addByte(address, value);
@@ -193,8 +199,8 @@ final class IxyMemoryManagerTest {
 	void addShort() {
 		assumeThat(mmanager).isNotNull();
 		val address = random.nextLong();
-		val value = (short) (random.nextInt() & 0xFFFF);
-		val old = (short) (random.nextInt() & 0xFFFF);
+		val value = (short) (random.nextInt() & MAX_SHORT);
+		val old = (short) (random.nextInt() & MAX_SHORT);
 		when(mmanager.getShort(address)).thenReturn(old);
 		when(mmanager.getShortVolatile(address)).thenReturn(old);
 		mmanager.addShort(address, value);
@@ -244,8 +250,8 @@ final class IxyMemoryManagerTest {
 	void addAndGetByte() {
 		assumeThat(mmanager).isNotNull();
 		val address = random.nextLong();
-		val value = (byte) (random.nextInt() & 0xFF);
-		val old = (byte) (random.nextInt() & 0xFF);
+		val value = (byte) (random.nextInt() & MAX_BYTE);
+		val old = (byte) (random.nextInt() & MAX_BYTE);
 		when(mmanager.getByte(address)).thenReturn(old);
 		when(mmanager.getByteVolatile(address)).thenReturn(old);
 		assertThat(mmanager.addAndGetByte(address, value)).isEqualTo((byte) (value + old));
@@ -261,8 +267,8 @@ final class IxyMemoryManagerTest {
 	void addAndGetShort() {
 		assumeThat(mmanager).isNotNull();
 		val address = random.nextLong();
-		val value = (short) (random.nextInt() & 0xFFFF);
-		val old = (short) (random.nextInt() & 0xFFFF);
+		val value = (short) (random.nextInt() & MAX_SHORT);
+		val old = (short) (random.nextInt() & MAX_SHORT);
 		when(mmanager.getShort(address)).thenReturn(old);
 		when(mmanager.getShortVolatile(address)).thenReturn(old);
 		assertThat(mmanager.addAndGetShort(address, value)).isEqualTo((short) (value + old));

@@ -12,15 +12,13 @@ import java.security.SecureRandom;
 import java.util.Random;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
-import static org.assertj.core.api.Assumptions.assumeThat;
 
 /**
  * Tests the class {@link SmartMemoryManager}.
  *
  * @author Esaú García Sánchez-Torija
  */
-@Execution(ExecutionMode.SAME_THREAD)
+@Execution(ExecutionMode.CONCURRENT)
 @DisplayName("Unsafe, JNI & Smart memory managers")
 final class MemoryManagerTest extends AbstractMemoryTest {
 
