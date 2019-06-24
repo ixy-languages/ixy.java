@@ -165,8 +165,8 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
-	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
 	@Contract(pure = true)
+	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
 	public boolean free(long address, long bytes, @NotNull AllocationType allocationType) {
 		// Stop if anything is wrong
 		if (!BuildConfig.OPTIMIZED) {
@@ -515,7 +515,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
-	@Contract(value = "_, _, null, _ -> fail", mutates = "param3")
+	@Contract(mutates = "param3")
 	public void get(long src, int bytes, @NotNull byte[] dest, int offset) {
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
@@ -533,7 +533,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	@Override
 	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
 	@SuppressWarnings("PMD.AssignmentInOperand")
-	@Contract(value = "_, _, null, _ -> fail", mutates = "param3")
+	@Contract(mutates = "param3")
 	public void getVolatile(long src, int bytes, @NotNull byte[] dest, int offset) {
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
@@ -552,7 +552,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
-	@Contract(value = "_, _, null, _ -> fail", pure = true)
+	@Contract(pure = true)
 	public void put(long dest, int bytes, @NotNull byte[] src, int offset) {
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
@@ -570,7 +570,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	@Override
 	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
 	@SuppressWarnings("PMD.AssignmentInOperand")
-	@Contract(value = "_, _, null, _ -> fail", pure = true)
+	@Contract(pure = true)
 	public void putVolatile(long dest, int bytes, @NotNull byte[] src, int offset) {
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
@@ -634,8 +634,8 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
-	@Contract(value = "null -> fail", pure = true)
 	@SuppressWarnings("PMD.DataflowAnomalyAnalysis")
 	public long obj2virt(@NotNull Object object) {
 		if (BuildConfig.DEBUG) log.debug("Computing the address of an object using the Unsafe object");

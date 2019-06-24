@@ -1,15 +1,16 @@
-package de.tum.in.net.ixy.memory.test;
+package de.tum.in.net.ixy.memory;
 
 import de.tum.in.net.ixy.generic.IxyMemoryManager;
 import de.tum.in.net.ixy.generic.IxyMempool;
-import de.tum.in.net.ixy.memory.PacketBuffer;
 import lombok.val;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.security.SecureRandom;
@@ -35,6 +36,7 @@ import static org.mockito.Mockito.when;
  */
 @DisplayName("PacketBuffer")
 @ExtendWith(MockitoExtension.class)
+@Execution(ExecutionMode.SAME_THREAD)
 final class PacketBufferTest {
 
 	/** A cached instance of a pseudo-random number generator. */
@@ -53,7 +55,7 @@ final class PacketBufferTest {
 	private int pool;
 
 	/** Holds a mocked memory manager. */
-	private IxyMemoryManager mmanager = mock(IxyMemoryManager.class);
+	private final @NotNull IxyMemoryManager mmanager = mock(IxyMemoryManager.class);
 
 	/** Holds an instance of {@link PacketBuffer} that will be used to test. */
 	private PacketBuffer packetBuffer;
@@ -129,24 +131,37 @@ final class PacketBufferTest {
 	}
 
 	@Test
-	@DisabledIfOptimized
 	@DisplayName("Wrong arguments produce exceptions")
 	void exceptions() {
 		int[] offsets = {-1, 0};
 		int[] bytes = {-1, 0};
 		for (val offset : offsets) {
 			for (val length : bytes) {
-				if (offset < 0 || length < 0) {
-					assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> packetBuffer.get(offset, length));
-					assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> packetBuffer.getVolatile(offset, length));
+				Class<? extends RuntimeException> exceptionClass1 = null;
+				Class<? extends RuntimeException> exceptionClass2 = null;
+				if (BuildConfig.OPTIMIZED) {
+					if (length < 0) exceptionClass1 = NegativeArraySizeException.class;
+				} else {
+					if (offset < 0 || length < 0) {
+						exceptionClass1 = IllegalArgumentException.class;
+						exceptionClass2 = IllegalArgumentException.class;
+					} else {
+						exceptionClass2 = NullPointerException.class;
+					}
 				}
-				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> packetBuffer.get(offset, length, null));
-				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> packetBuffer.getVolatile(offset, length, null));
-				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> packetBuffer.put(offset, length, null));
-				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> packetBuffer.putVolatile(offset, length, null));
+				if (exceptionClass1 != null) {
+					assertThatExceptionOfType(exceptionClass1).isThrownBy(() -> packetBuffer.get(offset, length));
+					assertThatExceptionOfType(exceptionClass1).isThrownBy(() -> packetBuffer.getVolatile(offset, length));
+				}
+				if (exceptionClass2 != null) {
+					assertThatExceptionOfType(exceptionClass2).isThrownBy(() -> packetBuffer.get(offset, length, null));
+					assertThatExceptionOfType(exceptionClass2).isThrownBy(() -> packetBuffer.getVolatile(offset, length, null));
+					assertThatExceptionOfType(exceptionClass2).isThrownBy(() -> packetBuffer.put(offset, length, null));
+					assertThatExceptionOfType(exceptionClass2).isThrownBy(() -> packetBuffer.putVolatile(offset, length, null));
+				}
 			}
 		}
-		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> packetBuffer.compareTo(null));
+		assertThatExceptionOfType(NullPointerException.class).isThrownBy(() -> packetBuffer.compareTo(null));
 	}
 
 	@Test

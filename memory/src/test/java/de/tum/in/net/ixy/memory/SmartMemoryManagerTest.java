@@ -1,7 +1,5 @@
-package de.tum.in.net.ixy.memory.test;
+package de.tum.in.net.ixy.memory;
 
-import de.tum.in.net.ixy.generic.IxyMemoryManager;
-import de.tum.in.net.ixy.memory.JniMemoryManager;
 import lombok.val;
 import org.assertj.core.api.SoftAssertions;
 import org.jetbrains.annotations.Contract;
@@ -39,29 +37,29 @@ import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.Assumptions.assumeThat;
 
 /**
- * Tests the class {@link JniMemoryManager}.
+ * Tests the class {@link SmartMemoryManager}.
  *
  * @author Esaú García Sánchez-Torija
  */
-@DisplayName("JniMemoryManager")
-@Execution(ExecutionMode.SAME_THREAD)
-final class JniMemoryManagerTest extends AbstractMemoryTest {
+@DisplayName("SmartMemoryManager")
+@Execution(ExecutionMode.CONCURRENT)
+final class SmartMemoryManagerTest extends AbstractMemoryTest {
 
 	/** A cached instance of a pseudo-random number generator. */
 	private static final @NotNull Random random = new SecureRandom();
 
-	// Creates a "JniMemoryManager" instance
+	// Creates a "SmartMemoryManager" instance
 	@BeforeEach
 	void setUp() {
-		mmanager = JniMemoryManager.getSingleton();
+		mmanager = SmartMemoryManager.getSingleton();
 	}
 
 	@Test
 	@DisplayName("Instantiation is not supported")
 	void constructorException() {
-		Constructor<JniMemoryManager> constructor = null;
+		Constructor<SmartMemoryManager> constructor = null;
 		try {
-			constructor = JniMemoryManager.class.getDeclaredConstructor();
+			constructor = SmartMemoryManager.class.getDeclaredConstructor();
 		} catch (NoSuchMethodException | SecurityException e) {
 //			e.printStackTrace();
 		}
@@ -81,16 +79,21 @@ final class JniMemoryManagerTest extends AbstractMemoryTest {
 	 * @author Esaú García Sánchez-Torija
 	 */
 	@Nested
-	@DisplayName("JniMemoryManager (Parameters)")
+	@DisplayName("SmartMemoryManager (Parameters)")
 	final class Parameters {
 
 		// Creates the tests that check that the API checks the parameters
 		@TestFactory
 		@DisabledIfOptimized
 		@Contract(value = " -> new", pure = true)
-		@SuppressWarnings("JUnitTestMethodWithNoAssertions")
 		@NotNull Collection<@NotNull DynamicTest> exceptions() {
-			return commonTest_parameters(mmanager);
+			val tests = commonTest_parameters(mmanager);
+			// Create the tests for memory address translation
+			tests.add(DynamicTest.dynamicTest("Parameters are checked for obj2virt(Object)", () -> {
+				assumeThat(mmanager).isNotNull();
+				assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.obj2virt(null));
+			}));
+			return tests;
 		}
 
 	}
@@ -117,34 +120,19 @@ final class JniMemoryManagerTest extends AbstractMemoryTest {
 	@MethodSource("allocate_free_Arguments")
 	@EnabledIfRoot
 	void allocate_free(long size, @NotNull AllocationType allocationType, @NotNull LayoutType layoutType) {
-		// Create a clone of the memory manager without calling the constructor
-		val mmanagerClone = (IxyMemoryManager) allocateInstance(mmanager.getClass());
-		// Make sure the managers are available
 		assumeThat(mmanager).isNotNull();
-		assumeThat(mmanagerClone).isNotNull();
-		// Make the cloned memory manager have a wrong value on the field HUGE_PAGE_SIZE
-		val hugepageSizeField = getDeclaredField(mmanager.getClass(), "HUGE_PAGE_SIZE");
-		if (hugepageSizeField != null) {
-			hugepageSizeField.setAccessible(true);
-			fieldSet(hugepageSizeField, mmanagerClone, 0);
-			hugepageSizeField.setAccessible(false);
-		}
 		// Make sure we can extract the huge page size
 		val hpsz = mmanager.hugepageSize();
-		assumeThat(hpsz).as("Huge memory page size").isPositive().withFailMessage("should be a power of two").isEqualTo(hpsz & -hpsz);
+		assumeThat(hpsz).as("Hugepage size").isPositive().withFailMessage("should be a power of two").isEqualTo(hpsz & -hpsz);
 		// Allocate the memory and make sure it's valid
 		val addr = mmanager.allocate(size, allocationType, layoutType);
-		if (allocationType == AllocationType.HUGE) {
-			assertThat(mmanagerClone.allocate(hpsz, AllocationType.HUGE, layoutType)).as("Address").isZero();
-			assertThat(mmanagerClone.free(1, hpsz, AllocationType.HUGE)).as("Address").isFalse();
-			if (layoutType == LayoutType.CONTIGUOUS && size > hpsz) {
-				assertThat(addr).as("Address").isZero();
-				// Perform an extra check to achieve better coverage
-				val notRoundSize = mmanager.allocate(hpsz, AllocationType.HUGE, LayoutType.CONTIGUOUS);
-				assertThat(notRoundSize).as("Address").isNotZero();
-				assumeThat(mmanager.free(notRoundSize, hpsz, AllocationType.HUGE)).isTrue();
-				return;
-			}
+		if (allocationType == AllocationType.HUGE && layoutType == LayoutType.CONTIGUOUS && size > hpsz) {
+			assertThat(addr).as("Address").isZero();
+			// Perform an extra check to achieve better coverage
+			val notRoundSize = mmanager.allocate(hpsz, AllocationType.HUGE, LayoutType.CONTIGUOUS);
+			assertThat(notRoundSize).as("Address").isNotZero();
+			assumeThat(mmanager.free(notRoundSize, hpsz, AllocationType.HUGE)).isTrue();
+			return;
 		}
 		assertThat(addr).as("Address").isNotZero();
 		// Test all memory addresses for every granularity using non-overlapping parallel write and read operations
@@ -302,8 +290,8 @@ final class JniMemoryManagerTest extends AbstractMemoryTest {
 	@Test
 	@DisplayName("Objects can be translated to memory addresses")
 	void obj2pvirt() {
-		assumeThat(mmanager).isNotNull();
-		assertThatExceptionOfType(UnsupportedOperationException.class).isThrownBy(() -> mmanager.obj2virt(""));
+		val object = "Hello World!";
+		commonTest_obj2virt(object);
 	}
 
 	@Test

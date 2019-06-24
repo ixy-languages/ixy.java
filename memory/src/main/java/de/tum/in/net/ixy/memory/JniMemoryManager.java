@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import static de.tum.in.net.ixy.memory.Utility.check;
 
@@ -109,7 +110,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 * @return The base address of the allocated memory region.
 	 */
 	@Contract(value = "_, true, null -> fail", pure = true)
-	private static native long c_allocate(long bytes, boolean huge, String mnt);
+	private static native long c_allocate(long bytes, boolean huge, @Nullable String mnt);
 
 	/**
 	 * Frees a previously allocated memory region.
@@ -825,7 +826,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 
 	@Override
 	@SuppressWarnings("Contract")
-	@Contract(value = "_, null, _ -> fail; _, _, null -> fail", pure = true)
+	@Contract(pure = true)
 	public long allocate(long bytes, @NotNull AllocationType allocationType, @NotNull LayoutType layoutType) {
 		// Stop if anything is wrong
 		if (!BuildConfig.OPTIMIZED) {
@@ -833,34 +834,29 @@ public final class JniMemoryManager implements IxyMemoryManager {
 			if (allocationType == null) throw new InvalidNullParameterException("allocationType");
 			if (layoutType == null) throw new InvalidNullParameterException("layoutType");
 		}
-
 		// Perform some checks when using huge memory pages
 		if (allocationType == AllocationType.HUGE) {
 			if (BuildConfig.DEBUG) {
 				val type = layoutType == LayoutType.CONTIGUOUS ? "contiguous" : "non-contiguous";
 				log.debug("Allocating {} {} hugepage-backed bytes using C", bytes, type);
 			}
-
 			// If no huge memory page file support has been detected, exit right away
 			if (HUGE_PAGE_SIZE <= 0) return 0;
-
 			// Round the size to a multiple of the page size
 			val mask = (HUGE_PAGE_SIZE - 1);
 			bytes = (bytes & mask) == 0 ? bytes : (bytes + HUGE_PAGE_SIZE) & ~mask;
-
 			// Skip if we cannot guarantee contiguity
 			if (layoutType == LayoutType.CONTIGUOUS && bytes > HUGE_PAGE_SIZE) return 0;
 		} else if (BuildConfig.DEBUG) {
 			val type = layoutType == LayoutType.CONTIGUOUS ? "contiguous" : "non-contiguous";
 			log.debug("Allocating {} {} bytes using C", bytes, type);
 		}
-
 		// Allocate the memory
 		return c_allocate(bytes, allocationType == AllocationType.HUGE, BuildConfig.HUGE_MNT);
 	}
 
 	@Override
-	@Contract(value = "_, null, _ -> fail; _, _, null -> fail; _, !null, !null -> new", pure = true)
+	@Contract(value = "_, !null, !null -> new", pure = true)
 	public @NotNull IxyDmaMemory dmaAllocate(long bytes, @NotNull AllocationType allocationType, @NotNull LayoutType layoutType) {
 		if (!BuildConfig.DEBUG) log.debug("Allocating DualMemory using C");
 		val virt = allocate(bytes, allocationType, layoutType);
@@ -869,7 +865,6 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
-	@Contract(value = "_, _, null -> fail", pure = true)
 	public boolean free(long address, long bytes, @NotNull AllocationType allocationType) {
 		// Stop if anything is wrong
 		if (!BuildConfig.OPTIMIZED) {
@@ -945,6 +940,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public byte getAndPutByte(long address, byte value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
@@ -956,6 +952,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public byte getAndPutByteVolatile(long address, byte value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
@@ -967,6 +964,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public void addByte(long address, byte value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
@@ -978,6 +976,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public void addByteVolatile(long address, byte value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
@@ -989,6 +988,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public byte getAndAddByte(long address, byte value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
@@ -1000,6 +1000,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public byte getAndAddByteVolatile(long address, byte value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
@@ -1011,6 +1012,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public byte addAndGetByte(long address, byte value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
@@ -1022,6 +1024,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public byte addAndGetByteVolatile(long address, byte value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
@@ -1079,6 +1082,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public short getAndPutShort(long address, short value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
@@ -1090,6 +1094,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public short getAndPutShortVolatile(long address, short value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
@@ -1101,6 +1106,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public void addShort(long address, short value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
@@ -1112,6 +1118,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public void addShortVolatile(long address, short value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
@@ -1123,6 +1130,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public short getAndAddShort(long address, short value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
@@ -1134,6 +1142,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public short getAndAddShortVolatile(long address, short value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
@@ -1145,6 +1154,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public short addAndGetShort(long address, short value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
@@ -1156,6 +1166,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public short addAndGetShortVolatile(long address, short value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
@@ -1213,6 +1224,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public int getAndPutInt(long address, int value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(value);
@@ -1224,6 +1236,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public int getAndPutIntVolatile(long address, int value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(value);
@@ -1235,6 +1248,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public void addInt(long address, int value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(value);
@@ -1246,6 +1260,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public void addIntVolatile(long address, int value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(value);
@@ -1257,6 +1272,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public int getAndAddInt(long address, int value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(value);
@@ -1268,6 +1284,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public int getAndAddIntVolatile(long address, int value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(value);
@@ -1279,6 +1296,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public int addAndGetInt(long address, int value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(value);
@@ -1290,6 +1308,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public int addAndGetIntVolatile(long address, int value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(value);
@@ -1347,6 +1366,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public long getAndPutLong(long address, long value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Long.toHexString(value);
@@ -1358,6 +1378,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public long getAndPutLongVolatile(long address, long value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Long.toHexString(value);
@@ -1369,6 +1390,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public void addLong(long address, long value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Long.toHexString(value);
@@ -1380,6 +1402,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public void addLongVolatile(long address, long value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Long.toHexString(value);
@@ -1391,6 +1414,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public long getAndAddLong(long address, long value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Long.toHexString(value);
@@ -1402,6 +1426,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public long getAndAddLongVolatile(long address, long value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Long.toHexString(value);
@@ -1413,6 +1438,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public long addAndGetLong(long address, long value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Long.toHexString(value);
@@ -1424,6 +1450,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
+	@Contract(pure = true)
 	public long addAndGetLongVolatile(long address, long value) {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Long.toHexString(value);
@@ -1435,7 +1462,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
-	@Contract(value = "_, _, null, _ -> fail", mutates = "param3")
+	@Contract(mutates = "param3")
 	public void get(long src, int bytes, @NotNull byte[] dest, int offset) {
 		if (!BuildConfig.OPTIMIZED) {
 			if (check(src, bytes, dest, offset)) return;
@@ -1449,7 +1476,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
-	@Contract(value = "_, _, null, _ -> fail", mutates = "param3")
+	@Contract(mutates = "param3")
 	public void getVolatile(long src, int bytes, @NotNull byte[] dest, int offset) {
 		if (!BuildConfig.OPTIMIZED) {
 			if (check(src, bytes, dest, offset)) return;
@@ -1457,13 +1484,13 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		}
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(src);
-			log.debug("Copying memory data segment of {} bytes from 0x{} using C", bytes, xaddress);
+			log.debug("Copying volatile memory data segment of {} bytes from 0x{} using C", bytes, xaddress);
 		}
 		c_get_volatile(src, bytes, dest, offset);
 	}
 
 	@Override
-	@Contract(value = "_, _, null, _ -> fail", pure = true)
+	@Contract(pure = true)
 	public void put(long dest, int bytes, @NotNull byte[] src, int offset) {
 		if (!BuildConfig.OPTIMIZED) {
 			if (check(dest, bytes, src, offset)) return;
@@ -1477,7 +1504,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
-	@Contract(value = "_, _, null, _ -> fail", pure = true)
+	@Contract(pure = true)
 	public void putVolatile(long dest, int bytes, @NotNull byte[] src, int offset) {
 		if (!BuildConfig.OPTIMIZED) {
 			if (check(dest, bytes, src, offset)) return;
@@ -1515,14 +1542,6 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
-	@Contract(value = "null -> fail", pure = true)
-	public long obj2virt(@NotNull Object object) {
-		if (BuildConfig.DEBUG) log.debug("Computing the address of an object using the Unsafe object");
-		if (!BuildConfig.OPTIMIZED && object == null) throw new InvalidNullParameterException("object");
-		throw new UnsupportedOperationException("The C library does not provide an implementation for this operation");
-	}
-
-	@Override
 	@Contract(pure = true)
 	public long virt2phys(long address) {
 		if (BuildConfig.DEBUG) {
@@ -1530,6 +1549,17 @@ public final class JniMemoryManager implements IxyMemoryManager {
 			log.debug("Translating virtual address 0x{} using C", xaddress);
 		}
 		return c_virt2phys(address);
+	}
+
+	/////////////////////////////////////////////// UNSUPPORTED METHODS ////////////////////////////////////////////////
+
+	/** @deprecated */
+	@Override
+	@Deprecated
+	@Contract(value = "_ -> fail", pure = true)
+	public long obj2virt(@NotNull Object object) {
+		if (BuildConfig.DEBUG) log.debug("Computing the address of an object using the Unsafe object");
+		throw new UnsupportedOperationException("The C library does not provide an implementation for this operation");
 	}
 
 }

@@ -1,7 +1,6 @@
-package de.tum.in.net.ixy.memory.test;
+package de.tum.in.net.ixy.memory;
 
 import de.tum.in.net.ixy.generic.IxyMemoryManager;
-import de.tum.in.net.ixy.memory.UnsafeMemoryManager;
 import lombok.val;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -15,6 +14,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -42,6 +43,7 @@ import static org.assertj.core.api.Assumptions.assumeThat;
  * @author Esaú García Sánchez-Torija
  */
 @DisplayName("UnsafeMemoryManager")
+@Execution(ExecutionMode.CONCURRENT)
 final class UnsafeMemoryManagerTest extends AbstractMemoryTest {
 
 	/** A cached instance of a pseudo-random number generator. */
@@ -658,7 +660,8 @@ final class UnsafeMemoryManagerTest extends AbstractMemoryTest {
 	@Test
 	@DisplayName("Objects can be translated to memory addresses")
 	void obj2pvirt() {
-		commonTest_obj2virt("Hello World!");
+		val object = "Hello World!";
+		commonTest_obj2virt(object);
 	}
 
 	@Test

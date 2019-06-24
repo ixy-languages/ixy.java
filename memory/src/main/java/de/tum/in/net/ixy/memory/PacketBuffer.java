@@ -77,7 +77,6 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 		 * @param memoryManager The memory manager.
 		 * @return This builder.
 		 */
-		@Contract("_ -> !null")
 		public @NotNull Builder manager(@NotNull IxyMemoryManager memoryManager) {
 			if (BuildConfig.DEBUG) log.debug("Setting memory manager");
 			mmanager = memoryManager;
@@ -90,7 +89,6 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 		 * @param virtualAddress The virtual memory address.
 		 * @return This builder.
 		 */
-		@Contract("_ -> !null")
 		public @NotNull Builder virtual(long virtualAddress) {
 			if (BuildConfig.DEBUG) {
 				val xaddress = Long.toHexString(virtualAddress);
@@ -106,7 +104,6 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 		 * @param physicalAddress The physical memory address.
 		 * @return This builder.
 		 */
-		@Contract("_ -> !null")
 		public @NotNull Builder physical(@Nullable Long physicalAddress) {
 			if (BuildConfig.DEBUG) {
 				val xaddress = Long.toHexString(physicalAddress == null ? 0L : physicalAddress);
@@ -122,7 +119,6 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 		 * @param size The size.
 		 * @return This builder.
 		 */
-		@Contract("_ -> !null")
 		public @NotNull Builder size(@Nullable Integer size) {
 			if (BuildConfig.DEBUG) log.debug("Setting size {}", size);
 			packetSize = size;
@@ -135,7 +131,6 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 		 * @param pool The memory pool identifier.
 		 * @return This builder.
 		 */
-		@Contract("_ -> !null")
 		public Builder pool(@Nullable Integer pool) {
 			if (BuildConfig.DEBUG) log.debug("Setting memory pool identifier {}", pool);
 			memoryPool = pool;
@@ -148,7 +143,6 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 		 * @param pool The memory pool identifier.
 		 * @return This builder.
 		 */
-		@Contract("_ -> !null")
 		public Builder pool(@Nullable IxyMempool pool) {
 			return pool(pool == null ? null : pool.getId());
 		}
@@ -166,22 +160,13 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 
 		@Override
 		@Contract(pure = true)
-		public String toString() {
-			var string = PacketBuffer.class.getSimpleName();
-			string += ".";
-			string += Builder.class.getSimpleName();
-			string += "(manager=";
-			string += mmanager;
-			string += ", virtual=";
-			string += virtualAddress;
-			string += ", physical=";
-			string += physicalAddress;
-			string += ", size=";
-			string += packetSize;
-			string += ", pool=";
-			string += memoryPool;
-			string += ")";
-			return string;
+		public @NotNull String toString() {
+			// Gather all the data that will be used for the output message
+			val parent = PacketBuffer.class.getSimpleName();
+			val self = Builder.class.getSimpleName();
+			// Construct the output message
+			return String.format("%1$s.%2$s(mmanager=%3$s, virtual=%4$d, physical=%5$d, size=%6$d, pool=%7$s)",
+					parent, self, mmanager, virtualAddress, physicalAddress, packetSize, memoryPool);
 		}
 
 	}
@@ -262,12 +247,11 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 	 * @param buffer The buffer to copy the data to.
 	 * @return Whether the operation should be stopped.
 	 */
-	@Contract(value = "_, _, null -> fail", pure = true)
-	private static boolean check(int offset, int bytes, @Nullable byte[] buffer) {
+	@Contract(pure = true)
+	private static boolean check(int offset, int bytes, @NotNull byte[] buffer) {
 		if (offset < 0) throw new InvalidOffsetException("offset");
 		else if (bytes < 0) throw new InvalidSizeException("length");
-		else if (buffer == null) throw new InvalidBufferException("buffer");
-		return (bytes == 0 || buffer.length == 0);
+		return (buffer.length == 0 || bytes == 0);
 	}
 
 	///////////////////////////////////////////////// MEMBER VARIABLES /////////////////////////////////////////////////
@@ -282,10 +266,21 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 	@EqualsAndHashCode.Include
 	private final long virtualAddress;
 
-	@Contract("null, _, _, _, _ -> fail")
+	/**
+	 * Creates a new immutable packet buffer.
+	 * <p>
+	 * This method is private because it is intended to be called only from the {@link Builder} class.
+	 *
+	 * @param memoryManager   The memory manager.
+	 * @param virtualAddress  The virtual memory address.
+	 * @param physicalAddress The physical virtual memory address.
+	 * @param size            The packet size.
+	 * @param pool            The memory pool identifier.
+	 */
 	private PacketBuffer(@NotNull IxyMemoryManager memoryManager, long virtualAddress, @Nullable Long physicalAddress, @Nullable Integer size, @Nullable Integer pool) {
-		if (BuildConfig.DEBUG)
+		if (BuildConfig.DEBUG) {
 			log.trace("Instantiating packet buffer with address 0x{}", Long.toHexString(virtualAddress));
+		}
 		if (!BuildConfig.OPTIMIZED) {
 			if (memoryManager == null) throw new InvalidNullParameterException("mmanager");
 			if (virtualAddress == 0) throw new InvalidMemoryAddressException("address");
@@ -557,7 +552,7 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 	}
 
 	@Override
-	@Contract(value = "_, _, null -> fail", mutates = "param3")
+	@Contract(mutates = "param3")
 	public void get(int offset, int bytes, @NotNull byte[] buffer) {
 		if (BuildConfig.DEBUG) {
 			val xoffset = Integer.toHexString(offset);
@@ -571,7 +566,7 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 	}
 
 	@Override
-	@Contract(value = "_, _, null -> fail", mutates = "param3")
+	@Contract(mutates = "param3")
 	public void getVolatile(int offset, int bytes, @NotNull byte[] buffer) {
 		if (BuildConfig.DEBUG) {
 			val xoffset = Integer.toHexString(offset);
@@ -585,7 +580,7 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 	}
 
 	@Override
-	@Contract(value = "_, _, null -> fail", pure = true)
+	@Contract(pure = true)
 	public void put(int offset, int bytes, @NotNull byte[] buffer) {
 		if (BuildConfig.DEBUG) {
 			val xoffset = Integer.toHexString(offset);
@@ -599,7 +594,7 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 	}
 
 	@Override
-	@Contract(value = "_, _, null -> fail", pure = true)
+	@Contract(pure = true)
 	public void putVolatile(int offset, int bytes, @NotNull byte[] buffer) {
 		if (BuildConfig.DEBUG) {
 			val xoffset = Integer.toHexString(offset);
@@ -613,10 +608,9 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 	}
 
 	@Override
-	@Contract(value = "null -> fail", pure = true)
+	@Contract(pure = true)
 	public int compareTo(@NotNull IxyPacketBuffer o) {
 		if (BuildConfig.DEBUG) log.debug("Comparing with another packet");
-		if (!BuildConfig.OPTIMIZED && o == null) throw new InvalidNullParameterException("o");
 		return Long.compare(virtualAddress, o.getVirtualAddress());
 	}
 

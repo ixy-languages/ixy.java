@@ -1,6 +1,5 @@
-package de.tum.in.net.ixy.memory.test;
+package de.tum.in.net.ixy.memory;
 
-import de.tum.in.net.ixy.memory.BuildConfig;
 import lombok.val;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;

@@ -1,7 +1,6 @@
-package de.tum.in.net.ixy.memory.test;
+package de.tum.in.net.ixy.memory;
 
 import de.tum.in.net.ixy.generic.IxyDmaMemory;
-import de.tum.in.net.ixy.memory.DmaMemory;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

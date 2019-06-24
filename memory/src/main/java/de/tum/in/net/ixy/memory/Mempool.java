@@ -161,7 +161,6 @@ public final class Mempool extends IxyMempool implements Comparable<Mempool> {
 	}
 
 	@Override
-	@Contract("null -> fail")
 	public void free(@NotNull IxyPacketBuffer packet) {
 		if (BuildConfig.DEBUG) log.info("Pushing free packet: {}", packet);
 		if (BuildConfig.OPTIMIZED) {
@@ -289,7 +288,6 @@ public final class Mempool extends IxyMempool implements Comparable<Mempool> {
 	@Contract(pure = true)
 	public int compareTo(@NotNull Mempool o) {
 		if (BuildConfig.DEBUG) log.trace("Comparing with another Mempool.");
-		if (!BuildConfig.OPTIMIZED) throw new InvalidNullParameterException("mempool");
 		return Integer.compare(id, o.id);
 	}
 

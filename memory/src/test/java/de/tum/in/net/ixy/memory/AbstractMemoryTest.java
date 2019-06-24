@@ -1,4 +1,4 @@
-package de.tum.in.net.ixy.memory.test;
+package de.tum.in.net.ixy.memory;
 
 import de.tum.in.net.ixy.generic.BuildConfig;
 import de.tum.in.net.ixy.generic.IxyMemoryManager;
@@ -23,8 +23,8 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assumptions.assumeThat;
 
 /**
- * Common functionality shared amongst {@link de.tum.in.net.ixy.memory.test.UnsafeMemoryManagerTest}, {@link
- * de.tum.in.net.ixy.memory.test.JniMemoryManagerTest} and {@link de.tum.in.net.ixy.memory.test.SmartMemoryManagerTest}.
+ * Common functionality shared amongst {@link UnsafeMemoryManagerTest}, {@link
+ * JniMemoryManagerTest} and {@link SmartMemoryManagerTest}.
  *
  * @author Esaú García Sánchez-Torija
  */
@@ -135,11 +135,6 @@ abstract class AbstractMemoryTest {
 				}
 			}
 		}
-		// Create the tests for memory address translation
-		tests.add(DynamicTest.dynamicTest("Parameters are checked for obj2virt(Object)", () -> {
-			assumeThat(mmanager).isNotNull();
-			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> mmanager.obj2virt(null));
-		}));
 		/// Add other tests that cannot be added with a loop
 		// For bytes
 		tests.add(DynamicTest.dynamicTest("Parameters are checked for getByte(0)", () -> {
@@ -552,7 +547,7 @@ abstract class AbstractMemoryTest {
 	 *
 	 * @param data The data sample.
 	 */
-	@Contract(value = "null -> fail", pure = true)
+	@Contract(pure = true)
 	final void commonTest_getput(@NotNull byte[] data) {
 		val address = assumeAllocate(data.length);
 		// Write the data
@@ -573,7 +568,7 @@ abstract class AbstractMemoryTest {
 	 *
 	 * @param data The data sample.
 	 */
-	@Contract(value = "null -> fail", pure = true)
+	@Contract(pure = true)
 	final void commonTest_getputVolatile(@NotNull byte[] data) {
 		val address = assumeAllocate(data.length);
 		// Write the data
@@ -594,7 +589,7 @@ abstract class AbstractMemoryTest {
 	 * @param data     The data sample.
 	 * @param reversed Whether the addresses should be reversed.
 	 */
-	@Contract(value = "null, _ -> fail", pure = true)
+	@Contract(pure = true)
 	final void commonTest_copy(@NotNull byte[] data, boolean reversed) {
 		assumeThat(mmanager).isNotNull();
 		// Allocate the memory
@@ -627,7 +622,7 @@ abstract class AbstractMemoryTest {
 	 * @param data     The data sample.
 	 * @param reversed Whether the addresses should be reversed.
 	 */
-	@Contract(value = "null, _ -> fail", pure = true)
+	@Contract(pure = true)
 	final void commonTest_copyVolatile(@NotNull byte[] data, boolean reversed) {
 		assumeThat(mmanager).isNotNull();
 		// Allocate the memory
@@ -661,7 +656,7 @@ abstract class AbstractMemoryTest {
 	 *
 	 * @param object The object sample.
 	 */
-	@Contract(value = "null -> fail", pure = true)
+	@Contract(pure = true)
 	final void commonTest_obj2virt(@NotNull Object object) {
 		assumeThat(object).isNotNull();
 		assumeThat(mmanager).isNotNull();

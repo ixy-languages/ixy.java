@@ -24,7 +24,7 @@ enum Utility {
 	 * @see UnsafeMemoryManager
 	 * @see JniMemoryManager
 	 */
-	@Contract(value = "_, _, null, _ -> fail", pure = true)
+	@Contract(pure = true)
 	static boolean check(long address, int bytes, @Nullable byte[] buffer, int offset) {
 		if (address == 0) throw new InvalidMemoryAddressException("address");
 		if (bytes < 0) throw new InvalidSizeException("bytes");

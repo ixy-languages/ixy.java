@@ -94,7 +94,7 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 	 * @return The buffered reader.
 	 * @throws FileNotFoundException If the {@code file} does not exist.
 	 */
-	@Contract(value = "null -> fail; !null -> new", pure = true)
+	@Contract(value = "!null -> new", pure = true)
 	private static @NotNull BufferedReader bufferedReader(@NotNull File file) throws FileNotFoundException {
 		val fileInputStream = new FileInputStream(file);
 		val inputFilterStream = new InputStreamReader(fileInputStream, StandardCharsets.UTF_8);
@@ -218,7 +218,7 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
-	@Contract(value = "_, null, _ -> fail; _, _, null -> fail", pure = true)
+	@Contract(pure = true)
 	public long allocate(long bytes, @NotNull AllocationType allocationType, @NotNull LayoutType layoutType) {
 		if (allocationType == AllocationType.HUGE) {
 			return jni.allocate(bytes, AllocationType.HUGE, layoutType);
@@ -230,13 +230,13 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 	}
 
 	@Override
-	@Contract(value = "_, null, _ -> fail; _, _, null -> fail; _, !null, !null -> new", pure = true)
+	@Contract(value = "_, !null, !null -> new", pure = true)
 	public @NotNull IxyDmaMemory dmaAllocate(long bytes, @NotNull AllocationType allocationType, @NotNull LayoutType layoutType) {
 		return jni.dmaAllocate(bytes, allocationType, layoutType);
 	}
 
 	@Override
-	@Contract(value = "_, _, null -> fail", pure = true)
+	@Contract(pure = true)
 	public boolean free(long address, long bytes, @NotNull AllocationType allocationType) {
 		if (allocationType == AllocationType.HUGE) {
 			return jni.free(address, bytes, AllocationType.HUGE);

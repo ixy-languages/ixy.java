@@ -1,6 +1,5 @@
 package de.tum.in.net.ixy.memory;
 
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -8,7 +7,7 @@ import org.jetbrains.annotations.NotNull;
  *
  * @author Esaú García Sánchez-Torija
  */
-public final class InvalidBufferException extends IllegalArgumentException {
+final class InvalidBufferException extends IllegalArgumentException {
 
 	/** Serial used for serialization purposes. */
 	private static final long serialVersionUID = -8823678074225048611L;
@@ -18,8 +17,7 @@ public final class InvalidBufferException extends IllegalArgumentException {
 	 *
 	 * @param parameter The name of the parameter that is wrong.
 	 */
-	@Contract("null -> fail")
-	public InvalidBufferException(@NotNull String parameter) {
+	InvalidBufferException(@NotNull String parameter) {
 		super(String.format("The parameter '%s' is an invalid size", parameter));
 		if (!BuildConfig.OPTIMIZED && (parameter == null || parameter.isBlank())) {
 			throw new IllegalArgumentException("The exception message could not be constructed correctly");

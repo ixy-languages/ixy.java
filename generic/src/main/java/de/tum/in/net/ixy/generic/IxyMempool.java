@@ -113,6 +113,7 @@ public abstract class IxyMempool {
 	 * This does not free the memory allocated to the packets, but registers it as free so that it can be reused again.
 	 *
 	 * @param packets The packet to free.
+	 * @return The number of packets that have been freed.
 	 */
 	@SuppressWarnings("PMD.NullAssignment")
 	@Contract(value = "null, _, _ -> fail", mutates = "param1")
@@ -152,6 +153,7 @@ public abstract class IxyMempool {
 	 * This does not free the memory allocated to the packets, but registers it as free so that it can be reused again.
 	 *
 	 * @param packets The packet to free.
+	 * @return The number of packets that have been freed.
 	 */
 	@Contract(value = "null, _ -> fail", mutates = "param1")
 	public int free(@Nullable IxyPacketBuffer[] packets, int offset) {
@@ -165,6 +167,7 @@ public abstract class IxyMempool {
 	 * This does not free the memory allocated to the packets, but registers it as free so that it can be reused again.
 	 *
 	 * @param packets The packet to free.
+	 * @return The number of packets that have been freed.
 	 */
 	@Contract(value = "null -> fail", mutates = "param1")
 	public int free(@Nullable IxyPacketBuffer[] packets) {
@@ -179,7 +182,11 @@ public abstract class IxyMempool {
 	 */
 	public abstract void register();
 
-	/** Deregisters the memory pool. */
+	/**
+	 * Deregisters the memory pool.
+	 * <p>
+	 * Idempotently registers the memory pool in the system.
+	 */
 	public abstract void deregister();
 
 	/**

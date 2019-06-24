@@ -908,7 +908,7 @@ public interface IxyMemoryManager {
 	 * @param object The object.
 	 * @return The virtual memory address.
 	 */
-	@Contract(value = "null -> fail", pure = true)
+	@Contract(pure = true)
 	long obj2virt(@NotNull Object object);
 
 	/**

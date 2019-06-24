@@ -39,9 +39,9 @@ public final class DmaMemory implements IxyDmaMemory {
 	 * Creates a copy of another Ixy's direct memory address specification implementation.
 	 *
 	 * @param dmaMemory The direct memory address specification to copy.
-	 * @return A copy of the {@code dmaMemory}.
+	 * @return A copy of the parameter {@code dmaMemory}.
 	 */
-	@Contract(value = "null -> fail; _ -> new", pure = true)
+	@Contract(value = "!null -> new", pure = true)
 	public static @NotNull DmaMemory of(@NotNull IxyDmaMemory dmaMemory) {
 		if (!BuildConfig.OPTIMIZED && dmaMemory == null) throw new InvalidNullParameterException("dmaMemory");
 		return of(dmaMemory.getVirtualAddress(), dmaMemory.getPhysicalAddress());
@@ -51,9 +51,9 @@ public final class DmaMemory implements IxyDmaMemory {
 	 * Creates a copy of another Ixy's direct memory address specification implementation.
 	 *
 	 * @param dmaMemory The direct memory address specification to copy.
-	 * @return A copy of the {@code dmaMemory}.
+	 * @return A copy of the parameter {@code dmaMemory}.
 	 */
-	@Contract(value = "null -> fail; _ -> new", pure = true)
+	@Contract(value = "!null -> new", pure = true)
 	public static @NotNull DmaMemory of(@NotNull DmaMemory dmaMemory) {
 		if (!BuildConfig.OPTIMIZED && dmaMemory == null) throw new InvalidNullParameterException("dmaMemory");
 		return of(dmaMemory.virtualAddress, dmaMemory.physicalAddress);

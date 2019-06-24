@@ -1,4 +1,4 @@
-package de.tum.in.net.ixy.memory.test;
+package de.tum.in.net.ixy.memory;
 
 import org.junit.jupiter.api.extension.ExtendWith;
 

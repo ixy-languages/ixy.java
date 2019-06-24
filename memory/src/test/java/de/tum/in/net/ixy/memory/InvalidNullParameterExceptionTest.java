@@ -1,9 +1,10 @@
-package de.tum.in.net.ixy.memory.test;
+package de.tum.in.net.ixy.memory;
 
-import de.tum.in.net.ixy.memory.InvalidOffsetException;
 import lombok.val;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
@@ -12,19 +13,20 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 /**
- * Tests the class {@link InvalidOffsetException}.
+ * Tests the class {@link InvalidNullParameterException}.
  *
  * @author Esaú García Sánchez-Torija
  */
-@DisplayName("InvalidOffsetException")
-final class InvalidOffsetExceptionTest {
+@Execution(ExecutionMode.CONCURRENT)
+@DisplayName("InvalidNullParameterException")
+final class InvalidNullParameterExceptionTest {
 
 	@Test
 	@DisabledIfOptimized
 	@DisplayName("Null or blank constructor fails")
 	void exceptions() {
-		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new InvalidOffsetException(null));
-		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new InvalidOffsetException(""));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new InvalidNullParameterException(null));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new InvalidNullParameterException(""));
 	}
 
 	@Test
@@ -33,7 +35,7 @@ final class InvalidOffsetExceptionTest {
 		val array = new byte[8];
 		new SecureRandom().nextBytes(array);
 		val parameter = new String(array, StandardCharsets.UTF_8);
-		assertDoesNotThrow(() -> new InvalidOffsetException(parameter));
+		assertDoesNotThrow(() -> new InvalidNullParameterException(parameter));
 	}
 
 }
