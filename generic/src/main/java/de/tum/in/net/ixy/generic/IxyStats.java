@@ -87,6 +87,7 @@ public interface IxyStats {
 	 * Prints the stats to the given output stream.
 	 *
 	 * @param out The output stream.
+	 * @throws IOException If an I/O error occurs.
 	 */
 	@Contract(pure = true)
 	void writeStats(@NotNull OutputStream out) throws IOException;
@@ -99,6 +100,7 @@ public interface IxyStats {
 	 *
 	 * @param stats The initial stats.
 	 * @param delta The delta of time in nanoseconds.
+	 * @throws IOException If an I/O error occurs.
 	 */
 	@Contract(pure = true)
 	void writeStats(@NotNull OutputStream out, @NotNull IxyStats stats, long delta) throws IOException;
