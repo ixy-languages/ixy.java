@@ -8,8 +8,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * JUnit annotation that disallows the execution of a test case if the member {@link
- * de.tum.in.net.ixy.pci.BuildConfig#OPTIMIZED} is {@code true}.
+ * JUnit annotation that disallows the execution of a test case if the member {@link BuildConfig#OPTIMIZED} is {@code
+ * true}.
  *
  * @author Esaú García Sánchez-Torija
  */

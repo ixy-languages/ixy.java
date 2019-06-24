@@ -2,13 +2,15 @@ package de.tum.in.net.ixy.pci;
 
 import de.tum.in.net.ixy.generic.IxyPacketBuffer;
 import de.tum.in.net.ixy.generic.IxyStats;
-import de.tum.in.net.ixy.pci.Device;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.FileNotFoundException;
-import java.io.IOException;
 
-/** Dummy class extending {@link Device}. */
+/**
+ * Dummy class extending {@link Device}.
+ *
+ * @author Esaú García Sánchez-Torija
+ */
 final class DummyDevice extends Device {
 
 	DummyDevice(@NotNull String name, @NotNull String driver) throws FileNotFoundException {
@@ -16,7 +18,7 @@ final class DummyDevice extends Device {
 	}
 
 	@Override
-	public boolean isSupported() throws IOException {
+	public boolean isSupported() {
 		return false;
 	}
 

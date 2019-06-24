@@ -29,19 +29,19 @@ import static org.junit.platform.commons.util.AnnotationUtils.findAnnotation;
 final class EnabledIfNicCondition implements ExecutionCondition {
 
 	/** Cached evaluation result used when the annotation {@code @EnabledIfNic} is not present. */
-	private static final ConditionEvaluationResult ENABLED_BY_DEFAULT = enabled("@EnabledIfNic is not present");
+	private static final @NotNull ConditionEvaluationResult ENABLED_BY_DEFAULT = enabled("@EnabledIfNic is not present");
 
 	/** Cached evaluation result used when at least one NIC is counted and at least one PCI address can be found. */
-	private static final ConditionEvaluationResult ENABLED_AT_LEAST = enabled("At least one NIC address was found");
+	private static final @NotNull ConditionEvaluationResult ENABLED_AT_LEAST = enabled("At least one NIC address was found");
 
 	/** Cached evaluation result used when at least one NIC is counted but not a single PCI address can be found. */
-	private static final ConditionEvaluationResult DISABLED_NOT_FOUND = disabled("Not a single NIC address was found");
+	private static final @NotNull ConditionEvaluationResult DISABLED_NOT_FOUND = disabled("Not a single NIC address was found");
 
 	/** The {@link Pattern} used to validate a PCI address. */
-	private static final Pattern PCI_ADDRESS_REGEX = Pattern.compile("^\\d{4}:\\d{2}\\d{2}.\\d$");
+	private static final @NotNull Pattern PCI_ADDRESS_REGEX = Pattern.compile("^\\d{4}:\\d{2}\\d{2}.\\d$");
 
 	@Override
-	@Contract(value = "null -> fail; !null -> !null", pure = true)
+	@Contract(value = "null -> fail", pure = true)
 	public @NotNull ConditionEvaluationResult evaluateExecutionCondition(@NotNull ExtensionContext context) {
 		// Search our custom annotation
 		val optional = findAnnotation(context.getElement(), EnabledIfNic.class);

@@ -3,7 +3,6 @@ package de.tum.in.net.ixy.pci;
 import lombok.NonNull;
 import lombok.val;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -18,7 +17,6 @@ import org.junit.jupiter.api.parallel.ResourceLock;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Objects;
@@ -40,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 @EnabledOnOs(OS.LINUX)
 @DisplayName("Device (VirtIO)")
 @Execution(ExecutionMode.CONCURRENT)
+@SuppressWarnings("JUnitTestMethodWithNoAssertions")
 final class VirtioPciTest {
 
 	/** The name of the environment variable that counts how many VirtIO PCI devices exist. */
@@ -58,13 +57,13 @@ final class VirtioPciTest {
 	private static final short EXPECTED_VENDOR = 0x1af4;
 
 	/** The expected device identifiers. */
-	private static final Set<Short> EXPECTED_DEVICES = Set.of((short) 0x1000);
+	private static final @NotNull Set<Short> EXPECTED_DEVICES = Set.of((short) 0x1000);
 
 	/** The expected class. */
 	private static final byte EXPECTED_CLASS = 0x02;
 
 	/** The expected message of the exception thrown by the binding and unbinding methods. */
-	private static final String EXPECTED_BIND_MESSAGE = "No such device";
+	private static final @NotNull String EXPECTED_BIND_MESSAGE = "No such device";
 
 	/** The expected message of the exception thrown when the user does not have sufficient permissions. */
 	private static final @NotNull String EXPECTED_SEC_MESSAGE = "Permission denied";
@@ -87,21 +86,28 @@ final class VirtioPciTest {
 	}
 
 	@Nested
-	@DisabledIfOptimized
+	@SuppressWarnings("InnerClassMayBeStatic")
 	@DisplayName("Device (VirtIO) (Parameters)")
 	final class Parameters {
 
 		@Test
 		@DisplayName("Construction fails with wrong parameters")
 		void Pci_exceptions() {
-			String[] wrong = {null, "", " ", File.separator};
+			String[] wrong = {null, "", " ", "-"};
 			for (val device : wrong) {
 				for (val driver : wrong) {
-					if (Objects.equals(device, File.separator) && Objects.equals(driver, File.separator)) {
-						assertThatExceptionOfType(FileNotFoundException.class).isThrownBy(() -> new DummyDevice(device, driver));
+					// Compute the exception class to be thrown, if any
+					Class<? extends Exception> exceptionClass;
+					if (device == null || driver == null) {
+						exceptionClass = NullPointerException.class;
+					} else if (BuildConfig.OPTIMIZED) {
+						exceptionClass = FileNotFoundException.class;
+					} else if (!Objects.equals(device, "-") || !Objects.equals(driver, "-")) {
+						exceptionClass = IllegalArgumentException.class;
 					} else {
-						assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new DummyDevice(device, driver));
+						exceptionClass = FileNotFoundException.class;
 					}
+					assertThatExceptionOfType(exceptionClass).isThrownBy(() -> new DummyDevice(device, driver));
 				}
 			}
 		}
@@ -255,7 +261,7 @@ final class VirtioPciTest {
 	 * @param device The PCI device.
 	 * @return The {@link Device} instance.
 	 */
-	private static @NotNull Optional<@Nullable Device> newPci(@NonNull String device) {
+	private static @NotNull Optional<Device> newPci(@NonNull String device) {
 		try {
 			return Optional.of(new DummyDevice(device, DRIVER));
 		} catch (FileNotFoundException e) {
