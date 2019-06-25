@@ -96,56 +96,60 @@ public final class Main {
 			if (BuildConfig.DEBUG) log.error("The device name is missing or wrong.");
 			return;
 		}
-		// Extract the device driver
-		try (val device = driver.getDevice(deviceName, 1, 1)) {
+
+		// Get the generic implementations from the driver
+		if (BuildConfig.DEBUG) log.info("Extracting plugin-specific implementations:");
+		if (BuildConfig.DEBUG) log.info(">>> Memory manager");
+		val memoryManager = driver.getMemoryManager();
+		if (BuildConfig.DEBUG) log.info(">>> Memory pool");
+		val mempool = driver.getMemoryPool(batchSize);
+		if (BuildConfig.DEBUG) log.info(">>> Device driver");
+		try (val device = driver.getDevice(deviceName, 1, 1, memoryManager)) {
+			if (BuildConfig.DEBUG) log.info(">>> Initial stats");
+			val statsStart = driver.getStats(device);
+			if (BuildConfig.DEBUG) log.info(">>> End stats");
+			val statsEnd = driver.getStats(device);
+
 			// Output some information about it
-			if (BuildConfig.DEBUG) {
-				log.info("========== DEVICE INFORMATION ==========");
-				log.info("Vendor id: {}", Integer.toHexString(Short.toUnsignedInt(device.getVendorId())));
-				log.info("Device id: {}", Integer.toHexString(Short.toUnsignedInt(device.getDeviceId())));
-				log.info("Class id: {}", Integer.toHexString(Byte.toUnsignedInt(device.getClassId())));
-				log.info("========== DEVICE INFORMATION ==========");
-			}
+			var message = "========== DEVICE INFORMATION ==========";
+			message += System.lineSeparator();
+			message += "Vendor id: " + Integer.toHexString(Short.toUnsignedInt(device.getVendorId()));
+			message += System.lineSeparator();
+			message += "Device id: " + Integer.toHexString(Short.toUnsignedInt(device.getDeviceId()));
+			message += System.lineSeparator();
+			message += "Class id: " + Integer.toHexString(Short.toUnsignedInt(device.getClassId()));
+			message += "========== DEVICE INFORMATION ==========";
+			System.out.println(message);
 
 			// Guess whether the device can be used for packet generation
 			if (!device.isMappable()) {
-				if (BuildConfig.DEBUG) log.error("Legacy device cannot be memory mapped.");
+				log.error("Legacy device cannot be memory mapped.");
 				return;
 			} else if (!device.isSupported()) {
-				if (BuildConfig.DEBUG) log.error("The selected device driver does not support this NIC.");
+				log.error("The selected device driver does not support this NIC.");
 				return;
 			}
 
 			// Memorize the bind status to restore it after use
 			wasBound = device.isBound();
-			if (BuildConfig.DEBUG) log.info("Memorizing bind status, which is '{}'", wasBound);
-			Runtime.getRuntime().addShutdownHook(new ShutdownHookThread(device, () -> wasBound, null, () -> null));
+			if (BuildConfig.DEBUG) log.info("Memorizing bind status, which is '{}'.", wasBound);
+//			Runtime.getRuntime().addShutdownHook(new ShutdownHookThread(device, () -> wasBound, null, () -> null));
 
-			// Create the dependencies of the packet generator and the packet generator
-			if (BuildConfig.DEBUG) log.info("Allocating resources for the packet generator");
-			val mmanager = driver.getMemoryManager();
-			val mempool = driver.getMemoryPool(batchSize);
-			val statsStart = driver.getStats(device);
-			val statsEnd = driver.getStats(device);
-			val generator = new IxyGenerator(device, mmanager, mempool, batchSize, statsStart, statsEnd);
-
-			// Prepare the device card
-			device.unbind();
-			device.enableDma();
-
-			// Run the packet generator
-			if (BuildConfig.DEBUG) log.info("Running packet generator.");
+			if (BuildConfig.DEBUG) log.info("Instantiating and running packet generator.");
+			val generator = new IxyGenerator(device, memoryManager, mempool, batchSize, statsStart, statsEnd);
 			generator.run();
 
 			// Recover the bind status if this part of the program ever gets reached
-			log.info("Recovering bind status, which was 'true'");
-			if (wasBound != null && wasBound) {
-				device.bind();
+			log.info("Recovering bind status, which was '{}'.", wasBound);
+			if (wasBound) {
+				if (!device.isBound()) device.bind();
+			} else {
+				if (device.isBound()) device.unbind();
 			}
 		} catch (FileNotFoundException e) {
-			log.error("The device '{}' could not be found", deviceName, e);
+			log.error("The device '{}' could not be found.", deviceName, e);
 		} catch (IOException e) {
-			log.error("Unexpected I/O error", e);
+			log.error("Unexpected I/O error.", e);
 		}
 	}
 
@@ -154,41 +158,7 @@ public final class Main {
 	 *
 	 * @param driver The driver instance.
 	 */
-	private static void forward(@NotNull IxyDriver driver) {
-		log.info("Preparing forwarder application.");
-		val firstNicName = argumentsList.isEmpty() ? "" : argumentsList.remove(0).trim();
-		if (firstNicName.isBlank()) {
-			log.error("The first device name is missing or wrong.");
-			return;
-		}
-		val secondNicName = argumentsList.isEmpty() ? "" : argumentsList.remove(0).trim();
-		if (secondNicName.isBlank()) {
-			log.error("The second device name is missing or wrong.");
-			return;
-		}
-		try (
-				val firstNic = driver.getDevice(firstNicName, 1, 1);
-				val secondNic = driver.getDevice(secondNicName, 1, 1)
-		) {
-			log.info("[1] Vendor id: {}", Integer.toHexString(Short.toUnsignedInt(firstNic.getVendorId())));
-			log.info("[1] Device id: {}", Integer.toHexString(Short.toUnsignedInt(firstNic.getDeviceId())));
-			log.info("[1] Class id: {}", Integer.toHexString(Byte.toUnsignedInt(firstNic.getClassId())));
-			log.info("[2] Vendor id: {}", Integer.toHexString(Short.toUnsignedInt(secondNic.getVendorId())));
-			log.info("[2] Device id: {}", Integer.toHexString(Short.toUnsignedInt(secondNic.getDeviceId())));
-			log.info("[2] Class id: {}", Integer.toHexString(Byte.toUnsignedInt(secondNic.getClassId())));
-			if (!firstNic.isMappable() || !secondNic.isMappable()) {
-				log.error("Legacy devices cannot be memory mapped.");
-			} else if (!firstNic.isSupported() || !secondNic.isSupported()) {
-				log.error("The selected device driver does not support one of these NICs.");
-			} else {
-				log.info("Everything works as expected.");
-			}
-		} catch (FileNotFoundException e) {
-			log.error("The device '{}' or '{}' could not be found", firstNicName, secondNicName, e);
-		} catch (IOException e) {
-			log.error("Unexpected I/O error", e);
-		}
-	}
+	private static void forward(@NotNull IxyDriver driver) { }
 
 	/**
 	 * Parses a list of arguments and stores them in {@link #argumentsList}, {@link #argumentsKeyValue} and {@link
