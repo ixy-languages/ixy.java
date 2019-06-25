@@ -12,6 +12,8 @@
 	</root>
 	<!-- Increase verbosity for the Ixy package -->
 	<logger name="de.tum.in.net.ixy.app" level="DEBUG" />
+	<logger name="de.tum.in.net.ixy.generator" level="DEBUG" />
+	<logger name="de.tum.in.net.ixy.forwarder" level="DEBUG" />
 	<logger name="de.tum.in.net.ixy.ixgbe" level="DEBUG" />
 	<!-- Disable logging from the PF4J -->
 	<logger name="org.pf4j" level="WARN" />
