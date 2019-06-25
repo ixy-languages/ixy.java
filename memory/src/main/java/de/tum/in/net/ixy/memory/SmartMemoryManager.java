@@ -119,7 +119,7 @@ public final class SmartMemoryManager implements IxyMemoryManager {
 	@SuppressWarnings("ConstantConditions")
 	@SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
 	private SmartMemoryManager() {
-		if (BuildConfig.DEBUG) log.debug("Creating a smart memory manager");
+		if (BuildConfig.DEBUG) log.trace("Creating a smart memory manager.");
 		if (singleton != null) {
 			throw new IllegalStateException("An instance cannot be created twice. Use getSingleton() instead.");
 		}

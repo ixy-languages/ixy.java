@@ -792,7 +792,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	 */
 	@SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
 	private JniMemoryManager() {
-		if (BuildConfig.DEBUG) log.debug("Creating a JNI-backed memory manager");
+		if (BuildConfig.DEBUG) log.trace("Creating a JNI-backed memory manager.");
 		if (singleton == null) {
 			System.loadLibrary("ixy");
 			HUGE_PAGE_SIZE = c_hugepage_size();
@@ -806,21 +806,21 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	@Override
 	@Contract(pure = true)
 	public int addressSize() {
-		if (BuildConfig.DEBUG) log.debug("Computing address size using C");
+		if (BuildConfig.DEBUG) log.trace("Computing address size using C.");
 		return c_address_size();
 	}
 
 	@Override
 	@Contract(pure = true)
 	public long pageSize() {
-		if (BuildConfig.DEBUG) log.debug("Computing page size using C");
+		if (BuildConfig.DEBUG) log.trace("Computing page size using C.");
 		return c_page_size();
 	}
 
 	@Override
 	@Contract(pure = true)
 	public long hugepageSize() {
-		if (BuildConfig.DEBUG) log.debug("Computing huge page size using C");
+		if (BuildConfig.DEBUG) log.trace("Computing huge page size using C.");
 		return c_hugepage_size();
 	}
 
@@ -837,7 +837,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (allocationType == AllocationType.HUGE) {
 			if (BuildConfig.DEBUG) {
 				val type = layoutType == LayoutType.CONTIGUOUS ? "contiguous" : "non-contiguous";
-				log.debug("Allocating {} {} hugepage-backed bytes using C", bytes, type);
+				log.trace("Allocating {} {} hugepage-backed bytes using C.", bytes, type);
 			}
 			// If no huge memory page file support has been detected, exit right away
 			if (HUGE_PAGE_SIZE <= 0) return 0;
@@ -848,7 +848,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 			if (layoutType == LayoutType.CONTIGUOUS && bytes > HUGE_PAGE_SIZE) return 0;
 		} else if (BuildConfig.DEBUG) {
 			val type = layoutType == LayoutType.CONTIGUOUS ? "contiguous" : "non-contiguous";
-			log.debug("Allocating {} {} bytes using C", bytes, type);
+			log.trace("Allocating {} {} bytes using C.", bytes, type);
 		}
 		// Allocate the memory
 		return c_allocate(bytes, allocationType == AllocationType.HUGE, BuildConfig.HUGE_MNT);
@@ -857,7 +857,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	@Override
 	@Contract(value = "_, !null, !null -> new", pure = true)
 	public @NotNull IxyDmaMemory dmaAllocate(long bytes, @NotNull AllocationType allocationType, @NotNull LayoutType layoutType) {
-		if (!BuildConfig.DEBUG) log.debug("Allocating DualMemory using C");
+		if (!BuildConfig.DEBUG) log.trace("Allocating DualMemory using C.");
 		val virt = allocate(bytes, allocationType, layoutType);
 		val phys = virt2phys(virt);
 		return DmaMemory.of(virt, phys);
@@ -876,7 +876,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (huge) {
 			if (BuildConfig.DEBUG) {
 				val xaddress = Long.toHexString(address);
-				log.debug("Freeing {} hugepage-backed bytes @ 0x{} using C", bytes, xaddress);
+				log.trace("Freeing {} hugepage-backed bytes @ 0x{} using C.", bytes, xaddress);
 			}
 			// If no huge memory page file support has been detected, exit right away
 			if (HUGE_PAGE_SIZE <= 0) return false;
@@ -886,7 +886,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 			bytes = (bytes & mask) == 0 ? bytes : (bytes + HUGE_PAGE_SIZE) & ~mask;
 		} else if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
-			log.debug("Freeing {} bytes @ 0x{} using C", bytes, xaddress);
+			log.trace("Freeing {} bytes @ 0x{} using C.", bytes, xaddress);
 		}
 		// Perform some checks when using huge memory pages
 		return c_free(address, bytes, huge);
@@ -897,7 +897,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	public byte getByte(long address) {
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
-			log.debug("Reading byte @ 0x{} using C", xaddress);
+			log.trace("Reading byte @ 0x{} using C.", xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("src");
 		return c_get_byte(address);
@@ -908,7 +908,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	public byte getByteVolatile(long address) {
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
-			log.debug("Reading volatile byte @ 0x{} using C", xaddress);
+			log.trace("Reading volatile byte @ 0x{} using C.", xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("src");
 		return c_get_byte_volatile(address);
@@ -920,7 +920,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
 			val xaddress = Long.toHexString(address);
-			log.debug("Putting byte 0x{} @ 0x{} using C", xvalue, xaddress);
+			log.trace("Putting byte 0x{} @ 0x{} using C.", xvalue, xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		c_put_byte(address, value);
@@ -932,7 +932,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
 			val xaddress = Long.toHexString(address);
-			log.debug("Putting volatile byte 0x{} @ 0x{} using C", xvalue, xaddress);
+			log.trace("Putting volatile byte 0x{} @ 0x{} using C.", xvalue, xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		c_put_byte_volatile(address, value);
@@ -944,7 +944,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
 			val xaddress = Long.toHexString(address);
-			log.debug("Replacing byte @ 0x{} with 0x{} using C", xaddress, xvalue);
+			log.trace("Replacing byte @ 0x{} with 0x{} using C.", xaddress, xvalue);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		return c_get_and_put_byte(address, value);
@@ -956,7 +956,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
 			val xaddress = Long.toHexString(address);
-			log.debug("Replacing volatile byte @ 0x{} with 0x{} using C", xaddress, xvalue);
+			log.trace("Replacing volatile byte @ 0x{} with 0x{} using C.", xaddress, xvalue);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		return c_get_and_put_byte_volatile(address, value);
@@ -968,7 +968,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
 			val xaddress = Long.toHexString(address);
-			log.debug("Adding byte 0x{} @ 0x{} using C", xvalue, xaddress);
+			log.trace("Adding byte 0x{} @ 0x{} using C.", xvalue, xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		c_add_byte(address, value);
@@ -980,7 +980,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
 			val xaddress = Long.toHexString(address);
-			log.debug("Adding volatile byte 0x{} @ 0x{} using C", xvalue, xaddress);
+			log.trace("Adding volatile byte 0x{} @ 0x{} using C.", xvalue, xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		c_add_byte_volatile(address, value);
@@ -992,7 +992,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
 			val xaddress = Long.toHexString(address);
-			log.debug("Adding byte 0x{} @ 0x{} using C", xvalue, xaddress);
+			log.trace("Adding byte 0x{} @ 0x{} using C.", xvalue, xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		return c_get_and_add_byte(address, value);
@@ -1004,7 +1004,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
 			val xaddress = Long.toHexString(address);
-			log.debug("Adding volatile byte 0x{} @ 0x{} using C", xvalue, xaddress);
+			log.trace("Adding volatile byte 0x{} @ 0x{} using C.", xvalue, xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		return c_get_and_add_byte_volatile(address, value);
@@ -1016,7 +1016,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
 			val xaddress = Long.toHexString(address);
-			log.debug("Adding byte 0x{} @ 0x{} using C", xvalue, xaddress);
+			log.trace("Adding byte 0x{} @ 0x{} using C.", xvalue, xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		return c_add_and_get_byte(address, value);
@@ -1028,7 +1028,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
 			val xaddress = Long.toHexString(address);
-			log.debug("Adding volatile byte 0x{} @ 0x{} using C", xvalue, xaddress);
+			log.trace("Adding volatile byte 0x{} @ 0x{} using C.", xvalue, xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		return c_add_and_get_byte_volatile(address, value);
@@ -1039,7 +1039,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	public short getShort(long address) {
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
-			log.debug("Reading short @ 0x{} using C", xaddress);
+			log.trace("Reading short @ 0x{} using C.", xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("src");
 		return c_get_short(address);
@@ -1050,7 +1050,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	public short getShortVolatile(long address) {
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
-			log.debug("Reading volatile short @ 0x{} using C", xaddress);
+			log.trace("Reading volatile short @ 0x{} using C.", xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("src");
 		return c_get_short_volatile(address);
@@ -1062,7 +1062,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
 			val xaddress = Long.toHexString(address);
-			log.debug("Putting short 0x{} @ 0x{} using C", xvalue, xaddress);
+			log.trace("Putting short 0x{} @ 0x{} using C.", xvalue, xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		c_put_short(address, value);
@@ -1074,7 +1074,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
 			val xaddress = Long.toHexString(address);
-			log.debug("Putting volatile short 0x{} @ 0x{} using C", xvalue, xaddress);
+			log.trace("Putting volatile short 0x{} @ 0x{} using C.", xvalue, xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		c_put_short_volatile(address, value);
@@ -1086,7 +1086,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
 			val xaddress = Long.toHexString(address);
-			log.debug("Replacing short @ 0x{} with 0x{} using C", xaddress, xvalue);
+			log.trace("Replacing short @ 0x{} with 0x{} using C.", xaddress, xvalue);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		return c_get_and_put_short(address, value);
@@ -1098,7 +1098,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
 			val xaddress = Long.toHexString(address);
-			log.debug("Replacing volatile short @ 0x{} with 0x{} using C", xaddress, xvalue);
+			log.trace("Replacing volatile short @ 0x{} with 0x{} using C.", xaddress, xvalue);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		return c_get_and_put_short_volatile(address, value);
@@ -1110,7 +1110,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
 			val xaddress = Long.toHexString(address);
-			log.debug("Adding short 0x{} @ 0x{} using C", xvalue, xaddress);
+			log.trace("Adding short 0x{} @ 0x{} using C.", xvalue, xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		c_add_short(address, value);
@@ -1122,7 +1122,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
 			val xaddress = Long.toHexString(address);
-			log.debug("Adding volatile short 0x{} @ 0x{} using C", xvalue, xaddress);
+			log.trace("Adding volatile short 0x{} @ 0x{} using C.", xvalue, xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		c_add_short_volatile(address, value);
@@ -1134,7 +1134,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
 			val xaddress = Long.toHexString(address);
-			log.debug("Adding short 0x{} @ 0x{} using C", xvalue, xaddress);
+			log.trace("Adding short 0x{} @ 0x{} using C.", xvalue, xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		return c_get_and_add_short(address, value);
@@ -1146,7 +1146,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
 			val xaddress = Long.toHexString(address);
-			log.debug("Adding volatile short 0x{} @ 0x{} using C", xvalue, xaddress);
+			log.trace("Adding volatile short 0x{} @ 0x{} using C.", xvalue, xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		return c_get_and_add_short_volatile(address, value);
@@ -1158,7 +1158,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
 			val xaddress = Long.toHexString(address);
-			log.debug("Adding short 0x{} @ 0x{} using C", xvalue, xaddress);
+			log.trace("Adding short 0x{} @ 0x{} using C.", xvalue, xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		return c_add_and_get_short(address, value);
@@ -1170,7 +1170,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
 			val xaddress = Long.toHexString(address);
-			log.debug("Adding volatile short 0x{} @ 0x{} using C", xvalue, xaddress);
+			log.trace("Adding volatile short 0x{} @ 0x{} using C.", xvalue, xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		return c_add_and_get_short_volatile(address, value);
@@ -1181,7 +1181,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	public int getInt(long address) {
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
-			log.debug("Reading int @ 0x{} using C", xaddress);
+			log.trace("Reading int @ 0x{} using C.", xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("src");
 		return c_get_int(address);
@@ -1192,7 +1192,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	public int getIntVolatile(long address) {
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
-			log.debug("Reading volatile int @ 0x{} using C", xaddress);
+			log.trace("Reading volatile int @ 0x{} using C.", xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("src");
 		return c_get_int_volatile(address);
@@ -1204,7 +1204,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(value);
 			val xaddress = Long.toHexString(address);
-			log.debug("Putting int 0x{} @ 0x{} using C", xvalue, xaddress);
+			log.trace("Putting int 0x{} @ 0x{} using C.", xvalue, xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		c_put_int(address, value);
@@ -1216,7 +1216,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(value);
 			val xaddress = Long.toHexString(address);
-			log.debug("Putting volatile int 0x{} @ 0x{} using C", xvalue, xaddress);
+			log.trace("Putting volatile int 0x{} @ 0x{} using C.", xvalue, xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		c_put_int_volatile(address, value);
@@ -1228,7 +1228,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(value);
 			val xaddress = Long.toHexString(address);
-			log.debug("Replacing int @ 0x{} with 0x{} using C", xaddress, xvalue);
+			log.trace("Replacing int @ 0x{} with 0x{} using C.", xaddress, xvalue);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		return c_get_and_put_int(address, value);
@@ -1240,7 +1240,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(value);
 			val xaddress = Long.toHexString(address);
-			log.debug("Replacing volatile int @ 0x{} with 0x{} using C", xaddress, xvalue);
+			log.trace("Replacing volatile int @ 0x{} with 0x{} using C.", xaddress, xvalue);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		return c_get_and_put_int_volatile(address, value);
@@ -1252,7 +1252,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(value);
 			val xaddress = Long.toHexString(address);
-			log.debug("Adding int 0x{} @ 0x{} using C", xvalue, xaddress);
+			log.trace("Adding int 0x{} @ 0x{} using C.", xvalue, xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		c_add_int(address, value);
@@ -1264,7 +1264,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(value);
 			val xaddress = Long.toHexString(address);
-			log.debug("Adding volatile int 0x{} @ 0x{} using C", xvalue, xaddress);
+			log.trace("Adding volatile int 0x{} @ 0x{} using C.", xvalue, xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		c_add_int_volatile(address, value);
@@ -1276,7 +1276,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(value);
 			val xaddress = Long.toHexString(address);
-			log.debug("Adding int 0x{} @ 0x{} using C", xvalue, xaddress);
+			log.trace("Adding int 0x{} @ 0x{} using C.", xvalue, xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		return c_get_and_add_int(address, value);
@@ -1288,7 +1288,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(value);
 			val xaddress = Long.toHexString(address);
-			log.debug("Adding volatile int 0x{} @ 0x{} using C", xvalue, xaddress);
+			log.trace("Adding volatile int 0x{} @ 0x{} using C.", xvalue, xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		return c_get_and_add_int_volatile(address, value);
@@ -1300,7 +1300,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(value);
 			val xaddress = Long.toHexString(address);
-			log.debug("Adding int 0x{} @ 0x{} using C", xvalue, xaddress);
+			log.trace("Adding int 0x{} @ 0x{} using C.", xvalue, xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		return c_add_and_get_int(address, value);
@@ -1312,7 +1312,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(value);
 			val xaddress = Long.toHexString(address);
-			log.debug("Adding volatile int 0x{} @ 0x{} using C", xvalue, xaddress);
+			log.trace("Adding volatile int 0x{} @ 0x{} using C.", xvalue, xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		return c_add_and_get_int_volatile(address, value);
@@ -1323,7 +1323,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	public long getLong(long address) {
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
-			log.debug("Reading long @ 0x{} using C", xaddress);
+			log.trace("Reading long @ 0x{} using C.", xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("src");
 		return c_get_long(address);
@@ -1334,7 +1334,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	public long getLongVolatile(long address) {
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
-			log.debug("Reading volatile long @ 0x{} using C", xaddress);
+			log.trace("Reading volatile long @ 0x{} using C.", xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("src");
 		return c_get_long_volatile(address);
@@ -1346,7 +1346,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Long.toHexString(value);
 			val xaddress = Long.toHexString(address);
-			log.debug("Putting long 0x{} @ 0x{} using C", xvalue, xaddress);
+			log.trace("Putting long 0x{} @ 0x{} using C.", xvalue, xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		c_put_long(address, value);
@@ -1358,7 +1358,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Long.toHexString(value);
 			val xaddress = Long.toHexString(address);
-			log.debug("Putting volatile long 0x{} @ 0x{} using C", xvalue, xaddress);
+			log.trace("Putting volatile long 0x{} @ 0x{} using C.", xvalue, xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		c_put_long_volatile(address, value);
@@ -1370,7 +1370,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Long.toHexString(value);
 			val xaddress = Long.toHexString(address);
-			log.debug("Replacing long @ 0x{} with 0x{} using C", xaddress, xvalue);
+			log.trace("Replacing long @ 0x{} with 0x{} using C.", xaddress, xvalue);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		return c_get_and_put_long(address, value);
@@ -1382,7 +1382,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Long.toHexString(value);
 			val xaddress = Long.toHexString(address);
-			log.debug("Replacing volatile long @ 0x{} with 0x{} using C", xaddress, xvalue);
+			log.trace("Replacing volatile long @ 0x{} with 0x{} using C.", xaddress, xvalue);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		return c_get_and_put_long_volatile(address, value);
@@ -1394,7 +1394,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Long.toHexString(value);
 			val xaddress = Long.toHexString(address);
-			log.debug("Adding long 0x{} @ 0x{} using C", xvalue, xaddress);
+			log.trace("Adding long 0x{} @ 0x{} using C.", xvalue, xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		c_add_long(address, value);
@@ -1406,7 +1406,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Long.toHexString(value);
 			val xaddress = Long.toHexString(address);
-			log.debug("Adding volatile long 0x{} @ 0x{} using C", xvalue, xaddress);
+			log.trace("Adding volatile long 0x{} @ 0x{} using C.", xvalue, xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		c_add_long_volatile(address, value);
@@ -1418,7 +1418,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Long.toHexString(value);
 			val xaddress = Long.toHexString(address);
-			log.debug("Adding long 0x{} @ 0x{} using C", xvalue, xaddress);
+			log.trace("Adding long 0x{} @ 0x{} using C.", xvalue, xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		return c_get_and_add_long(address, value);
@@ -1430,7 +1430,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Long.toHexString(value);
 			val xaddress = Long.toHexString(address);
-			log.debug("Adding volatile long 0x{} @ 0x{} using C", xvalue, xaddress);
+			log.trace("Adding volatile long 0x{} @ 0x{} using C.", xvalue, xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		return c_get_and_add_long_volatile(address, value);
@@ -1442,7 +1442,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Long.toHexString(value);
 			val xaddress = Long.toHexString(address);
-			log.debug("Adding long 0x{} @ 0x{} using C", xvalue, xaddress);
+			log.trace("Adding long 0x{} @ 0x{} using C.", xvalue, xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		return c_add_and_get_long(address, value);
@@ -1454,7 +1454,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Long.toHexString(value);
 			val xaddress = Long.toHexString(address);
-			log.debug("Adding volatile long 0x{} @ 0x{} using C", xvalue, xaddress);
+			log.trace("Adding volatile long 0x{} @ 0x{} using C.", xvalue, xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED && address == 0L) throw new InvalidMemoryAddressException("dest");
 		return c_add_and_get_long_volatile(address, value);
@@ -1469,7 +1469,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		}
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(src);
-			log.debug("Copying memory data segment of {} bytes from 0x{} using C", bytes, xaddress);
+			log.trace("Copying memory data segment of {} bytes from 0x{} using C.", bytes, xaddress);
 		}
 		c_get(src, bytes, dest, offset);
 	}
@@ -1483,7 +1483,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		}
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(src);
-			log.debug("Copying volatile memory data segment of {} bytes from 0x{} using C", bytes, xaddress);
+			log.trace("Copying volatile memory data segment of {} bytes from 0x{} using C.", bytes, xaddress);
 		}
 		c_get_volatile(src, bytes, dest, offset);
 	}
@@ -1497,7 +1497,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		}
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(dest);
-			log.debug("Copying buffer of {} bytes at offset 0x{} using the Unsafe object", bytes, xaddress);
+			log.trace("Copying buffer of {} bytes at offset 0x{} using C.", bytes, xaddress);
 		}
 		c_put(dest, bytes, src, offset);
 	}
@@ -1511,7 +1511,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		}
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(dest);
-			log.debug("Copying buffer of {} bytes at offset 0x{} using C", bytes, xaddress);
+			log.trace("Copying buffer of {} bytes at offset 0x{} using C.", bytes, xaddress);
 		}
 		c_put_volatile(dest, bytes, src, offset);
 	}
@@ -1522,7 +1522,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(src);
 			val xdest = Long.toHexString(dest);
-			log.debug("Copying memory region ({} B) @ 0x{} to 0x{} using C", bytes, xsrc, xdest);
+			log.trace("Copying memory region ({} B) @ 0x{} to 0x{} using C.", bytes, xsrc, xdest);
 		}
 		if (!BuildConfig.OPTIMIZED && check(src, dest, bytes)) return;
 		c_copy(src, bytes, dest);
@@ -1534,7 +1534,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(src);
 			val xdest = Long.toHexString(dest);
-			log.debug("Copying memory region ({} B) @ 0x{} to 0x{} using C", bytes, xsrc, xdest);
+			log.trace("Copying memory region ({} B) @ 0x{} to 0x{} using C.", bytes, xsrc, xdest);
 		}
 		if (!BuildConfig.OPTIMIZED && check(src, dest, bytes)) return;
 		c_copy_volatile(src, bytes, dest);
@@ -1545,7 +1545,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	public long virt2phys(long address) {
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
-			log.debug("Translating virtual address 0x{} using C", xaddress);
+			log.trace("Translating virtual address 0x{} using C.", xaddress);
 		}
 		return c_virt2phys(address);
 	}
@@ -1557,7 +1557,7 @@ public final class JniMemoryManager implements IxyMemoryManager {
 	@Deprecated
 	@Contract(value = "_ -> fail", pure = true)
 	public long obj2virt(@NotNull Object object) {
-		if (BuildConfig.DEBUG) log.debug("Computing the address of an object using the Unsafe object");
+		if (BuildConfig.DEBUG) log.trace("Computing the address of an object using C.");
 		throw new UnsupportedOperationException("The C library does not provide an implementation for this operation");
 	}
 

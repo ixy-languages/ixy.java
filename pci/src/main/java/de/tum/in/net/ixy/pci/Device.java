@@ -175,7 +175,7 @@ public abstract class Device extends IxyDevice {
 			if (name.isEmpty()) throw new IllegalArgumentException("The parameter 'name' is blank or empty");
 			if (driver.isEmpty()) throw new IllegalArgumentException("The parameter 'driver' is blank or empty");
 		}
-		if (BuildConfig.DEBUG) log.debug("Creating PCI device instance for '{}' with driver '{}'.", name, driver);
+		if (BuildConfig.DEBUG) log.trace("Creating PCI device instance for '{}' with driver '{}'.", name, driver);
 		val min = Math.max(BYTES_MIN, name.length());
 		this.name = name;
 		this.driver = driver;
@@ -191,7 +191,7 @@ public abstract class Device extends IxyDevice {
 	@Override
 	@Contract(pure = true)
 	public short getVendorId() throws IOException {
-		if (BuildConfig.DEBUG) log.debug("Reading vendor id of PCI device: {}", name);
+		if (BuildConfig.DEBUG) log.trace("Reading vendor id of PCI device '{}'.", name);
 		if (BuildConfig.DEBUG) {
 			val bytes = config.position(POSITION_VENDOR).read(buffer.clear().limit(BYTES_VENDOR).mark());
 			if (bytes < BYTES_VENDOR) log.warn("Could't read the exact amount of bytes needed to read the vendor id.");
@@ -204,7 +204,7 @@ public abstract class Device extends IxyDevice {
 	@Override
 	@Contract(pure = true)
 	public short getDeviceId() throws IOException {
-		if (BuildConfig.DEBUG) log.debug("Reading device id of PCI device: {}", name);
+		if (BuildConfig.DEBUG) log.trace("Reading device id of PCI device '{}'.", name);
 		if (BuildConfig.DEBUG) {
 			val bytes = config.position(POSITION_DEVICE).read(buffer.clear().limit(BYTES_DEVICE).mark());
 			if (bytes < BYTES_DEVICE) log.warn("Could't read the exact amount of bytes needed to read the device id.");
@@ -217,7 +217,7 @@ public abstract class Device extends IxyDevice {
 	@Override
 	@Contract(pure = true)
 	public byte getClassId() throws IOException {
-		if (BuildConfig.DEBUG) log.debug("Reading class id of PCI device: {}", name);
+		if (BuildConfig.DEBUG) log.trace("Reading class id of PCI device '{}'.", name);
 		if (BuildConfig.DEBUG) {
 			val bytes = config.position(POSITION_CLASS).read(buffer.clear().limit(BYTES_CLASS));
 			if (bytes < BYTES_CLASS) log.warn("Could't read the exact amount of bytes needed to read the class id.");
@@ -230,19 +230,19 @@ public abstract class Device extends IxyDevice {
 	@Override
 	@Contract(pure = true)
 	public boolean isDmaEnabled() throws IOException {
-		if (BuildConfig.DEBUG) log.debug("Checking if DMA is enabled on PCI device: {}", name);
+		if (BuildConfig.DEBUG) log.trace("Checking if DMA is enabled on PCI device '{}'.", name);
 		return (getCommand() & DMA_BIT) != 0;
 	}
 
 	@Override
 	public void enableDma() throws IOException {
-		if (BuildConfig.DEBUG) log.debug("Enabling DMA on PCI device: {}", name);
+		if (BuildConfig.DEBUG) log.trace("Enabling DMA on PCI device '{}'.", name);
 		setDma(true);
 	}
 
 	@Override
 	public void disableDma() throws IOException {
-		if (BuildConfig.DEBUG) log.debug("Disabling DMA on PCI device: {}", name);
+		if (BuildConfig.DEBUG) log.trace("Disabling DMA on PCI device '{}'.", name);
 		setDma(false);
 	}
 
@@ -255,7 +255,7 @@ public abstract class Device extends IxyDevice {
 
 	@Override
 	public void bind() throws IOException {
-		if (BuildConfig.DEBUG) log.debug("Binding driver of PCI device: {}", name);
+		if (BuildConfig.DEBUG) log.trace("Binding driver of PCI device '{}'.", name);
 		if (BuildConfig.DEBUG) {
 			val bytes = bindChannel.write(buffer.clear().put(name.getBytes(StandardCharsets.UTF_8)).flip());
 			if (bytes < BYTES_BIND) log.warn("Couldn't write the exact amount of bytes needed to bind the driver.");
@@ -266,7 +266,7 @@ public abstract class Device extends IxyDevice {
 
 	@Override
 	public void unbind() throws IOException {
-		if (BuildConfig.DEBUG) log.debug("Unbinding the driver of PCI device: {}", name);
+		if (BuildConfig.DEBUG) log.trace("Unbinding the driver of PCI device '{}'.", name);
 		if (BuildConfig.DEBUG) {
 			val bytes = unbindChannel.write(buffer.clear().put(name.getBytes(StandardCharsets.UTF_8)).flip());
 			if (bytes < BYTES_BIND) log.warn("Couldn't write the exact amount of bytes needed to unbind the driver.");
@@ -278,7 +278,7 @@ public abstract class Device extends IxyDevice {
 	@Override
 	@Contract(pure = true)
 	public boolean isMappable() throws IOException {
-		if (BuildConfig.DEBUG) log.debug("Checking mapability of PCI device: {}", name);
+		if (BuildConfig.DEBUG) log.trace("Checking mapability of PCI device '{}'.", name);
 		if (BuildConfig.DEBUG) {
 			val bytes = config.position(POSITION_MAPPABLE).read(buffer.clear().limit(BYTES_MAPPABLE).mark());
 			if (bytes < BYTES_MAPPABLE) log.warn("Couldn't read the exact amount of bytes needed to read a BAR.");
@@ -292,7 +292,7 @@ public abstract class Device extends IxyDevice {
 	@Contract(pure = true)
 	@SuppressWarnings("PMD.DataflowAnomalyAnalysis")
 	public @NotNull Optional<MappedByteBuffer> map() {
-		if (BuildConfig.DEBUG) log.trace("Mapping 'resource0' of PCI device: {}", name);
+		if (BuildConfig.DEBUG) log.trace("Mapping 'resource0' of PCI device '{}'.", name);
 		val path = String.format(PCI_RES_PATH_FMT, name, PCI_RES_MAP);
 		try (
 				val file = new RandomAccessFile(path, READ_WRITE_DATA);
@@ -301,7 +301,7 @@ public abstract class Device extends IxyDevice {
 			val mmap = channel.map(FileChannel.MapMode.READ_WRITE, 0, channel.size());
 			return Optional.of((MappedByteBuffer) mmap.order(ByteOrder.nativeOrder()));
 		} catch (FileNotFoundException e) {
-			log.debug("The resource 'resource0' does not exist.", e);
+			log.error("The resource 'resource0' does not exist.", e);
 		} catch (IOException e) {
 			if (Objects.equals(e.getMessage(), "Invalid argument")) {
 				log.error("The PCI device is a legacy device and cannot be mapped.", e);
@@ -314,6 +314,7 @@ public abstract class Device extends IxyDevice {
 
 	@Override
 	public void close() throws IOException {
+		if (BuildConfig.DEBUG) log.trace("Closing PCI device '{}'.", name);
 		config.close();
 		resource.close();
 		bindChannel.close();

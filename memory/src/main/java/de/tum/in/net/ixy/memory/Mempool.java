@@ -101,7 +101,7 @@ public abstract class Mempool extends IxyMempool implements Comparable<Mempool> 
 
 	@Override
 	public @Nullable IxyPacketBuffer get() {
-		if (BuildConfig.DEBUG) log.info("Popping a free packet.");
+		if (BuildConfig.DEBUG) log.trace("Popping a free packet.");
 		if (BuildConfig.OPTIMIZED) {
 			return buffers.pop();
 		} else {
@@ -118,7 +118,7 @@ public abstract class Mempool extends IxyMempool implements Comparable<Mempool> 
 			size = Math.min(buffer.length - offset, size);
 		}
 		val max = Math.min(size, getSize());
-		if (BuildConfig.DEBUG) log.debug("Extracting {} packets starting at index {}", max, offset);
+		if (BuildConfig.DEBUG) log.trace("Extracting {} packets starting at index {}.", max, offset);
 		var i = 0;
 		while (i < max) {
 			buffer[i++] = buffers.pop();
@@ -131,7 +131,7 @@ public abstract class Mempool extends IxyMempool implements Comparable<Mempool> 
 	public int get(@NotNull IxyPacketBuffer[] buffer, int offset) {
 		if (!BuildConfig.OPTIMIZED && offset < 0) throw new InvalidOffsetException("offset");
 		val max = Math.min(buffer.length - offset, getSize());
-		if (BuildConfig.DEBUG) log.debug("Extracting {} packets starting at index {}", max, offset);
+		if (BuildConfig.DEBUG) log.trace("Extracting {} packets starting at index {}.", max, offset);
 		var i = 0;
 		while (i < max) {
 			buffer[i++] = buffers.pop();
@@ -142,7 +142,7 @@ public abstract class Mempool extends IxyMempool implements Comparable<Mempool> 
 	@Contract(mutates = "param1")
 	public int get(@NotNull IxyPacketBuffer[] buffer) {
 		val max = Math.min(buffer.length, getSize());
-		if (BuildConfig.DEBUG) log.debug("Extracting {} packets starting at index 0", max);
+		if (BuildConfig.DEBUG) log.trace("Extracting {} packets starting at index 0.", max);
 		var i = 0;
 		while (i < max) {
 			buffer[i++] = buffers.pop();
@@ -152,7 +152,7 @@ public abstract class Mempool extends IxyMempool implements Comparable<Mempool> 
 
 	@Override
 	public void free(@NotNull IxyPacketBuffer packet) {
-		if (BuildConfig.DEBUG) log.info("Pushing free packet: {}", packet);
+		if (BuildConfig.DEBUG) log.trace("Pushing free packet: {}", packet);
 		if (BuildConfig.OPTIMIZED) {
 			buffers.push(packet);
 		} else {
@@ -169,7 +169,7 @@ public abstract class Mempool extends IxyMempool implements Comparable<Mempool> 
 			size = Math.min(packets.length - offset, size);
 		}
 		val max = Math.min(size, getSize());
-		if (BuildConfig.DEBUG) log.debug("Pushing {} free packets starting at index {}", max, offset);
+		if (BuildConfig.DEBUG) log.trace("Pushing {} free packets starting at index {}.", max, offset);
 		if (BuildConfig.OPTIMIZED) {
 			var i = 0;
 			while (i < max) {
@@ -196,7 +196,7 @@ public abstract class Mempool extends IxyMempool implements Comparable<Mempool> 
 	public int free(@NotNull IxyPacketBuffer[] packets, int offset) {
 		if (!BuildConfig.OPTIMIZED && offset < 0) throw new InvalidOffsetException("offset");
 		val max = Math.min(packets.length - offset, getSize());
-		if (BuildConfig.DEBUG) log.debug("Pushing {} free packets starting at index {}", max, offset);
+		if (BuildConfig.DEBUG) log.trace("Pushing {} free packets starting at index {}.", max, offset);
 		if (BuildConfig.OPTIMIZED) {
 			var i = 0;
 			while (i < max) {
@@ -223,7 +223,7 @@ public abstract class Mempool extends IxyMempool implements Comparable<Mempool> 
 	public int free(@NotNull IxyPacketBuffer[] packets) {
 		if (!BuildConfig.OPTIMIZED && packets == null) throw new InvalidNullParameterException("packets");
 		val max = Math.min(packets.length, getSize());
-		if (BuildConfig.DEBUG) log.debug("Pushing {} free packets starting at index 0", max);
+		if (BuildConfig.DEBUG) log.trace("Pushing {} free packets starting at index 0.", max);
 		if (BuildConfig.OPTIMIZED) {
 			var i = 0;
 			while (i < max) {
@@ -247,19 +247,19 @@ public abstract class Mempool extends IxyMempool implements Comparable<Mempool> 
 
 	@Override
 	public void register() {
-		if (BuildConfig.DEBUG) log.info("Registering memory pool.");
+		if (BuildConfig.DEBUG) log.trace("Registering memory pool.");
 		if (!buffers.isEmpty()) setId(getValidId());
 		pools.put(getId(), this);
-		if (BuildConfig.DEBUG) log.info("There are {} memory pools registered.", pools.size());
+		if (BuildConfig.DEBUG) log.debug("There are {} memory pools registered.", pools.size());
 	}
 
 	@Override
 	public void deregister() {
-		if (BuildConfig.DEBUG) log.info("Deregistering memory pool.");
+		if (BuildConfig.DEBUG) log.trace("Deregistering memory pool.");
 		val pool = pools.get(getId());
 		if (Objects.equals(this, pool)) {
 			pools.remove(getId());
-			if (BuildConfig.DEBUG) log.info("There are {} memory pools registered.", pools.size());
+			if (BuildConfig.DEBUG) log.debug("There are {} memory pools registered.", pools.size());
 		}
 	}
 

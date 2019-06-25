@@ -94,31 +94,31 @@ public final class Stats implements IxyStats {
 
 	@Override
 	public void addRxPackets(int packets) {
-		if (BuildConfig.DEBUG) log.debug("Adding {} to the RX packets counter.", packets);
+		if (BuildConfig.DEBUG) log.trace("Adding {} to the RX packets counter.", packets);
 		rxPackets = unsignedSum(rxPackets, packets);
 	}
 
 	@Override
 	public void addTxPackets(int packets) {
-		if (BuildConfig.DEBUG) log.debug("Adding {} to the TX packets counter.", packets);
+		if (BuildConfig.DEBUG) log.trace("Adding {} to the TX packets counter.", packets);
 		txPackets = unsignedSum(txPackets, packets);
 	}
 
 	@Override
 	public void addRxBytes(long bytes) {
-		if (BuildConfig.DEBUG) log.debug("Adding {} to the RX bytes counter.", bytes);
+		if (BuildConfig.DEBUG) log.trace("Adding {} to the RX bytes counter.", bytes);
 		rxBytes = unsignedSum(rxBytes, bytes);
 	}
 
 	@Override
 	public void addTxBytes(long bytes) {
-		if (BuildConfig.DEBUG) log.debug("Adding {} to the TX bytes counter.", bytes);
+		if (BuildConfig.DEBUG) log.trace("Adding {} to the TX bytes counter.", bytes);
 		txBytes = unsignedSum(txBytes, bytes);
 	}
 
 	@Override
 	public void reset() {
-		if (BuildConfig.DEBUG) log.debug("Resetting stats counters.");
+		if (BuildConfig.DEBUG) log.trace("Resetting stats counters.");
 		rxPackets = 0;
 		txPackets = 0;
 		rxBytes = 0;
@@ -136,7 +136,7 @@ public final class Stats implements IxyStats {
 	@Override
 	@Contract(pure = true)
 	public void writeStats(@NotNull OutputStream out) throws IOException {
-		if (BuildConfig.DEBUG) log.debug("Writing statistics to an output stream.");
+		if (BuildConfig.DEBUG) log.trace("Writing statistics to an output stream.");
 		// Gather all the data that will be used for the output message
 		val address = device.getName();
 		val strRxPackets = Integer.toUnsignedString(rxPackets);
@@ -156,7 +156,7 @@ public final class Stats implements IxyStats {
 	@Contract(pure = true)
 	@SuppressWarnings("HardcodedFileSeparator")
 	public void writeStats(@NotNull OutputStream out, @NotNull IxyStats stats, long delta) throws IOException {
-		if (BuildConfig.DEBUG) log.debug("Writing statistics to an output stream.");
+		if (BuildConfig.DEBUG) log.trace("Writing statistics to an output stream.");
 		if (!BuildConfig.OPTIMIZED && delta <= 0) throw new InvalidSizeException("nanos");
 		// Gather all the data that will be used for the output message
 		val address = device.getName();

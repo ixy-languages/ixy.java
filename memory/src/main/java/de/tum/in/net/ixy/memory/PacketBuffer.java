@@ -78,7 +78,7 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 		 * @return This builder.
 		 */
 		public @NotNull Builder manager(@NotNull IxyMemoryManager memoryManager) {
-			if (BuildConfig.DEBUG) log.debug("Setting memory manager");
+			if (BuildConfig.DEBUG) log.trace("Setting memory manager.");
 			mmanager = memoryManager;
 			return this;
 		}
@@ -92,7 +92,7 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 		public @NotNull Builder virtual(long virtualAddress) {
 			if (BuildConfig.DEBUG) {
 				val xaddress = Long.toHexString(virtualAddress);
-				log.debug("Setting virtual memory address 0x{}", xaddress);
+				log.trace("Setting virtual memory address 0x{}.", xaddress);
 			}
 			this.virtualAddress = virtualAddress;
 			return this;
@@ -107,7 +107,7 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 		public @NotNull Builder physical(@Nullable Long physicalAddress) {
 			if (BuildConfig.DEBUG) {
 				val xaddress = Long.toHexString(physicalAddress == null ? 0L : physicalAddress);
-				log.debug("Setting physical memory address 0x{}", xaddress);
+				log.trace("Setting physical memory address 0x{}.", xaddress);
 			}
 			this.physicalAddress = physicalAddress;
 			return this;
@@ -120,7 +120,7 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 		 * @return This builder.
 		 */
 		public @NotNull Builder size(@Nullable Integer size) {
-			if (BuildConfig.DEBUG) log.debug("Setting size {}", size);
+			if (BuildConfig.DEBUG) log.trace("Setting size {}.", size);
 			packetSize = size;
 			return this;
 		}
@@ -132,7 +132,7 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 		 * @return This builder.
 		 */
 		public Builder pool(@Nullable Integer pool) {
-			if (BuildConfig.DEBUG) log.debug("Setting memory pool identifier {}", pool);
+			if (BuildConfig.DEBUG) log.trace("Setting memory pool identifier {}", pool);
 			memoryPool = pool;
 			return this;
 		}
@@ -279,7 +279,7 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 	 */
 	private PacketBuffer(@NotNull IxyMemoryManager memoryManager, long virtualAddress, @Nullable Long physicalAddress, @Nullable Integer size, @Nullable Integer pool) {
 		if (BuildConfig.DEBUG) {
-			log.trace("Instantiating packet buffer with address 0x{}", Long.toHexString(virtualAddress));
+			log.trace("Instantiating packet buffer with address 0x{}.", Long.toHexString(virtualAddress));
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			if (memoryManager == null) throw new InvalidNullParameterException("mmanager");
@@ -301,7 +301,7 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 	 * @param physicalAddress The physical memory address.
 	 */
 	private void setPhysicalAddress(long physicalAddress) {
-		if (BuildConfig.DEBUG) log.trace("Writing physical address pointer field");
+		if (BuildConfig.DEBUG) log.trace("Writing physical address pointer field.");
 		mmanager.putLong(virtualAddress + PAP_OFFSET, physicalAddress);
 	}
 
@@ -313,7 +313,7 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 	 * @param memoryPoolId The memory pool identifier.
 	 */
 	private void setMemoryPoolId(int memoryPoolId) {
-		if (BuildConfig.DEBUG) log.trace("Writing memory pool index field");
+		if (BuildConfig.DEBUG) log.trace("Writing memory pool index field.");
 		mmanager.putInt(virtualAddress + PAP_OFFSET, memoryPoolId);
 	}
 
@@ -322,21 +322,21 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 	@Override
 	@Contract(pure = true)
 	public long getPhysicalAddress() {
-		if (BuildConfig.DEBUG) log.trace("Reading physical address pointer field");
+		if (BuildConfig.DEBUG) log.trace("Reading physical address pointer field.");
 		return mmanager.getLong(virtualAddress + PAP_OFFSET);
 	}
 
 	@Override
 	@Contract(pure = true)
 	public int getMemoryPoolId() {
-		if (BuildConfig.DEBUG) log.trace("Reading memory pool index field");
+		if (BuildConfig.DEBUG) log.trace("Reading memory pool index field.");
 		return mmanager.getInt(virtualAddress + MPI_OFFSET);
 	}
 
 	@Override
 	@Contract(pure = true)
 	public int getSize() {
-		if (BuildConfig.DEBUG) log.trace("Reading packet size field");
+		if (BuildConfig.DEBUG) log.trace("Reading packet size field.");
 		return mmanager.getInt(virtualAddress + PKT_OFFSET);
 	}
 
@@ -346,7 +346,7 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 		val address = virtualAddress + PKT_OFFSET;
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
-			log.trace("Writing packet size field @ 0x{} with value {}", xaddress, size);
+			log.trace("Writing packet size field @ 0x{} with value {}.", xaddress, size);
 		}
 		mmanager.putInt(address, size);
 	}
@@ -358,7 +358,7 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
 			val xoffset = Integer.toHexString(offset);
-			log.trace("Reading data byte @ 0x{} with offset 0x{}", xaddress, xoffset);
+			log.trace("Reading data byte @ 0x{} with offset 0x{}.", xaddress, xoffset);
 		}
 		return mmanager.getByte(address + offset);
 	}
@@ -370,7 +370,7 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
 			val xoffset = Integer.toHexString(offset);
-			log.trace("Reading volatile data byte @ 0x{} with offset 0x{}", xaddress, xoffset);
+			log.trace("Reading volatile data byte @ 0x{} with offset 0x{}.", xaddress, xoffset);
 		}
 		return mmanager.getByteVolatile(address + offset);
 	}
@@ -383,7 +383,7 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
 			val xaddress = Long.toHexString(address);
 			val xoffset = Integer.toHexString(offset);
-			log.trace("Writing data byte 0x{} @ 0x{} with offset 0x{}", xvalue, xaddress, xoffset);
+			log.trace("Writing data byte 0x{} @ 0x{} with offset 0x{}.", xvalue, xaddress, xoffset);
 		}
 		mmanager.putByte(address + offset, value);
 	}
@@ -396,7 +396,7 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
 			val xaddress = Long.toHexString(address);
 			val xoffset = Integer.toHexString(offset);
-			log.trace("Writing volatile data byte 0x{} @ 0x{} with offset 0x{}", xvalue, xaddress, xoffset);
+			log.trace("Writing volatile data byte 0x{} @ 0x{} with offset 0x{}.", xvalue, xaddress, xoffset);
 		}
 		mmanager.putByteVolatile(address + offset, value);
 	}
@@ -408,7 +408,7 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
 			val xoffset = Integer.toHexString(offset);
-			log.trace("Reading data short @ 0x{} with offset 0x{}", xaddress, xoffset);
+			log.trace("Reading data short @ 0x{} with offset 0x{}.", xaddress, xoffset);
 		}
 		return mmanager.getShort(address + offset);
 	}
@@ -420,7 +420,7 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
 			val xoffset = Integer.toHexString(offset);
-			log.trace("Reading volatile data short @ 0x{} with offset 0x{}", xaddress, xoffset);
+			log.trace("Reading volatile data short @ 0x{} with offset 0x{}.", xaddress, xoffset);
 		}
 		return mmanager.getShortVolatile(address + offset);
 	}
@@ -433,7 +433,7 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
 			val xaddress = Long.toHexString(address);
 			val xoffset = Integer.toHexString(offset);
-			log.trace("Writing data short 0x{} @ 0x{} with offset 0x{}", xvalue, xaddress, xoffset);
+			log.trace("Writing data short 0x{} @ 0x{} with offset 0x{}.", xvalue, xaddress, xoffset);
 		}
 		mmanager.putShort(address + offset, value);
 	}
@@ -446,7 +446,7 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
 			val xaddress = Long.toHexString(address);
 			val xoffset = Integer.toHexString(offset);
-			log.trace("Writing volatile data short 0x{} @ 0x{} with offset 0x{}", xvalue, xaddress, xoffset);
+			log.trace("Writing volatile data short 0x{} @ 0x{} with offset 0x{}.", xvalue, xaddress, xoffset);
 		}
 		mmanager.putShortVolatile(address + offset, value);
 	}
@@ -458,7 +458,7 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
 			val xoffset = Integer.toHexString(offset);
-			log.trace("Reading data int @ 0x{} with offset 0x{}", xaddress, xoffset);
+			log.trace("Reading data int @ 0x{} with offset 0x{}.", xaddress, xoffset);
 		}
 		return mmanager.getInt(address + offset);
 	}
@@ -470,7 +470,7 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
 			val xoffset = Integer.toHexString(offset);
-			log.trace("Reading volatile data int @ 0x{} with offset 0x{}", xaddress, xoffset);
+			log.trace("Reading volatile data int @ 0x{} with offset 0x{}.", xaddress, xoffset);
 		}
 		return mmanager.getIntVolatile(address + offset);
 	}
@@ -483,7 +483,7 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 			val xvalue = Integer.toHexString(value);
 			val xaddress = Long.toHexString(address);
 			val xoffset = Integer.toHexString(offset);
-			log.trace("Writing data int 0x{} @ 0x{} with offset 0x{}", xvalue, xaddress, xoffset);
+			log.trace("Writing data int 0x{} @ 0x{} with offset 0x{}.", xvalue, xaddress, xoffset);
 		}
 		mmanager.putInt(address + offset, value);
 	}
@@ -496,7 +496,7 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 			val xvalue = Integer.toHexString(value);
 			val xaddress = Long.toHexString(address);
 			val xoffset = Integer.toHexString(offset);
-			log.trace("Writing volatile data int 0x{} @ 0x{} with offset 0x{}", xvalue, xaddress, xoffset);
+			log.trace("Writing volatile data int 0x{} @ 0x{} with offset 0x{}.", xvalue, xaddress, xoffset);
 		}
 		mmanager.putIntVolatile(address + offset, value);
 	}
@@ -508,7 +508,7 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
 			val xoffset = Integer.toHexString(offset);
-			log.trace("Reading data long @ 0x{} with offset 0x{}", xaddress, xoffset);
+			log.trace("Reading data long @ 0x{} with offset 0x{}.", xaddress, xoffset);
 		}
 		return mmanager.getLong(address + offset);
 	}
@@ -520,7 +520,7 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
 			val xoffset = Integer.toHexString(offset);
-			log.trace("Reading volatile data long @ 0x{} with offset 0x{}", xaddress, xoffset);
+			log.trace("Reading volatile data long @ 0x{} with offset 0x{}.", xaddress, xoffset);
 		}
 		return mmanager.getLongVolatile(address + offset);
 	}
@@ -533,7 +533,7 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 			val xvalue = Long.toHexString(value);
 			val xaddress = Long.toHexString(address);
 			val xoffset = Integer.toHexString(offset);
-			log.trace("Writing data long 0x{} @ 0x{} with offset 0x{}", xvalue, xaddress, xoffset);
+			log.trace("Writing data long 0x{} @ 0x{} with offset 0x{}.", xvalue, xaddress, xoffset);
 		}
 		mmanager.putLong(address + offset, value);
 	}
@@ -546,7 +546,7 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 			val xvalue = Long.toHexString(value);
 			val xaddress = Long.toHexString(address);
 			val xoffset = Integer.toHexString(offset);
-			log.trace("Writing volatile data long 0x{} @ 0x{} with offset 0x{}", xvalue, xaddress, xoffset);
+			log.trace("Writing volatile data long 0x{} @ 0x{} with offset 0x{}.", xvalue, xaddress, xoffset);
 		}
 		mmanager.putLongVolatile(address + offset, value);
 	}
@@ -556,7 +556,7 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 	public void get(int offset, int bytes, @NotNull byte[] buffer) {
 		if (BuildConfig.DEBUG) {
 			val xoffset = Integer.toHexString(offset);
-			log.debug("Reading {} bytes starting from offset 0x{}", bytes, xoffset);
+			log.trace("Reading {} bytes starting from offset 0x{}.", bytes, xoffset);
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			if (check(offset, bytes, buffer)) return;
@@ -570,7 +570,7 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 	public void getVolatile(int offset, int bytes, @NotNull byte[] buffer) {
 		if (BuildConfig.DEBUG) {
 			val xoffset = Integer.toHexString(offset);
-			log.debug("Reading {} volatile bytes starting from offset 0x{}", bytes, xoffset);
+			log.trace("Reading {} volatile bytes starting from offset 0x{}.", bytes, xoffset);
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			if (check(offset, bytes, buffer)) return;
@@ -584,7 +584,7 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 	public void put(int offset, int bytes, @NotNull byte[] buffer) {
 		if (BuildConfig.DEBUG) {
 			val xoffset = Integer.toHexString(offset);
-			log.debug("Writing {} bytes starting from offset 0x{}", bytes, xoffset);
+			log.trace("Writing {} bytes starting from offset 0x{}.", bytes, xoffset);
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			if (check(offset, bytes, buffer)) return;
@@ -598,7 +598,7 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 	public void putVolatile(int offset, int bytes, @NotNull byte[] buffer) {
 		if (BuildConfig.DEBUG) {
 			val xoffset = Integer.toHexString(offset);
-			log.debug("Writing {} volatile bytes starting from offset 0x{}", bytes, xoffset);
+			log.trace("Writing {} volatile bytes starting from offset 0x{}.", bytes, xoffset);
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			if (check(offset, bytes, buffer)) return;
@@ -610,7 +610,7 @@ public final class PacketBuffer implements IxyPacketBuffer, Comparable<IxyPacket
 	@Override
 	@Contract(pure = true)
 	public int compareTo(@NotNull IxyPacketBuffer o) {
-		if (BuildConfig.DEBUG) log.debug("Comparing with another packet");
+		if (BuildConfig.DEBUG) log.trace("Comparing with another packet.");
 		return Long.compare(virtualAddress, o.getVirtualAddress());
 	}
 

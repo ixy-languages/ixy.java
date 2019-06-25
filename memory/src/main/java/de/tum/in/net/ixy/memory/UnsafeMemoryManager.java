@@ -81,14 +81,14 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	 */
 	@SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
 	private UnsafeMemoryManager() {
-		if (BuildConfig.DEBUG) log.debug("Creating an Unsafe-backed memory manager");
+		if (BuildConfig.DEBUG) log.trace("Creating an Unsafe-backed memory manager.");
 		if (singleton == null) {
 			try {
 				val theUnsafeField = Unsafe.class.getDeclaredField("theUnsafe");
 				theUnsafeField.setAccessible(true);
 				unsafe = (Unsafe) theUnsafeField.get(null);
 			} catch (NoSuchFieldException | IllegalAccessException e) {
-				log.error("Error getting Unsafe object", e);
+				log.error("Error getting Unsafe object.", e);
 			}
 		} else {
 			throw new IllegalStateException("An instance cannot be created twice. Use getSingleton() instead.");
@@ -114,7 +114,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	@Contract(pure = true)
 	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
 	public int addressSize() {
-		if (BuildConfig.DEBUG) log.debug("Computing address size using the Unsafe object");
+		if (BuildConfig.DEBUG) log.trace("Computing address size using the Unsafe object.");
 		if (!BuildConfig.OPTIMIZED) checkUnsafe();
 		return unsafe.addressSize();
 	}
@@ -123,7 +123,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	@Contract(pure = true)
 	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
 	public long pageSize() {
-		if (BuildConfig.DEBUG) log.debug("Computing page size using the Unsafe object");
+		if (BuildConfig.DEBUG) log.trace("Computing page size using the Unsafe object.");
 		if (!BuildConfig.OPTIMIZED) checkUnsafe();
 		return unsafe.pageSize();
 	}
@@ -143,14 +143,14 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		if (allocationType == AllocationType.HUGE) {
 			if (BuildConfig.DEBUG) {
 				val type = layoutType == LayoutType.CONTIGUOUS ? "contiguous" : "non-contiguous";
-				log.debug("Allocating {} {} hugepage-backed bytes using the Unsafe object", bytes, type);
+				log.trace("Allocating {} {} hugepage-backed bytes using the Unsafe object.", bytes, type);
 			}
 			throw new UnsupportedUnsafeOperationException();
 		}
 		// Allocate the memory
 		if (BuildConfig.DEBUG) {
 			val type = layoutType == LayoutType.CONTIGUOUS ? "contiguous" : "non-contiguous";
-			log.debug("Allocating {} {} bytes using the Unsafe object", bytes, type);
+			log.trace("Allocating {} {} bytes using the Unsafe object.", bytes, type);
 		}
 		if (BuildConfig.OPTIMIZED) {
 			return unsafe.allocateMemory(bytes);
@@ -179,14 +179,14 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		if (allocationType == AllocationType.HUGE) {
 			if (BuildConfig.DEBUG) {
 				val xsrc = Long.toHexString(address);
-				log.debug("Freeing {} {} hugepage-backed bytes using the Unsafe object", bytes, xsrc);
+				log.trace("Freeing {} {} hugepage-backed bytes using the Unsafe object.", bytes, xsrc);
 			}
 			throw new UnsupportedUnsafeOperationException();
 		}
 		// Free the memory
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(address);
-			log.debug("Freeing {} bytes @ 0x{} using the Unsafe object", bytes, xsrc);
+			log.trace("Freeing {} bytes @ 0x{} using the Unsafe object.", bytes, xsrc);
 		}
 		if (BuildConfig.OPTIMIZED) {
 			unsafe.freeMemory(address);
@@ -207,7 +207,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	public byte getByte(long address) {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(address);
-			log.debug("Reading byte @ 0x{} using the Unsafe object", xsrc);
+			log.trace("Reading byte @ 0x{} using the Unsafe object.", xsrc);
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
@@ -222,7 +222,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	public byte getByteVolatile(long address) {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(address);
-			log.debug("Reading volatile byte @ 0x{} using the Unsafe object", xsrc);
+			log.trace("Reading volatile byte @ 0x{} using the Unsafe object.", xsrc);
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
@@ -238,7 +238,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
 			val xdest = Long.toHexString(address);
-			log.debug("Putting byte 0x{} @ 0x{} using the Unsafe object", xvalue, xdest);
+			log.trace("Putting byte 0x{} @ 0x{} using the Unsafe object.", xvalue, xdest);
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
@@ -254,7 +254,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Byte.toUnsignedInt(value));
 			val xdest = Long.toHexString(address);
-			log.debug("Putting volatile byte 0x{} @ 0x{} using the Unsafe object", xvalue, xdest);
+			log.trace("Putting volatile byte 0x{} @ 0x{} using the Unsafe object.", xvalue, xdest);
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
@@ -269,7 +269,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	public short getShort(long address) {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(address);
-			log.debug("Reading short @ 0x{} using the Unsafe object", xsrc);
+			log.trace("Reading short @ 0x{} using the Unsafe object.", xsrc);
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
@@ -284,7 +284,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	public short getShortVolatile(long address) {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(address);
-			log.debug("Reading volatile short @ 0x{} using the Unsafe object", xsrc);
+			log.trace("Reading volatile short @ 0x{} using the Unsafe object.", xsrc);
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
@@ -300,7 +300,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
 			val xdest = Long.toHexString(address);
-			log.debug("Putting short 0x{} @ 0x{} using the Unsafe object", xvalue, xdest);
+			log.trace("Putting short 0x{} @ 0x{} using the Unsafe object.", xvalue, xdest);
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
@@ -316,7 +316,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(Short.toUnsignedInt(value));
 			val xdest = Long.toHexString(address);
-			log.debug("Putting volatile short 0x{} @ 0x{} using the Unsafe object", xvalue, xdest);
+			log.trace("Putting volatile short 0x{} @ 0x{} using the Unsafe object.", xvalue, xdest);
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
@@ -331,7 +331,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	public int getInt(long address) {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(address);
-			log.debug("Reading int @ 0x{} using the Unsafe object", xsrc);
+			log.trace("Reading int @ 0x{} using the Unsafe object.", xsrc);
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
@@ -346,7 +346,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	public int getIntVolatile(long address) {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(address);
-			log.debug("Reading volatile int @ 0x{} using the Unsafe object", xsrc);
+			log.trace("Reading volatile int @ 0x{} using the Unsafe object.", xsrc);
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
@@ -362,7 +362,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(value);
 			val xdest = Long.toHexString(address);
-			log.debug("Putting int 0x{} @ 0x{} using the Unsafe object", xvalue, xdest);
+			log.trace("Putting int 0x{} @ 0x{} using the Unsafe object.", xvalue, xdest);
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
@@ -378,7 +378,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(value);
 			val xdest = Long.toHexString(address);
-			log.debug("Putting volatile int 0x{} @ 0x{} using the Unsafe object", xvalue, xdest);
+			log.trace("Putting volatile int 0x{} @ 0x{} using the Unsafe object.", xvalue, xdest);
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
@@ -394,7 +394,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(value);
 			val xdest = Long.toHexString(address);
-			log.debug("Replacing int 0x{} @ 0x{} using the Unsafe object", xvalue, xdest);
+			log.trace("Replacing int 0x{} @ 0x{} using the Unsafe object.", xvalue, xdest);
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
@@ -410,7 +410,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Integer.toHexString(value);
 			val xdest = Long.toHexString(address);
-			log.debug("Adding int 0x{} @ 0x{} using the Unsafe object", xvalue, xdest);
+			log.trace("Adding int 0x{} @ 0x{} using the Unsafe object.", xvalue, xdest);
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
@@ -425,7 +425,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	public long getLong(long address) {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(address);
-			log.debug("Reading long @ 0x{} using the Unsafe object", xsrc);
+			log.trace("Reading long @ 0x{} using the Unsafe object.", xsrc);
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
@@ -440,7 +440,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	public long getLongVolatile(long address) {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(address);
-			log.debug("Reading volatile long @ 0x{} using the Unsafe object", xsrc);
+			log.trace("Reading volatile long @ 0x{} using the Unsafe object.", xsrc);
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
@@ -456,7 +456,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Long.toHexString(value);
 			val xdest = Long.toHexString(address);
-			log.debug("Putting long 0x{} @ 0x{} using the Unsafe object", xvalue, xdest);
+			log.trace("Putting long 0x{} @ 0x{} using the Unsafe object.", xvalue, xdest);
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
@@ -472,7 +472,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Long.toHexString(value);
 			val xdest = Long.toHexString(address);
-			log.debug("Writing volatile long 0x{} @ 0x{} using the Unsafe object", xvalue, xdest);
+			log.trace("Writing volatile long 0x{} @ 0x{} using the Unsafe object.", xvalue, xdest);
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
@@ -488,7 +488,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Long.toHexString(value);
 			val xdest = Long.toHexString(address);
-			log.debug("Replacing long 0x{} @ 0x{} using the Unsafe object", xvalue, xdest);
+			log.trace("Replacing long 0x{} @ 0x{} using the Unsafe object.", xvalue, xdest);
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
@@ -504,7 +504,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xvalue = Long.toHexString(value);
 			val xdest = Long.toHexString(address);
-			log.debug("Adding long 0x{} @ 0x{} using the Unsafe object", xvalue, xdest);
+			log.trace("Adding long 0x{} @ 0x{} using the Unsafe object.", xvalue, xdest);
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
@@ -525,7 +525,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xoffset = Long.toHexString(offset);
 			val xsrc = Long.toHexString(src);
-			log.debug("Reading memory region ({} B) @ 0x{} with offset {} using the Unsafe object", bytes, xsrc, xoffset);
+			log.trace("Reading memory region ({} B) @ 0x{} with offset {} using the Unsafe object.", bytes, xsrc, xoffset);
 		}
 		unsafe.copyMemory(null, src, dest, Unsafe.ARRAY_BYTE_BASE_OFFSET + offset, bytes);
 	}
@@ -543,7 +543,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xoffset = Long.toHexString(offset);
 			val xsrc = Long.toHexString(src);
-			log.debug("Reading volatile memory region ({} B) @ 0x{} with offset {} using the Unsafe object", bytes, xsrc, xoffset);
+			log.trace("Reading volatile memory region ({} B) @ 0x{} with offset {} using the Unsafe object.", bytes, xsrc, xoffset);
 		}
 		while (bytes-- > 0) {
 			dest[offset++] = unsafe.getByteVolatile(null, src++);
@@ -562,7 +562,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xoffset = Long.toHexString(offset);
 			val xdest = Long.toHexString(dest);
-			log.debug("Writing buffer ({} B) @ 0x{} with offset {} using the Unsafe object", bytes, xdest, xoffset);
+			log.trace("Writing buffer ({} B) @ 0x{} with offset {} using the Unsafe object.", bytes, xdest, xoffset);
 		}
 		unsafe.copyMemory(src, Unsafe.ARRAY_BYTE_BASE_OFFSET + offset, null, dest, bytes);
 	}
@@ -580,7 +580,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xoffset = Long.toHexString(offset);
 			val xdest = Long.toHexString(dest);
-			log.debug("Writing volatile buffer ({} B) @ 0x{} with offset {} using the Unsafe object", bytes, xdest, xoffset);
+			log.trace("Writing volatile buffer ({} B) @ 0x{} with offset {} using the Unsafe object.", bytes, xdest, xoffset);
 		}
 		while (bytes-- > 0) {
 			unsafe.putByteVolatile(null, dest++, src[offset++]);
@@ -594,7 +594,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(src);
 			val xdest = Long.toHexString(dest);
-			log.debug("Copying memory region ({} B) @ 0x{} to 0x{} using the Unsafe object", bytes, xsrc, xdest);
+			log.trace("Copying memory region ({} B) @ 0x{} to 0x{} using the Unsafe object.", bytes, xsrc, xdest);
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
@@ -611,7 +611,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 		if (BuildConfig.DEBUG) {
 			val xsrc = Long.toHexString(src);
 			val xdest = Long.toHexString(dest);
-			log.debug("Copying volatile memory region ({} B) @ 0x{} to 0x{} using the Unsafe object", bytes, xsrc, xdest);
+			log.trace("Copying volatile memory region ({} B) @ 0x{} to 0x{} using the Unsafe object.", bytes, xsrc, xdest);
 		}
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
@@ -638,7 +638,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
 	@SuppressWarnings("PMD.DataflowAnomalyAnalysis")
 	public long obj2virt(@NotNull Object object) {
-		if (BuildConfig.DEBUG) log.debug("Computing the address of an object using the Unsafe object");
+		if (BuildConfig.DEBUG) log.trace("Computing the address of an object using the Unsafe object.");
 		if (!BuildConfig.OPTIMIZED) {
 			checkUnsafe();
 			if (object == null) throw new InvalidNullParameterException("object");
@@ -664,7 +664,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	@Deprecated
 	@Contract(value = " -> fail", pure = true)
 	public long hugepageSize() {
-		if (BuildConfig.DEBUG) log.debug("Computing huge page size using the Unsafe object");
+		if (BuildConfig.DEBUG) log.trace("Computing huge page size using the Unsafe object.");
 		if (!BuildConfig.OPTIMIZED) checkUnsafe();
 		throw new UnsupportedUnsafeOperationException();
 	}
@@ -674,7 +674,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	@Deprecated
 	@Contract(value = "_, _, _ -> fail", pure = true)
 	public @NotNull IxyDmaMemory dmaAllocate(long bytes, @NotNull AllocationType allocationType, @NotNull LayoutType layoutType) {
-		if (!BuildConfig.DEBUG) log.debug("Allocating DmaMemory using the Unsafe object");
+		if (!BuildConfig.DEBUG) log.trace("Allocating DmaMemory using the Unsafe object.");
 		val virt = allocate(bytes, allocationType, layoutType);
 		val phys = virt2phys(virt);
 		return DmaMemory.of(virt, phys);
@@ -687,7 +687,7 @@ public final class UnsafeMemoryManager implements IxyMemoryManager {
 	public long virt2phys(long address) {
 		if (BuildConfig.DEBUG) {
 			val xaddress = Long.toHexString(address);
-			log.debug("Translating virtual address 0x{} using the Unsafe object", xaddress);
+			log.trace("Translating virtual address 0x{} using the Unsafe object.", xaddress);
 		}
 		if (!BuildConfig.OPTIMIZED) checkUnsafe();
 		throw new UnsupportedUnsafeOperationException();
