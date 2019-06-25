@@ -18,6 +18,9 @@ final class DummyDevice extends Device {
 	}
 
 	@Override
+	public void allocate() { }
+
+	@Override
 	public boolean isSupported() {
 		return false;
 	}
