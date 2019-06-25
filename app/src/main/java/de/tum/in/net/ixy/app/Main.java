@@ -118,6 +118,7 @@ public final class Main {
 			message += "Device id: " + Integer.toHexString(Short.toUnsignedInt(device.getDeviceId()));
 			message += System.lineSeparator();
 			message += "Class id: " + Integer.toHexString(Short.toUnsignedInt(device.getClassId()));
+			message += System.lineSeparator();
 			message += "========== DEVICE INFORMATION ==========";
 			System.out.println(message);
 
