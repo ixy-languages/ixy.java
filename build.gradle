@@ -18,7 +18,7 @@ repositories {
 
 // Define a set of custom properties which may or may not be useful, but should be inherited from the root project
 ext {
-	DEBUG     = false
+	DEBUG     = true
 	UNSAFE    = true
 	OPTIMIZED = false
 	HUGE_MNT  = "/mnt/huge"

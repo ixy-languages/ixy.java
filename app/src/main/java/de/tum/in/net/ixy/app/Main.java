@@ -45,9 +45,6 @@ public final class Main {
 	/** The batch size to use with the generator and forwarder. */
 	private static final int batchSize = 64;
 
-	/** The size of the packets to use with the generator and forwarder. */
-	private static final int packetSize = 60;
-
 	/** Memorizes whether the driver was already bound or not. */
 	private static @Nullable Boolean wasBound;
 
@@ -93,45 +90,54 @@ public final class Main {
 	 */
 	private static void generate(@NotNull IxyDriver driver) {
 		// Guess whether the required arguments have been supplied or not
-		log.info("Preparing generator application.");
+		if (BuildConfig.DEBUG) log.info("Preparing generator application.");
 		val deviceName = argumentsList.isEmpty() ? "" : argumentsList.remove(0).trim();
 		if (deviceName.isBlank()) {
-			log.error("The device name is missing or wrong.");
+			if (BuildConfig.DEBUG) log.error("The device name is missing or wrong.");
 			return;
 		}
 		// Extract the device driver
 		try (val device = driver.getDevice(deviceName, 1, 1)) {
 			// Output some information about it
-			log.info("========== DEVICE INFORMATION ==========");
-			log.info("Vendor id: {}", Integer.toHexString(Short.toUnsignedInt(device.getVendorId())));
-			log.info("Device id: {}", Integer.toHexString(Short.toUnsignedInt(device.getDeviceId())));
-			log.info("Class id: {}", Integer.toHexString(Byte.toUnsignedInt(device.getClassId())));
-			log.info("========== DEVICE INFORMATION ==========");
+			if (BuildConfig.DEBUG) {
+				log.info("========== DEVICE INFORMATION ==========");
+				log.info("Vendor id: {}", Integer.toHexString(Short.toUnsignedInt(device.getVendorId())));
+				log.info("Device id: {}", Integer.toHexString(Short.toUnsignedInt(device.getDeviceId())));
+				log.info("Class id: {}", Integer.toHexString(Byte.toUnsignedInt(device.getClassId())));
+				log.info("========== DEVICE INFORMATION ==========");
+			}
+
 			// Guess whether the device can be used for packet generation
 			if (!device.isMappable()) {
-				log.error("Legacy device cannot be memory mapped.");
+				if (BuildConfig.DEBUG) log.error("Legacy device cannot be memory mapped.");
 				return;
 			} else if (!device.isSupported()) {
-				log.error("The selected device driver does not support this NIC.");
+				if (BuildConfig.DEBUG) log.error("The selected device driver does not support this NIC.");
 				return;
 			}
+
 			// Memorize the bind status to restore it after use
 			wasBound = device.isBound();
-			log.info("Memorizing bind status, which is '{}'", wasBound);
-			// Add a shutdown hook to restore everything if the process gets interrupted
+			if (BuildConfig.DEBUG) log.info("Memorizing bind status, which is '{}'", wasBound);
 			Runtime.getRuntime().addShutdownHook(new ShutdownHookThread(device, () -> wasBound, null, () -> null));
+
 			// Create the dependencies of the packet generator and the packet generator
-			val mempool = driver.getMemoryPool();
+			if (BuildConfig.DEBUG) log.info("Allocating resources for the packet generator");
+			val mmanager = driver.getMemoryManager();
+			val mempool = driver.getMemoryPool(batchSize);
 			val statsStart = driver.getStats(device);
 			val statsEnd = driver.getStats(device);
-			val generator = new IxyGenerator(device, mempool, batchSize, statsStart, statsEnd);
+			val generator = new IxyGenerator(device, mmanager, mempool, batchSize, statsStart, statsEnd);
+
 			// Prepare the device card
 			device.unbind();
 			device.enableDma();
+
 			// Run the packet generator
 			if (BuildConfig.DEBUG) log.info("Running packet generator.");
 			generator.run();
-			// Recover the bind status if needed
+
+			// Recover the bind status if this part of the program ever gets reached
 			log.info("Recovering bind status, which was 'true'");
 			if (wasBound != null && wasBound) {
 				device.bind();
