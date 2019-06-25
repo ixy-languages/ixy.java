@@ -30,6 +30,10 @@ public abstract class IxyMempool {
 	 * Returns the identifier of the memory pool.
 	 *
 	 * @return The memory pool identifier.
+	 * ----------------- SETTER -----------------
+	 * Sets the identifier of the memory pool.
+	 *
+	 * @param id The memory pool identifier.
 	 */
 	@Getter(onMethod_ = {@Contract(pure = true)})
 	@Setter(AccessLevel.PROTECTED)
@@ -44,6 +48,10 @@ public abstract class IxyMempool {
 	 * Returns the number of packets slots this memory pool has.
 	 *
 	 * @return The capacity of the memory pool.
+	 * ------------------------- SETTER -------------------------
+	 * Sets the number of packets slots this memory pool has.
+	 *
+	 * @param capacity The capacity.
 	 */
 	@Getter(onMethod_ = {@Contract(pure = true)})
 	@Setter(AccessLevel.PROTECTED)
@@ -58,6 +66,10 @@ public abstract class IxyMempool {
 	 * Returns the packet size of the memory pool.
 	 *
 	 * @return The packet size of the memory pool.
+	 * ------------------ SETTER ------------------
+	 * Sets the packet size of the memory pool.
+	 *
+	 * @param packetSize The packet size of the memory pool.
 	 */
 	@Getter(onMethod_ = {@Contract(pure = true)})
 	@SuppressWarnings("JavaDoc")
@@ -169,7 +181,7 @@ public abstract class IxyMempool {
 			size = Math.min(packets.length - offset, size);
 		}
 		if (BuildConfig.DEBUG) log.debug("Freeing {} packets starting at index {}", size, offset);
-		val end = offset + Math.min(size, capacity - getSize());
+		val end = offset + Math.min(size, getCapacity() - getSize());
 		if (BuildConfig.OPTIMIZED) {
 			var i = offset;
 			while (i < end) {

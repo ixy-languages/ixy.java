@@ -30,7 +30,7 @@ import static org.mockito.Mockito.when;
  */
 @DisplayName("IxyPacketBuffer")
 @ExtendWith(MockitoExtension.class)
-@Execution(ExecutionMode.CONCURRENT)
+@Execution(ExecutionMode.SAME_THREAD)
 final class IxyPacketBufferTest {
 
 	/** A cached instance of a pseudo-random number generator. */
