@@ -4,8 +4,6 @@ import lombok.NonNull;
 import lombok.val;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -19,7 +17,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -79,28 +76,8 @@ final class IxgbePciTest {
 	/** The expected class. */
 	private static final byte EXPECTED_CLASS = 0x02;
 
-	/** The expected message of the exception thrown by the binding and unbinding methods. */
-	private static final @NotNull String EXPECTED_BIND_MESSAGE = "No such device";
-
 	/** The expected message of the exception thrown when the user does not have sufficient permissions. */
 	private static final @NotNull String EXPECTED_SEC_MESSAGE = "Permission denied";
-
-	@BeforeAll
-	@DisplayName("All NICs can be bound before starting the tests")
-	static void setUp() {
-		pciSource().forEach(pci -> {
-			try {
-				if (pci != null) pci.bind();
-			} catch (IOException e) {
-				val message = e.getMessage();
-				if (message == null) {
-					throw new RuntimeException(e);
-				} else if (!Objects.equals(message, EXPECTED_BIND_MESSAGE) && !Objects.equals(message, EXPECTED_SEC_MESSAGE)) {
-					throw new RuntimeException(e);
-				}
-			}
-		});
-	}
 
 	@Nested
 	@DisabledIfOptimized
@@ -224,23 +201,6 @@ final class IxgbePciTest {
 	@EnabledIfRoot
 	void bindunbind(Device device) {
 		CommonPciTest.bindunbind(device);
-	}
-
-	@AfterAll
-	@DisplayName("All NICs can be bound after finishing the tests")
-	static void tearDown() {
-		pciSource().forEach(pci -> {
-			try {
-				if (pci != null) pci.bind();
-			} catch (IOException e) {
-				val message = e.getMessage();
-				if (message == null) {
-					throw new RuntimeException(e);
-				} else if (!Objects.equals(message, EXPECTED_BIND_MESSAGE) && !Objects.equals(message, EXPECTED_SEC_MESSAGE)) {
-					throw new RuntimeException(e);
-				}
-			}
-		});
 	}
 
 	/**

@@ -53,9 +53,11 @@ enum CommonPciTest {
 	@Contract(pure = true)
 	static void map(@Nullable Device device) {
 		assumeThat(device).isNotNull();
+		val dmable = assertDoesNotThrow(device::isDmaEnabled);
 		val mappable = assertDoesNotThrow(device::isMappable);
+		val bound = assertDoesNotThrow(device::isBound);
 		val map = device.map();
-		if (mappable) {
+		if (mappable && dmable && !bound) {
 			assertThat(map).isPresent();
 		} else {
 			assertThat(map).isNotPresent();

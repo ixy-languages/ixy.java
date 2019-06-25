@@ -125,7 +125,7 @@ public abstract class Device extends IxyDevice {
 	 * @see <a href="https://en.wikipedia.org/wiki/PCI_configuration_space#/media/File:Pci-config-space.svg">PCI
 	 * Configuration Space</a>
 	 */
-	private static final byte DMA_BIT = 0b00000100;
+	private static final byte DMA_BIT = 0b00000010; // TODO: Review this change
 
 	///////////////////////////////////////////////// MEMBER VARIABLES /////////////////////////////////////////////////
 
