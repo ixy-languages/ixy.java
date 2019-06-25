@@ -32,9 +32,10 @@ public interface IxyDriver extends ExtensionPoint {
 	/**
 	 * Returns a memory pool instance.
 	 *
+	 * @param capacity The capacity of the memory pool.
 	 * @return A memory pool.
 	 */
-	@Contract(value = " -> new", pure = true)
+	@Contract(value = "_ -> new", pure = true)
 	@NotNull IxyMempool getMemoryPool(int capacity);
 
 	/**
