@@ -30,6 +30,15 @@ public interface IxyDriver extends ExtensionPoint {
 	@NotNull IxyMempool getMemoryPool();
 
 	/**
+	 * Returns a stats instance that tracks the given device.
+	 *
+	 * @param device The device to track.
+	 * @return The stats.
+	 */
+	@Contract(value = "!null -> new", pure = true)
+	@NotNull IxyStats getStats(@NotNull IxyDevice device);
+
+	/**
 	 * Returns the implementation of an Ixy device.
 	 *
 	 * @param device   The device name.
