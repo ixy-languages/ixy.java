@@ -4,6 +4,7 @@ import de.tum.in.net.ixy.generic.IxyMemoryManager;
 import de.tum.in.net.ixy.generic.IxyQueue;
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.jetbrains.annotations.Contract;
@@ -26,10 +27,11 @@ abstract class IxgbeQueue implements IxyQueue {
 	private final @NotNull IxyMemoryManager memoryManager;
 
 	/** The virtual addresses of the packets in the queue. */
-	private final long[] addresses;
+	final long[] addresses;
 
 	/** The base address where all the descriptors are stored. */
-	private final long baseDescriptorAddress;
+	@Setter(AccessLevel.PUBLIC)
+	private long baseDescriptorAddress;
 
 	/**
 	 * Creates a new queue with the given capacity.
@@ -38,7 +40,7 @@ abstract class IxgbeQueue implements IxyQueue {
 	 * @param capacity      The capacity of the queue.
 	 */
 	IxgbeQueue(@NotNull IxyMemoryManager memoryManager, int capacity) {
-		if (BuildConfig.DEBUG) log.debug("Creating a generic Ixgbe queue with a capacity of {}", capacity);
+		if (BuildConfig.DEBUG) log.debug("Creating a generic Ixgbe queue with a capacity of {} (entries).", capacity);
 		if (!BuildConfig.OPTIMIZED) {
 			if (memoryManager == null) throw new InvalidNullParameterException("memoryManager");
 			if (capacity <= 0) throw new InvalidSizeException("capacity");
@@ -105,6 +107,7 @@ abstract class IxgbeQueue implements IxyQueue {
 	private int capacity;
 
 	@Getter(onMethod_ = {@Contract(pure = true)})
+	@Setter
 	private int index;
 
 }

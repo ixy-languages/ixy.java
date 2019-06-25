@@ -76,9 +76,9 @@ final class IxgbeDefs {
 	static final short DEV_ID_X550EM_A_VF_HV = 0x15B4;
 	static final short DEV_ID_X550EM_X_VF = 0x15A8;
 	static final short DEV_ID_X550EM_X_VF_HV = 0x15A9;
-//	public static final int CTRL = 0x00000;
+	static final int CTRL = 0x00000;
 //	public static final int STATUS = 0x00008;
-//	public static final int CTRL_EXT = 0x00018;
+	static final int CTRL_EXT = 0x00018;
 //	public static final int ESDP = 0x00020;
 //	public static final int EODSDP = 0x00028;
 //	public static final int I2CCTL_82599 = 0x00028;
@@ -93,7 +93,7 @@ final class IxgbeDefs {
 //	public static final int TCPTIMER = 0x0004C;
 //	public static final int CORESPARE = 0x00600;
 //	public static final int EXVET = 0x05078;
-//	public static final int EEC = 0x10010;
+	static final int EEC = 0x10010;
 //	public static final int EEC_X550EM_a = 0x15FF8;
 //	public static final int EERD = 0x10014;
 //	public static final int EEWR = 0x10018;
@@ -135,7 +135,7 @@ final class IxgbeDefs {
 //	public static final int EICR = 0x00800;
 //	public static final int EICS = 0x00808;
 //	public static final int EIMS = 0x00880;
-//	public static final int EIMC = 0x00888;
+	static final int EIMC = 0x00888;
 //	public static final int EIAC = 0x00810;
 //	public static final int EIAM = 0x00890;
 //	public static final int MAX_EITR = 0x00000FF8;
@@ -159,8 +159,8 @@ final class IxgbeDefs {
 //	public static final int RDDCC = 0x02F20;
 //	public static final int RXMEMWRAP = 0x03190;
 //	public static final int STARCTRL = 0x03024;
-//	public static final int RDRXCTL = 0x02F00;
-//	public static final int RXCTRL = 0x03000;
+	static final int RDRXCTL = 0x02F00;
+	static final int RXCTRL = 0x03000;
 //	public static final int DROPEN = 0x03D04;
 //	public static final int RXPBSIZE_MASK = 0x000FFC00;
 //	public static final int RXCSUM = 0x05000;
@@ -209,13 +209,13 @@ final class IxgbeDefs {
 //	public static final int FDIRHASH = 0x0EE28;
 //	public static final int FDIRCMD = 0x0EE2C;
 //	public static final int DTXCTL = 0x07E00;
-//	public static final int DMATXCTL = 0x04A80;
+	static final int DMATXCTL = 0x04A80;
 //	public static final int PFDTXGSWC = 0x08220;
-//	public static final int DTXMXSZRQ = 0x08100;
+	static final int DTXMXSZRQ = 0x08100;
 //	public static final int DTXTCPFLGL = 0x04A88;
 //	public static final int DTXTCPFLGH = 0x04A8C;
 //	public static final int LBDRPEN = 0x0CA00;
-//	public static final int DMATXCTL_TE = 0x1;
+	static final int DMATXCTL_TE = 0x1;
 //	public static final int DMATXCTL_NS = 0x2;
 //	public static final int DMATXCTL_GDV = 0x8;
 //	public static final int DMATXCTL_MDP_EN = 0x20;
@@ -379,8 +379,8 @@ final class IxgbeDefs {
 //	public static final int IPSRXMOD = 0x08E30;
 //	public static final int SECTXCTRL_STORE_FORWARD_ENABLE = 0x4;
 //	public static final int RTRPCS = 0x02430;
-//	public static final int RTTDCS = 0x04900;
-//	public static final int RTTDCS_ARBDIS = 0x00000040;
+	static final int RTTDCS = 0x04900;
+	static final int RTTDCS_ARBDIS = 0x00000040;
 //	public static final int RTTPCS = 0x0CD00;
 //	public static final int RTRUP2TC = 0x03020;
 //	public static final int RTTUP2TC = 0x0C800;
@@ -449,14 +449,14 @@ final class IxgbeDefs {
 //	public static final int PRC511 = 0x04068;
 //	public static final int PRC1023 = 0x0406C;
 //	public static final int PRC1522 = 0x04070;
-//	public static final int GPRC = 0x04074;
+	static final int GPRC = 0x04074;
 //	public static final int BPRC = 0x04078;
 //	public static final int MPRC = 0x0407C;
-//	public static final int GPTC = 0x04080;
-//	public static final int GORCL = 0x04088;
-//	public static final int GORCH = 0x0408C;
-//	public static final int GOTCL = 0x04090;
-//	public static final int GOTCH = 0x04094;
+	static final int GPTC = 0x04080;
+	static final int GORCL = 0x04088;
+	static final int GORCH = 0x0408C;
+	static final int GOTCL = 0x04090;
+	static final int GOTCH = 0x04094;
 //	public static final int RUC = 0x040A4;
 //	public static final int RFC = 0x040A8;
 //	public static final int ROC = 0x040AC;
@@ -672,7 +672,7 @@ final class IxgbeDefs {
 //	public static final int PCS1GANLP = 0x0421C;
 //	public static final int PCS1GANNP = 0x04220;
 //	public static final int PCS1GANLPNP = 0x04224;
-//	public static final int HLREG0 = 0x04240;
+	static final int HLREG0 = 0x04240;
 //	public static final int HLREG1 = 0x04244;
 //	public static final int PAP = 0x04248;
 //	public static final int MACA = 0x0424C;
@@ -692,16 +692,16 @@ final class IxgbeDefs {
 //	public static final int SERDESC = 0x04298;
 //	public static final int MAC_SGMII_BUSY = 0x04298;
 //	public static final int MACS = 0x0429C;
-//	public static final int AUTOC = 0x042A0;
+	static final int AUTOC = 0x042A0;
 	static final int LINKS = 0x042A4;
 //	public static final int LINKS2 = 0x04324;
 //	public static final int AUTOC2 = 0x042A8;
 //	public static final int AUTOC3 = 0x042AC;
-//	public static final int AUTOC_LMS_SHIFT = 13;
-//	public static final int AUTOC_LMS_10G_SERIAL = (0x3 << (int) AUTOC_LMS_SHIFT);
-//	public static final int AUTOC_LMS_MASK = (0x7 << (int) AUTOC_LMS_SHIFT);
-//	public static final int AUTOC_10G_PMA_PMD_SHIFT = 7;
-//	public static final int AUTOC_10G_XAUI = (0x0 << AUTOC_10G_PMA_PMD_SHIFT);
+	private static final int AUTOC_LMS_SHIFT = 13;
+	static final int AUTOC_LMS_10G_SERIAL = (0x3 << AUTOC_LMS_SHIFT);
+	static final int AUTOC_LMS_MASK = (0x7 << AUTOC_LMS_SHIFT);
+	private static final int AUTOC_10G_PMA_PMD_SHIFT = 7;
+	static final int AUTOC_10G_XAUI = (0x0 << AUTOC_10G_PMA_PMD_SHIFT);
 //	public static final int ANLP1 = 0x042B0;
 //	public static final int ANLP2 = 0x042B4;
 //	public static final int MACC = 0x04330;
@@ -748,11 +748,11 @@ final class IxgbeDefs {
 //	public static final int RSCDBU_RSCSMALDIS_MASK = 0x0000007F;
 //	public static final int RSCDBU_RSCACKDIS = 0x00000080;
 //	public static final int RDRXCTL_RDMTS_1_2 = 0x00000000;
-//	public static final int RDRXCTL_CRCSTRIP = 0x00000002;
+	static final int RDRXCTL_CRCSTRIP = 0x00000002;
 //	public static final int RDRXCTL_PSP = 0x00000004;
 //	public static final int RDRXCTL_MVMEN = 0x00000020;
 //	public static final int RDRXCTL_RSC_PUSH_DIS = 0x00000020;
-//	public static final int RDRXCTL_DMAIDONE = 0x00000008;
+	static final int RDRXCTL_DMAIDONE = 0x00000008;
 //	public static final int RDRXCTL_RSC_PUSH = 0x00000080;
 //	public static final int RDRXCTL_AGGDIS = 0x00010000;
 //	public static final int RDRXCTL_RSCFRSTSIZE = 0x003E0000;
@@ -763,14 +763,14 @@ final class IxgbeDefs {
 //	public static final int RDRXCTL_MDP_EN = 0x20000000;
 //	public static final int PSRTYPE_RQPL_MASK = 0x7;
 //	public static final int CTRL_GIO_DIS = 0x00000004;
-//	public static final int CTRL_LNK_RST = 0x00000008;
-//	public static final int CTRL_RST = 0x04000000;
-//	public static final int CTRL_RST_MASK = (CTRL_LNK_RST | CTRL_RST);
+	private static final int CTRL_LNK_RST = 0x00000008;
+	private static final int CTRL_RST = 0x04000000;
+	static final int CTRL_RST_MASK = (CTRL_LNK_RST | CTRL_RST);
 //	public static final int FACTPS_MNGCG = 0x20000000;
 //	public static final int FACTPS_LFS = 0x40000000;
 //	public static final int MHADD_MFS_MASK = 0xFFFF0000;
 //	public static final int CTRL_EXT_PFRSTD = 0x00004000;
-//	public static final int CTRL_EXT_NS_DIS = 0x00010000;
+	static final int CTRL_EXT_NS_DIS = 0x00010000;
 //	public static final int CTRL_EXT_RO_DIS = 0x00020000;
 //	public static final int CTRL_EXT_DRV_LOAD = 0x10000000;
 //	public static final int DCA_CTRL_DCA_ENABLE = 0x00000000;
@@ -947,11 +947,11 @@ final class IxgbeDefs {
 //	public static final int GPIE_VTMODE_32 = 0x00008000;
 //	public static final int GPIE_VTMODE_64 = 0x0000C000;
 //	public static final int TXPBSIZE_20KB = 0x00005000;
-//	public static final int TXPBSIZE_40KB = 0x0000A000;
+	static final int TXPBSIZE_40KB = 0x0000A000;
 //	public static final int RXPBSIZE_48KB = 0x0000C000;
 //	public static final int RXPBSIZE_64KB = 0x00010000;
 //	public static final int RXPBSIZE_80KB = 0x00014000;
-//	public static final int RXPBSIZE_128KB = 0x00020000;
+	static final int RXPBSIZE_128KB = 0x00020000;
 //	public static final int RXPBSIZE_MAX = 0x00080000;
 //	public static final int TXPBSIZE_MAX = 0x00028000;
 //	public static final int TXPKT_SIZE_MAX = 0xA;
@@ -969,10 +969,10 @@ final class IxgbeDefs {
 //	public static final int TCPTIMER_COUNT_FINISH = 0x00000400;
 //	public static final int TCPTIMER_LOOP = 0x00000800;
 //	public static final int TCPTIMER_DURATION_MASK = 0x000000FF;
-//	public static final int HLREG0_TXCRCEN = 0x00000001;
-//	public static final int HLREG0_RXCRCSTRP = 0x00000002;
+	static final int HLREG0_TXCRCEN = 0x00000001;
+	static final int HLREG0_RXCRCSTRP = 0x00000002;
 //	public static final int HLREG0_JUMBOEN = 0x00000004;
-//	public static final int HLREG0_TXPADEN = 0x00000400;
+	static final int HLREG0_TXPADEN = 0x00000400;
 //	public static final int HLREG0_TXPAUSEEN = 0x00001000;
 //	public static final int HLREG0_RXPAUSEEN = 0x00004000;
 //	public static final int HLREG0_LPBK = 0x00008000;
@@ -1140,10 +1140,10 @@ final class IxgbeDefs {
 //	public static final int AUTOC_FECA = 0x00040000;
 //	public static final int AUTOC_FECR = 0x00020000;
 //	public static final int AUTOC_KR_SUPP = 0x00010000;
-//	public static final int AUTOC_AN_RESTART = 0x00001000;
+	static final int AUTOC_AN_RESTART = 0x00001000;
 //	public static final int AUTOC_FLU = 0x00000001;
 //	public static final int AUTOC_1G_PMA_PMD_MASK = 0x00000200;
-//	public static final int AUTOC_10G_PMA_PMD_MASK = 0x00000180;
+	static final int AUTOC_10G_PMA_PMD_MASK = 0x00000180;
 //	public static final int AUTOC2_UPPER_MASK = 0xFFFF0000;
 //	public static final int AUTOC2_10G_SERIAL_PMA_PMD_MASK = 0x00030000;
 //	public static final int AUTOC2_LINK_DISABLE_ON_D3_MASK = 0x50000000;
@@ -1219,7 +1219,7 @@ final class IxgbeDefs {
 //	public static final int EEC_REQ = 0x00000040;
 //	public static final int EEC_GNT = 0x00000080;
 //	public static final int EEC_PRES = 0x00000100;
-//	public static final int EEC_ARD = 0x00000200;
+	static final int EEC_ARD = 0x00000200;
 //	public static final int EEC_FLUP = 0x00800000;
 //	public static final int EEC_SEC1VAL = 0x02000000;
 //	public static final int EEC_FLUDONE = 0x04000000;
@@ -1366,16 +1366,16 @@ final class IxgbeDefs {
 //	public static final int RFCTL_IPFRSP_DIS = 0x00004000;
 //	public static final int RFCTL_IPV6_EX_DIS = 0x00010000;
 //	public static final int RFCTL_NEW_IPV6_EXT_DIS = 0x00020000;
-//	public static final int TXDCTL_ENABLE = 0x02000000;
+	static final int TXDCTL_ENABLE = 0x02000000;
 //	public static final int TXDCTL_SWFLSH = 0x04000000;
 //	public static final int TX_PAD_ENABLE = 0x00000400;
 //	public static final int JUMBO_FRAME_ENABLE = 0x00000004;
 //	public static final int MAX_FRAME_SZ = 0x40040000;
 //	public static final int TDWBAL_HEAD_WB_ENABLE = 0x1;
 //	public static final int TDWBAL_SEQNUM_WB_ENABLE = 0x2;
-//	public static final int RXCTRL_RXEN = 0x00000001;
+	static final int RXCTRL_RXEN = 0x00000001;
 //	public static final int RXCTRL_DMBYPS = 0x00000002;
-//	public static final int RXDCTL_ENABLE = 0x02000000;
+	static final int RXDCTL_ENABLE = 0x02000000;
 //	public static final int RXDCTL_SWFLSH = 0x04000000;
 //	public static final int RXDCTL_RLPMLMASK = 0x00003FFF;
 //	public static final int RXDCTL_RLPML_EN = 0x00008000;
@@ -1425,7 +1425,7 @@ final class IxgbeDefs {
 //	public static final int FCTRL_SBP = 0x00000002;
 	static final int FCTRL_MPE = 0x00000100;
 	static final int FCTRL_UPE = 0x00000200;
-//	public static final int FCTRL_BAM = 0x00000400;
+	static final int FCTRL_BAM = 0x00000400;
 //	public static final int FCTRL_PMCF = 0x00001000;
 //	public static final int FCTRL_DPF = 0x00002000;
 //	public static final int FCTRL_RPFCE = 0x00004000;
@@ -1546,15 +1546,15 @@ final class IxgbeDefs {
 //	public static final int PSRTYPE_IPV6HDR = 0x00000200;
 //	public static final int PSRTYPE_L2HDR = 0x00001000;
 //	public static final int SRRCTL_RDMTS_MASK = 0x01C00000;
-//	public static final int SRRCTL_DROP_EN = 0x10000000;
+	static final int SRRCTL_DROP_EN = 0x10000000;
 //	public static final int SRRCTL_BSIZEPKT_MASK = 0x0000007F;
 //	public static final int SRRCTL_BSIZEHDR_MASK = 0x00003F00;
 //	public static final int SRRCTL_DESCTYPE_LEGACY = 0x00000000;
-//	public static final int SRRCTL_DESCTYPE_ADV_ONEBUF = 0x02000000;
+	static final int SRRCTL_DESCTYPE_ADV_ONEBUF = 0x02000000;
 //	public static final int SRRCTL_DESCTYPE_HDR_SPLIT = 0x04000000;
 //	public static final int SRRCTL_DESCTYPE_HDR_REPLICATION_LARGE_PKT = 0x08000000;
 //	public static final int SRRCTL_DESCTYPE_HDR_SPLIT_ALWAYS = 0x0A000000;
-//	public static final int SRRCTL_DESCTYPE_MASK = 0x0E000000;
+	static final int SRRCTL_DESCTYPE_MASK = 0x0E000000;
 //	public static final int RXDPS_HDRSTAT_HDRSP = 0x00008000;
 //	public static final int RXDPS_HDRSTAT_HDRLEN_MASK = 0x000003FF;
 //	public static final int RXDADV_RSSTYPE_MASK = 0x0000000F;
@@ -1750,97 +1750,96 @@ final class IxgbeDefs {
 //	public static final int ADVTXD_DCMD_DEXT = TXD_CMD_DEXT;
 //	public static final int ADVTXD_PAYLEN_SHIFT = 14;
 
-//	public static int RXPBSIZE(final int i) {
-//		return 0x03C00 + i * 4;
-//	}
+	static int RXPBSIZE(int i) {
+		return 0x03C00 + i << 2;
+	}
 
-//	public static int SRRCTL(final int i) {
-//		if (Integer.compareUnsigned(i, 15) <= 0) {
-//			return 0x02100 + i * 4;
-//		} else if (Integer.compareUnsigned(i, 64) < 0) {
-//			return 0x01014 + i * 0x40;
-//		}
-//		return 0x0D014 + (i - 64) * 0x40;
-//	}
+	static int SRRCTL(int i) {
+		if (Integer.compareUnsigned(i, 15) <= 0) {
+			return 0x02100 + i << 2;
+		} else if (Integer.compareUnsigned(i, 64) < 0) {
+			return 0x01014 + i << 6;
+		}
+		return 0x0D014 + (i - 64) << 6;
+	}
 
-//	// Receive DMA registers
-//	public static int RDBAL(final int i) {
-//		if (Integer.compareUnsigned(i, 64) < 0) {
-//			return 0x01000 + i * 0x40;
-//		}
-//		return 0x0D000 + (i - 64) * 0x40;
-//	}
+	static int RDBAL(int i) {
+		if (Integer.compareUnsigned(i, 64) < 0) {
+			return 0x01000 + i << 6;
+		}
+		return 0x0D000 + (i - 64) << 6;
+	}
 
-//	public static int RDBAH(final int i) {
-//		if (Integer.compareUnsigned(i, 64) < 0) {
-//			return 0x01004 + i * 0x40;
-//		}
-//		return 0x0D004 + (i - 64) * 0x40;
-//	}
+	static int RDBAH(int i) {
+		if (Integer.compareUnsigned(i, 64) < 0) {
+			return 0x01004 + i << 6;
+		}
+		return 0x0D004 + (i - 64) << 6;
+	}
 
-//	public static int RDLEN(final int i) {
-//		if (Integer.compareUnsigned(i, 64) < 0) {
-//			return 0x01008 + i * 0x40;
-//		}
-//		return 0x0D008 + (i - 64) * 0x40;
-//	}
+	static int RDLEN(int i) {
+		if (Integer.compareUnsigned(i, 64) < 0) {
+			return 0x01008 + i << 6;
+		}
+		return 0x0D008 + (i - 64) << 6;
+	}
 
-//	public static int RDH(final int i) {
-//		if (Integer.compareUnsigned(i, 64) < 0) {
-//			return 0x01010 + i * 0x40;
-//		}
-//		return 0x0D010 + (i - 64) * 0x40;
-//	}
+	static int RDH(int i) {
+		if (Integer.compareUnsigned(i, 64) < 0) {
+			return 0x01010 + i << 6;
+		}
+		return 0x0D010 + (i - 64) << 6;
+	}
 
-//	public static int RDT(final int i) {
-//		if (Integer.compareUnsigned(i, 64) < 0) {
-//			return 0x01018 + i * 0x40;
-//		}
-//		return 0x0D018 + (i -64) * 0x40;
-//	}
+	static int RDT(int i) {
+		if (Integer.compareUnsigned(i, 64) < 0) {
+			return 0x01018 + i << 6;
+		}
+		return 0x0D018 + (i - 64) << 6;
+	}
 
-//	public static int DCA_RXCTRL(final int i) {
-//		if (Integer.compareUnsigned(i, 15) <= 0) {
-//			return 0x02200 + i * 4;
-//		} else if (Integer.compareUnsigned(i, 64) < 0) {
-//			return 0x0100C + i * 0x40;
-//		}
-//		return 0x0D00C + (i - 64) * 0x40;
-//	}
+	static int DCA_RXCTRL(int i) {
+		if (Integer.compareUnsigned(i, 15) <= 0) {
+			return 0x02200 + i << 2;
+		} else if (Integer.compareUnsigned(i, 64) < 0) {
+			return 0x0100C + i << 6;
+		}
+		return 0x0D00C + (i - 64) << 6;
+	}
 
-//	public static int TXPBSIZE(final int i) {
-//		return 0x0CC00 + i * 4;
-//	}
+	static int TXPBSIZE(int i) {
+		return 0x0CC00 + i << 2;
+	}
 
-//	public static int TDBAL(final int i) {
-//		return 0x06000 + i * 0x40;
-//	}
+	static int TDBAL(int i) {
+		return 0x06000 + i << 6;
+	}
 
-//	public static int TDBAH(final int i) {
-//		return 0x06004 + i * 0x40;
-//	}
+	static int TDBAH(int i) {
+		return 0x06004 + i << 6;
+	}
 
-//	public static int TDLEN(final int i) {
-//		return 0x06008 + i * 0x40;
-//	}
+	static int TDLEN(int i) {
+		return 0x06008 + i << 6;
+	}
 
-//	public static int TXDCTL(final int i) {
-//		return 0x06028 + i * 0x40;
-//	}
+	static int TXDCTL(int i) {
+		return 0x06028 + i << 6;
+	}
 
-//	public static int RXDCTL(final int i) {
-//		if (Integer.compareUnsigned(i, 64) < 0) {
-//			return 0x01028 + i * 0x40;
-//		}
-//		return 0x0D028 + (i-64) * 0x40;
-//	}
+	static int RXDCTL(int i) {
+		if (Integer.compareUnsigned(i, 64) < 0) {
+			return 0x01028 + i << 6;
+		}
+		return 0x0D028 + (i - 64) << 6;
+	}
 
-//	public static int TDH(final int i) {
-//		return 0x06010 + i * 0x40;
-//	}
+	static int TDH(int i) {
+		return 0x06010 + i << 6;
+	}
 
-//	public static int TDT(final int i) {
-//		return 0x06018 + i * 0x40;
-//	}
+	static int TDT(int i) {
+		return 0x06018 + i << 6;
+	}
 
 }

@@ -15,6 +15,7 @@
 	<logger name="de.tum.in.net.ixy.generator" level="TRACE" />
 	<logger name="de.tum.in.net.ixy.forwarder" level="TRACE" />
 	<logger name="de.tum.in.net.ixy.ixgbe" level="TRACE" />
+	<logger name="de.tum.in.net.ixy.ixgbe.IxgbePlugin" level="OFF" />
 	<!-- Disable logging from the PF4J -->
 	<logger name="org.pf4j" level="WARN" />
 </configuration>

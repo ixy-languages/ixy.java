@@ -1,6 +1,7 @@
 package de.tum.in.net.ixy.generator;
 
 import de.tum.in.net.ixy.generic.IxyDevice;
+import de.tum.in.net.ixy.generic.IxyMemoryManager;
 import de.tum.in.net.ixy.generic.IxyMempool;
 import de.tum.in.net.ixy.generic.IxyPacketBuffer;
 import de.tum.in.net.ixy.generic.IxyStats;
@@ -117,6 +118,19 @@ public final class IxyGenerator implements Runnable {
 	private final @NotNull IxyDevice destination;
 
 	/**
+	 * The memory manager that allows accessing the memory.
+	 * ---------------------- SETTER ----------------------
+	 * Sets memory manager.
+	 *
+	 * @param mmanager The memory manager.
+	 * @return This builder.
+	 */
+	@EqualsAndHashCode.Include
+	@SuppressWarnings("JavaDoc")
+	@ToString.Include(name = "manager", rank = 4)
+	private final @NotNull IxyMemoryManager mmanager;
+
+	/**
 	 * The memory pool that manages the packets.
 	 * ----------------- SETTER -----------------
 	 * Sets the memory pool that manages the packets.
@@ -170,18 +184,23 @@ public final class IxyGenerator implements Runnable {
 	 * Creates a packet generator that sends packets uninterrumptedly.
 	 *
 	 * @param destination The first NIC.
+	 * @param mmanager    The memory manager.
 	 * @param memoryPool  The memory pool.
 	 * @param batchSize   The batch size.
+	 * @param statsStart  The initial stats instance.
+	 * @param statsEnd    The end stats instance.
 	 */
-	public IxyGenerator(@NotNull IxyDevice destination, @NotNull IxyMempool memoryPool, int batchSize, @NotNull IxyStats statsStart, @NotNull IxyStats statsEnd) {
+	public IxyGenerator(@NotNull IxyDevice destination, @NotNull IxyMemoryManager mmanager, @NotNull IxyMempool memoryPool, int batchSize, @NotNull IxyStats statsStart, @NotNull IxyStats statsEnd) {
 		if (!BuildConfig.OPTIMIZED) {
 			if (destination == null) throw new InvalidNullParameterException("destination");
+			if (mmanager == null) throw new InvalidNullParameterException("mmanager");
 			if (memoryPool == null) throw new InvalidNullParameterException("memoryPool");
 			if (batchSize <= 0) throw new InvalidSizeException("batchSize");
 			if (statsStart == null) throw new InvalidNullParameterException("statsStart");
 			if (statsEnd == null) throw new InvalidNullParameterException("statsEnd");
 		}
 		this.destination = destination;
+		this.mmanager = mmanager;
 		this.memoryPool = memoryPool;
 		this.batchSize = batchSize;
 		this.statsStart = statsStart;
@@ -193,42 +212,59 @@ public final class IxyGenerator implements Runnable {
 	@Override
 	@SuppressWarnings("UseOfSystemOutOrSystemErr")
 	public void run() {
-		if (BuildConfig.DEBUG) log.debug("Allocating resources.");
-		initPackets();
-		val buffers = new IxyPacketBuffer[batchSize];
-		var sequence = 0;
-		var counter = (short) 0;
-		statsStart.reset();
-		statsEnd.reset();
-		var startTime = System.nanoTime();
-		while (true) {
-			val batch = memoryPool.get(buffers);
-			for (var i = 0; i < batch; i += 1) {
-				val buffer = buffers[i];
-				buffer.putInt(PACKET_SIZE - 4, sequence++);
-			}
-			destination.txBusyWait(0, buffers, 0, batch);
-			if(counter++ % BATCHES_PER_PRINT == 0) {
-				val endTime = System.nanoTime();
-				val nanos = endTime - startTime;
-				if (nanos > NANOS_PER_PRINT) {
-					destination.readStats(statsEnd);
-					try {
-						statsEnd.writeStats(System.out, statsStart, nanos);
-					} catch (IOException e) {
-						if (BuildConfig.DEBUG) log.error("Could not write the stats.", e);
-					}
-					statsStart.copy(statsEnd);
-					counter = 0;
-					startTime = endTime;
-					break; // TODO: REMOVE THIS
-				}
-			}
+		if (BuildConfig.DEBUG) log.info("Removing drivers from NIC.");
+		try {
+			if (destination.isBound()) destination.unbind();
+			if (!destination.isDmaEnabled()) destination.enableDma();
+		} catch (IOException e) {
+			log.error("Error while manipulating the NIC.", e);
 		}
+
+		if (BuildConfig.DEBUG) log.info("Allocating data structures for this driver.");
+		destination.allocate();
+
+//		if (BuildConfig.DEBUG) log.info("Allocating DMA memory.");
+//		val dma = mmanager.dmaAllocate(mmanager.hugepageSize(), IxyMemoryManager.AllocationType.HUGE, IxyMemoryManager.LayoutType.CONTIGUOUS);
+//		if (BuildConfig.DEBUG) log.info("Assigning DMA memory to memory pool.");
+//		memoryPool.setPacketSize(PACKET_SIZE);
+//		memoryPool.allocate(mmanager, dma);
+//		initPackets();
+//		if (BuildConfig.DEBUG) log.debug("Allocating resources.");
+//		val buffers = new IxyPacketBuffer[batchSize];
+//		var sequence = 0;
+//		var counter = (short) 0;
+//		statsStart.reset();
+//		statsEnd.reset();
+//		var startTime = System.nanoTime();
+//		while (true) {
+//			val batch = memoryPool.get(buffers);
+//			for (var i = 0; i < batch; i += 1) {
+//				val buffer = buffers[i];
+//				buffer.putInt(PACKET_SIZE - 4, sequence++);
+//			}
+//			destination.txBusyWait(0, buffers, 0, batch);
+//			if(counter++ % BATCHES_PER_PRINT == 0) {
+//				val endTime = System.nanoTime();
+//				val nanos = endTime - startTime;
+//				if (nanos > NANOS_PER_PRINT) {
+//					destination.readStats(statsEnd);
+//					try {
+//						statsEnd.writeStats(System.out, statsStart, nanos);
+//					} catch (IOException e) {
+//						if (BuildConfig.DEBUG) log.error("Could not write the stats.", e);
+//					}
+//					statsStart.copy(statsEnd);
+//					counter = 0;
+//					startTime = endTime;
+//					break; // TODO: REMOVE THIS
+//				}
+//			}
+//		}
 	}
 
 	/** Uses the template packet data {@link #packetData} to populate the packets with the default data. */
 	private void initPackets() {
+		log.debug("Setting default packet data.");
 		val copy = new IxyPacketBuffer[memoryPool.getCapacity()];
 		var offset = 0;
 		while (offset < copy.length) {
@@ -241,7 +277,7 @@ public final class IxyGenerator implements Runnable {
 				copy[offset++] = buffer;
 			}
 		}
-		for(val packet : copy){
+		for (val packet : copy) {
 			if (packet != null) memoryPool.free(packet);
 		}
 	}

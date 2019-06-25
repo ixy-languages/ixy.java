@@ -25,4 +25,11 @@ public interface IxyQueue {
 	@Contract(pure = true)
 	int getIndex();
 
+	/**
+	 * Sets the index of the queue.
+	 *
+	 * @param index The index of the queue.
+	 */
+	void setIndex(int index);
+
 }

@@ -1,9 +1,13 @@
 package de.tum.in.net.ixy.ixgbe;
 
 import de.tum.in.net.ixy.generic.IxyMemoryManager;
+import de.tum.in.net.ixy.generic.IxyMempool;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Intel 10 GbE implementation of an RX queue.
@@ -11,7 +15,11 @@ import org.jetbrains.annotations.NotNull;
  * @author Esaú García Sánchez-Torija
  */
 @Slf4j
-public class IxgbeRxQueue extends IxgbeQueue {
+final class IxgbeRxQueue extends IxgbeQueue {
+
+	@Setter
+	@Getter
+	private @Nullable IxyMempool mempool;
 
 	/**
 	 * Creates a new queue with the given capacity.
@@ -19,9 +27,9 @@ public class IxgbeRxQueue extends IxgbeQueue {
 	 * @param memoryManager The memory manager.
 	 * @param capacity      The capacity.
 	 */
-	public IxgbeRxQueue(@NotNull IxyMemoryManager memoryManager, int capacity) {
+	IxgbeRxQueue(@NotNull IxyMemoryManager memoryManager, int capacity) {
 		super(memoryManager, capacity);
-		if (BuildConfig.DEBUG) log.debug("Creating an RX Ixgbe queue with a capacity of {}", capacity);
+		if (BuildConfig.DEBUG) log.debug("Creating an RX Ixgbe queue with a capacity of {} (entries).", capacity);
 		if (!BuildConfig.OPTIMIZED) {
 			if (memoryManager == null) throw new InvalidNullParameterException("memoryManager");
 			if (capacity <= 0) throw new InvalidSizeException("capacity");

@@ -50,13 +50,14 @@ public interface IxyDriver extends ExtensionPoint {
 	/**
 	 * Returns the implementation of an Ixy device.
 	 *
-	 * @param device   The device name.
-	 * @param rxQueues The number of read queues.
-	 * @param txQueues The number of write queues.
+	 * @param device        The device name.
+	 * @param rxQueues      The number of read queues.
+	 * @param txQueues      The number of write queues.
+	 * @param memoryManager The memory manager.
 	 * @return The device.
 	 * @throws FileNotFoundException If the device cannot be found.
 	 */
-	@Contract(value = "!null, _, _ -> new", pure = true)
-	@NotNull IxyDevice getDevice(@NotNull String device, int rxQueues, int txQueues) throws FileNotFoundException;
+	@Contract(value = "!null, _, _, !null -> new", pure = true)
+	@NotNull IxyDevice getDevice(@NotNull String device, int rxQueues, int txQueues, @NotNull IxyMemoryManager memoryManager) throws FileNotFoundException;
 
 }

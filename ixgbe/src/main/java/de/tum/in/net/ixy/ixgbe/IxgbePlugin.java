@@ -64,8 +64,8 @@ public final class IxgbePlugin extends Plugin {
 		}
 
 		@Override
-		public @NotNull IxyDevice getDevice(@NotNull String device, int rxQueues, int txQueues) throws FileNotFoundException {
-			return new IxgbeDevice(device, rxQueues, txQueues);
+		public @NotNull IxyDevice getDevice(@NotNull String device, int rxQueues, int txQueues, @NotNull IxyMemoryManager memoryManager) throws FileNotFoundException {
+			return new IxgbeDevice(device, rxQueues, txQueues, memoryManager);
 		}
 
 	}
