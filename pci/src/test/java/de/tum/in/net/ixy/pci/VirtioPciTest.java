@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
  */
 @EnabledOnOs(OS.LINUX)
 @DisplayName("Device (VirtIO)")
-@Execution(ExecutionMode.CONCURRENT)
+@Execution(ExecutionMode.SAME_THREAD)
 @SuppressWarnings("JUnitTestMethodWithNoAssertions")
 final class VirtioPciTest {
 
