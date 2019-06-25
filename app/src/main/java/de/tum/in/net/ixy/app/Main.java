@@ -117,15 +117,23 @@ public final class Main {
 			}
 			// Memorize the bind status to restore it after use
 			wasBound = device.isBound();
-			log.info("Memorizing bind status: {}", wasBound);
-			// Create the packet generator
+			log.info("Memorizing bind status, which is '{}'", wasBound);
+			// Add a shutdown hook to restore everything if the process gets interrupted
+			Runtime.getRuntime().addShutdownHook(new ShutdownHookThread(device, () -> wasBound, null, () -> null));
+			// Create the dependencies of the packet generator and the packet generator
 			val mempool = driver.getMemoryPool();
-			val generator = new IxyGenerator(device, mempool, batchSize);
+			val statsStart = driver.getStats(device);
+			val statsEnd = driver.getStats(device);
+			val generator = new IxyGenerator(device, mempool, batchSize, statsStart, statsEnd);
+			// Prepare the device card
+			device.unbind();
+			device.enableDma();
+			// Run the packet generator
+			if (BuildConfig.DEBUG) log.info("Running packet generator.");
+			generator.run();
 			// Recover the bind status if needed
-			if (wasBound == null || !wasBound) {
-				log.info("Bind status unchanged.");
-			} else {
-				log.info("Recovering bind status: true");
+			log.info("Recovering bind status, which was 'true'");
+			if (wasBound != null && wasBound) {
 				device.bind();
 			}
 		} catch (FileNotFoundException e) {
@@ -257,36 +265,30 @@ public final class Main {
 	private static <T> @Nullable T getPluginDriver(@NotNull Class<T> cls, @NotNull PluginManager pluginManager, @Nullable String pluginName, @Nullable String driverName) {
 		log.debug("Loading all plugins.");
 		pluginManager.loadPlugins();
-
 		// Prepare the data structures
 		val plugins = pluginManager.getResolvedPlugins();
 		val count = plugins.size();
-		val matchingPlugins = new TreeMap<String, List<String[]>>();    // Plugins that contain a matching device driver
-		val nonMatchingPlugins = new TreeMap<String, Boolean>(); // Plugins that do not; will be unloaded
-
+		val matchingPlugins = new TreeMap<String, List<String[]>>(); // Plugins that contain a matching device driver
+		val nonMatchingPlugins = new TreeMap<String, Boolean>();     // Plugins that do not; will be unloaded
 		// If no plugins are found, exit
 		if (count <= 0) {
 			log.warn("No plugins have been found. Exiting.");
 			return null;
 		}
-
 		// If plugins are found, list them to find matches
 		else {
 			log.info("{} plugin(s) have been found:", count);
 			for (val plugin : plugins) {
 				val id = plugin.getDescriptor().getPluginId();
 				log.info(">>> {}", id);
-
 				// If we want a specific plugin, filter out those that do not match
 				if (pluginName != null && !Objects.equals(pluginName, id)) {
 					nonMatchingPlugins.put(id, false);
 					continue;
 				}
-
 				// Start the plugin so that we can get the device drivers it exposes
 				pluginManager.startPlugin(id);
 				val deviceDrivers = pluginManager.getExtensions(IxyDriver.class, id);
-
 				// List all the drivers and save all the matches
 				val size = deviceDrivers.size();
 				if (size > 0) {
@@ -305,21 +307,18 @@ public final class Main {
 						}
 					}
 				}
-
 				// If no match was found, the plugin will be stopped right away
 				if (!matchingPlugins.containsKey(id)) {
 					nonMatchingPlugins.put(id, true);
 				}
 			}
 		}
-
 		// If no match is found, exit
 		if (matchingPlugins.isEmpty()) {
 			log.warn("No matching plugins found.");
 			stopAndUnload(pluginManager, nonMatchingPlugins);
 			return null;
 		}
-
 		// Resolve any conflicts
 		val pluginsSize = matchingPlugins.size();
 		var canonicalName = (String) null;
@@ -333,7 +332,6 @@ public final class Main {
 		} else if (pluginsSize > 1) {
 			log.warn("Multiple plugins are conflicting.");
 			System.out.println("Multiple plugins are implementing the device driver you want:");
-
 			// List and save in an array the possible options
 			val options = new ArrayList<String[]>(pluginsSize);
 			var i = 0;
@@ -352,7 +350,6 @@ public final class Main {
 				}
 				System.out.println();
 			}
-
 			// Ask until a valid answer is given
 			var selection = -1;
 			val max = options.size();
@@ -371,7 +368,6 @@ public final class Main {
 				log.warn("Using the first available device driver.");
 				selection = 0;
 			}
-
 			// Discard all the options that are not the selection
 			val selected = options.get(selection);
 			canonicalName = selected[2];
@@ -385,21 +381,16 @@ public final class Main {
 				matchingPlugins.remove(invalid.getKey());
 			}
 		}
-
 		// Stop and unload the plugins that are not needed
 		stopAndUnload(pluginManager, nonMatchingPlugins);
-
 		// Update the parameters, just in case
 		argumentsKeyValue.put("--plugin", pluginName);
 		argumentsKeyValue.put("--p", pluginName);
 		argumentsKeyValue.put("--driver", driverName);
 		argumentsKeyValue.put("-d", driverName);
-
 		// Return the plugin instance, if more than one
 		val extensions = pluginManager.getExtensions(cls, pluginName);
-		if (canonicalName == null) {
-			return extensions.get(0);
-		}
+		if (canonicalName == null) return extensions.get(0);
 		for (val extension : extensions) {
 			if (Objects.equals(extension.getClass().getCanonicalName(), canonicalName)) {
 				return extension;
