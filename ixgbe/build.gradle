@@ -94,6 +94,14 @@ dependencies {
 		exclude module: project(':ixy.generic').name
 		exclude group: 'org.slf4j'
 	}
+	compile(project(':ixy.memory')) {
+		exclude module: project(':ixy.generic').name
+		exclude group: 'org.slf4j'
+	}
+	compile(project(':ixy.stats')) {
+		exclude module: project(':ixy.generic').name
+		exclude group: 'org.slf4j'
+	}
 	compileOnly         group: 'org.pf4j',      name: 'pf4j',        version: '3.0.1'
 	annotationProcessor group: 'org.pf4j',      name: 'pf4j',        version: '3.0.1'
 	compileOnly         group: 'org.slf4j',     name: 'slf4j-api',   version: '1.8.0-beta4'
