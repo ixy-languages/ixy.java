@@ -18,6 +18,9 @@ import java.io.IOException;
 @SuppressWarnings("PMD.AvoidDuplicateLiterals")
 public abstract class IxyDevice implements IxyPciDevice {
 
+	/** Allocates things once the environment is prepared. */
+	public abstract void allocate();
+
 	/**
 	 * Checks whether the device being manipulated is supported or not.
 	 *

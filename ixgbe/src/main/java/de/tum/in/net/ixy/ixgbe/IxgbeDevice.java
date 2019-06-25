@@ -26,7 +26,7 @@ final class IxgbeDevice extends Device {
 	private static final long MBPS_TO_BPS = 1_000_000;
 
 	/** The memory of the PCI device. */
-	private final @Nullable MappedByteBuffer memory;
+	private @Nullable MappedByteBuffer memory;
 
 	/**
 	 * Creates a device driver for Intel Ixgbe devices.
@@ -38,10 +38,14 @@ final class IxgbeDevice extends Device {
 	 */
 	IxgbeDevice(@NotNull String name, int rxQueues, int txQueues) throws FileNotFoundException {
 		super(name, "ixgbe");
-		memory = map().orElse(null);
 	}
 
 	//////////////////////////////////////////////// OVERRIDDEN METHODS ////////////////////////////////////////////////
+
+	@Override
+	public void allocate() {
+		memory = map().orElse(null);
+	}
 
 	@Override
 	public boolean isSupported() throws IOException {
