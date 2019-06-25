@@ -40,7 +40,7 @@ spotbugs {
 // Use the latest PMD version if possible => https://pmd.github.io/#downloads
 pmd {
 	toolVersion    = '6.14.0'
-	ignoreFailures = false
+	ignoreFailures = true
 }
 
 // Define a set of custom properties which may or may not be useful, but should be inherited from the root project

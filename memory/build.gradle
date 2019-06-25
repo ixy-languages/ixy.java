@@ -152,6 +152,13 @@ tasks.withType(com.github.spotbugs.SpotBugsTask) {
 	}
 }
 
+// Add the native library into the JAR
+jar {
+	into('lib/') {
+		from fileTree(dir: file("${buildDir}/libs/ixy/shared").absolutePath, include: '*.so')
+	}
+}
+
 // Exclude the tests that will fail always if no NICs are available
 test {
 	// Add the native library path
