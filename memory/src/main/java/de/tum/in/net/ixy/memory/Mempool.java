@@ -1,7 +1,9 @@
 package de.tum.in.net.ixy.memory;
 
+import de.tum.in.net.ixy.generic.IxyDmaMemory;
 import de.tum.in.net.ixy.generic.IxyMempool;
 import de.tum.in.net.ixy.generic.IxyPacketBuffer;
+import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -15,6 +17,8 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Objects;
 import java.util.TreeMap;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
  * Simple implementation of Ixy's memory pool specification.
@@ -25,7 +29,7 @@ import java.util.TreeMap;
 @SuppressWarnings({"PMD.AvoidDuplicateLiterals", "PMD.BeanMembersShouldSerialize"})
 @ToString(onlyExplicitlyIncluded = true, doNotUseGetters = true)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, doNotUseGetters = true, callSuper = true)
-public final class Mempool extends IxyMempool implements Comparable<Mempool> {
+public abstract class Mempool extends IxyMempool implements Comparable<Mempool> {
 
 	////////////////////////////////////////////////// STATIC MEMBERS //////////////////////////////////////////////////
 
@@ -62,37 +66,21 @@ public final class Mempool extends IxyMempool implements Comparable<Mempool> {
 	///////////////////////////////////////////////// MEMBER VARIABLES /////////////////////////////////////////////////
 
 	/** Double ended queue with a bunch a pre-allocated {@link IxyPacketBuffer} instances. */
+	@Getter(value = AccessLevel.PROTECTED, onMethod_ = {@Contract(pure = true)})
 	@EqualsAndHashCode.Include
 	@ToString.Include
 	private final @NotNull Deque<IxyPacketBuffer> buffers;
 
 	////////////////////////////////////////////////// MEMBER METHODS //////////////////////////////////////////////////
 
-	@Getter(onMethod_ = {@Contract(pure = true)})
-	@EqualsAndHashCode.Include
-	@ToString.Include
-	private int id;
-
-	@Getter(onMethod_ = {@Contract(pure = true)})
-	@EqualsAndHashCode.Include
-	@ToString.Include
-	private final int capacity;
-
-	@Getter(onMethod_ = {@Contract(pure = true)})
-	@EqualsAndHashCode.Include
-	@ToString.Include
-	private final int packetSize;
-
 	/**
 	 * Creates a memory pool that manages a finite amount of packets.
 	 *
 	 * @param capacity   The capacity of the memory pool.
-	 * @param packetSize The size of each packet.
 	 */
-	public Mempool(int capacity, int packetSize) {
-		id = 0;
-		this.capacity = capacity;
-		this.packetSize = packetSize;
+	protected Mempool(int capacity) {
+		setId(0);
+		setCapacity(capacity);
 		buffers = new ArrayDeque<>(capacity);
 	}
 
@@ -161,7 +149,7 @@ public final class Mempool extends IxyMempool implements Comparable<Mempool> {
 		if (BuildConfig.OPTIMIZED) {
 			buffers.push(packet);
 		} else {
-			if (buffers.size() < capacity) buffers.push(packet);
+			if (buffers.size() < getCapacity()) buffers.push(packet);
 		}
 	}
 
@@ -253,17 +241,17 @@ public final class Mempool extends IxyMempool implements Comparable<Mempool> {
 	@Override
 	public void register() {
 		if (BuildConfig.DEBUG) log.info("Registering memory pool.");
-		if (!buffers.isEmpty()) id = getValidId();
-		pools.put(id, this);
+		if (!buffers.isEmpty()) setId(getValidId());
+		pools.put(getId(), this);
 		if (BuildConfig.DEBUG) log.info("There are {} memory pools registered.", pools.size());
 	}
 
 	@Override
 	public void deregister() {
 		if (BuildConfig.DEBUG) log.info("Deregistering memory pool.");
-		val pool = pools.get(id);
+		val pool = pools.get(getId());
 		if (Objects.equals(this, pool)) {
-			pools.remove(id);
+			pools.remove(getId());
 			if (BuildConfig.DEBUG) log.info("There are {} memory pools registered.", pools.size());
 		}
 	}
@@ -276,10 +264,9 @@ public final class Mempool extends IxyMempool implements Comparable<Mempool> {
 
 	@Override
 	@Contract(pure = true)
-	@SuppressWarnings("CompareToUsesNonFinalVariable")
 	public int compareTo(@NotNull Mempool o) {
 		if (BuildConfig.DEBUG) log.trace("Comparing with another Mempool.");
-		return Integer.compare(id, o.id);
+		return Integer.compare(getId(), o.getId());
 	}
 
 }
