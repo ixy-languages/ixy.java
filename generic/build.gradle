@@ -139,7 +139,7 @@ test {
 		showPassed                 true
 		showSkipped                true
 		showFailed                 true
-		showStandardStreams        false
+		showStandardStreams        true
 		showPassedStandardStreams  true
 		showSkippedStandardStreams true
 		showFailedStandardStreams  true
