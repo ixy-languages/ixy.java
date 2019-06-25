@@ -110,6 +110,8 @@ public abstract class IxyMempool {
 	 * This does not free the memory allocated to the packets, but registers it as free so that it can be reused again.
 	 *
 	 * @param packets The packet to free.
+	 * @param offset  The position to start extracting packets from.
+	 * @param size    The amount of packets to extract.
 	 * @return The number of packets that have been freed.
 	 */
 	@SuppressWarnings("PMD.NullAssignment")
@@ -147,8 +149,9 @@ public abstract class IxyMempool {
 	 * Frees the maximum amount of packets starting from the given offset.
 	 * <p>
 	 * This does not free the memory allocated to the packets, but registers it as free so that it can be reused again.
-	 *
+	 * @param offset  The position to start extracting packets from.
 	 * @param packets The packet to free.
+	 *
 	 * @return The number of packets that have been freed.
 	 */
 	@Contract(mutates = "param1")
