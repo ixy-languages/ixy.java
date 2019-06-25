@@ -65,8 +65,15 @@ public abstract class Mempool extends IxyMempool implements Comparable<Mempool> 
 
 	///////////////////////////////////////////////// MEMBER VARIABLES /////////////////////////////////////////////////
 
-	/** Double ended queue with a bunch a pre-allocated {@link IxyPacketBuffer} instances. */
+	/**
+	 * Double ended queue with a bunch a pre-allocated {@link IxyPacketBuffer} instances.
+	 * ------------------------------------- GETTER -------------------------------------
+	 * Returns the internal storage of packets.
+	 *
+	 * @return The internal packet storage.
+	 */
 	@Getter(value = AccessLevel.PROTECTED, onMethod_ = {@Contract(pure = true)})
+	@SuppressWarnings("JavaDoc")
 	@EqualsAndHashCode.Include
 	@ToString.Include
 	private final @NotNull Deque<IxyPacketBuffer> buffers;
