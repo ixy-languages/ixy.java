@@ -16,8 +16,6 @@ import java.io.OutputStream;
  */
 public interface IxyStats {
 
-	///////////////////////////////////////////////// USELESS METHODS //////////////////////////////////////////////////
-
 	/**
 	 * Returns the number of read packets.
 	 *
@@ -78,10 +76,15 @@ public interface IxyStats {
 	 */
 	void addTxBytes(long bytes);
 
-	///////////////////////////////////////////////// CONCRETE METHODS /////////////////////////////////////////////////
-
 	/** Resets the stats. */
 	void reset();
+
+	/**
+	 * Copies the stats from another instance.
+	 *
+	 * @param stats The stats.
+	 */
+	void copy(@NotNull IxyStats stats);
 
 	/**
 	 * Prints the stats to the given output stream.

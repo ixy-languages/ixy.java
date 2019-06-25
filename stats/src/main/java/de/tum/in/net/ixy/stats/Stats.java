@@ -126,6 +126,14 @@ public final class Stats implements IxyStats {
 	}
 
 	@Override
+	public void copy(@NotNull IxyStats stats) {
+		rxPackets = stats.getRxPackets();
+		txPackets = stats.getTxPackets();
+		rxBytes = stats.getRxBytes();
+		txBytes = stats.getTxBytes();
+	}
+
+	@Override
 	@Contract(pure = true)
 	public void writeStats(@NotNull OutputStream out) throws IOException {
 		if (BuildConfig.DEBUG) log.debug("Writing statistics to an output stream.");
