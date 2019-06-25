@@ -22,12 +22,20 @@ public interface IxyDriver extends ExtensionPoint {
 	@NotNull String getName();
 
 	/**
+	 * Returns a memory manager.
+	 *
+	 * @return The memory manager.
+	 */
+	@Contract(pure = true)
+	@NotNull IxyMemoryManager getMemoryManager();
+
+	/**
 	 * Returns a memory pool instance.
 	 *
 	 * @return A memory pool.
 	 */
 	@Contract(value = " -> new", pure = true)
-	@NotNull IxyMempool getMemoryPool();
+	@NotNull IxyMempool getMemoryPool(int capacity);
 
 	/**
 	 * Returns a stats instance that tracks the given device.

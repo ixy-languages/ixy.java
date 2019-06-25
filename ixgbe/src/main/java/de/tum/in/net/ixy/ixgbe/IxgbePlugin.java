@@ -2,6 +2,11 @@ package de.tum.in.net.ixy.ixgbe;
 
 import de.tum.in.net.ixy.generic.IxyDevice;
 import de.tum.in.net.ixy.generic.IxyDriver;
+import de.tum.in.net.ixy.generic.IxyMemoryManager;
+import de.tum.in.net.ixy.generic.IxyMempool;
+import de.tum.in.net.ixy.generic.IxyStats;
+import de.tum.in.net.ixy.memory.SmartMemoryManager;
+import de.tum.in.net.ixy.stats.Stats;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -44,9 +49,23 @@ public final class IxgbePlugin extends Plugin {
 		}
 
 		@Override
-		@Contract(value = "null, _ -> fail; _, null -> fail; !null, !null -> new", pure = true)
-		public @NotNull IxyDevice getDevice(@NotNull String device, @NotNull String driver) throws FileNotFoundException {
-			return new IxgbeDevice(device, driver);
+		public @NotNull IxyMemoryManager getMemoryManager() {
+			return SmartMemoryManager.getSingleton();
+		}
+
+		@Override
+		public @NotNull IxyMempool getMemoryPool(int capacity) {
+			return new IxgbeMempool(capacity);
+		}
+
+		@Override
+		public @NotNull IxyStats getStats(@NotNull IxyDevice device) {
+			return Stats.of(device);
+		}
+
+		@Override
+		public @NotNull IxyDevice getDevice(@NotNull String device, int rxQueues, int txQueues) throws FileNotFoundException {
+			return new IxgbeDevice(device, rxQueues, txQueues);
 		}
 
 	}
