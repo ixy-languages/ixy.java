@@ -223,43 +223,43 @@ public final class IxyGenerator implements Runnable {
 		if (BuildConfig.DEBUG) log.info("Allocating data structures for this driver.");
 		destination.allocate();
 
-//		if (BuildConfig.DEBUG) log.info("Allocating DMA memory.");
-//		val dma = mmanager.dmaAllocate(mmanager.hugepageSize(), IxyMemoryManager.AllocationType.HUGE, IxyMemoryManager.LayoutType.CONTIGUOUS);
-//		if (BuildConfig.DEBUG) log.info("Assigning DMA memory to memory pool.");
-//		memoryPool.setPacketSize(PACKET_SIZE);
-//		memoryPool.allocate(mmanager, dma);
-//		initPackets();
-//		if (BuildConfig.DEBUG) log.debug("Allocating resources.");
-//		val buffers = new IxyPacketBuffer[batchSize];
-//		var sequence = 0;
-//		var counter = (short) 0;
-//		statsStart.reset();
-//		statsEnd.reset();
-//		var startTime = System.nanoTime();
-//		while (true) {
-//			val batch = memoryPool.get(buffers);
-//			for (var i = 0; i < batch; i += 1) {
-//				val buffer = buffers[i];
-//				buffer.putInt(PACKET_SIZE - 4, sequence++);
-//			}
-//			destination.txBusyWait(0, buffers, 0, batch);
-//			if(counter++ % BATCHES_PER_PRINT == 0) {
-//				val endTime = System.nanoTime();
-//				val nanos = endTime - startTime;
-//				if (nanos > NANOS_PER_PRINT) {
-//					destination.readStats(statsEnd);
-//					try {
-//						statsEnd.writeStats(System.out, statsStart, nanos);
-//					} catch (IOException e) {
-//						if (BuildConfig.DEBUG) log.error("Could not write the stats.", e);
-//					}
-//					statsStart.copy(statsEnd);
-//					counter = 0;
-//					startTime = endTime;
-//					break; // TODO: REMOVE THIS
-//				}
-//			}
-//		}
+		if (BuildConfig.DEBUG) log.info("Allocating memory for the template packets.");
+		val dma = mmanager.dmaAllocate((long) memoryPool.getCapacity() << 11, IxyMemoryManager.AllocationType.STANDARD, IxyMemoryManager.LayoutType.STANDARD);
+		memoryPool.setPacketSize(2048);
+		memoryPool.allocate(mmanager, dma);
+
+		initPackets();
+
+		if (BuildConfig.DEBUG) log.debug("Resetting counters.");
+		val buffers = new IxyPacketBuffer[batchSize];
+		var sequence = 0;
+		var counter = (short) 0;
+		statsStart.reset();
+		statsEnd.reset();
+		var startTime = System.nanoTime();
+		while (true) {
+			val batch = memoryPool.get(buffers);
+			for (var i = 0; i < batch; i += 1) {
+				val buffer = buffers[i];
+				buffer.putInt(PACKET_SIZE - 4, sequence++);
+			}
+			destination.txBusyWait(0, buffers, 0, batch);
+			if(counter++ % BATCHES_PER_PRINT == 0) {
+				val endTime = System.nanoTime();
+				val nanos = endTime - startTime;
+				if (nanos > NANOS_PER_PRINT) {
+					destination.readStats(statsEnd);
+					try {
+						statsEnd.writeStats(System.out, statsStart, nanos);
+					} catch (IOException e) {
+						if (BuildConfig.DEBUG) log.error("Could not write the stats.", e);
+					}
+					statsStart.copy(statsEnd);
+					counter = 0;
+					startTime = endTime;
+				}
+			}
+		}
 	}
 
 	/** Uses the template packet data {@link #packetData} to populate the packets with the default data. */
@@ -274,6 +274,7 @@ public final class IxyGenerator implements Runnable {
 				break;
 			} else {
 				if (BuildConfig.DEBUG) log.debug("Writing packet data to {}th packet: {}", offset, buffer);
+				buffer.setSize(packetData.length);
 				copy[offset++] = buffer;
 			}
 		}
