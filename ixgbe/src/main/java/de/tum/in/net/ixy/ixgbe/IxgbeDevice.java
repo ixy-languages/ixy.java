@@ -1,6 +1,5 @@
 package de.tum.in.net.ixy.ixgbe;
 
-import de.tum.in.net.ixy.generic.InvalidOffsetException;
 import de.tum.in.net.ixy.generic.IxyPacketBuffer;
 import de.tum.in.net.ixy.generic.IxyStats;
 import de.tum.in.net.ixy.pci.BuildConfig;
@@ -32,11 +31,12 @@ final class IxgbeDevice extends Device {
 	/**
 	 * Creates a device driver for Intel Ixgbe devices.
 	 *
-	 * @param name   The device name.
-	 * @param driver The device driver.
+	 * @param name     The device name.
+	 * @param rxQueues The number of read queues.
+	 * @param txQueues The number of write queues.
 	 * @throws FileNotFoundException If the device does not exist.
 	 */
-	IxgbeDevice(@NotNull String name, @NotNull String driver) throws FileNotFoundException {
+	IxgbeDevice(@NotNull String name, int rxQueues, int txQueues) throws FileNotFoundException {
 		super(name, "ixgbe");
 		memory = map().orElse(null);
 	}
