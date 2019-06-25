@@ -35,8 +35,9 @@ final class IxgbeMempool extends Mempool {
 		val builder = PacketBuffer.builder().manager(mmanager).size(0).pool(this);
 		var virtual = dmaMemory.getVirtualAddress();
 		var physical = dmaMemory.getPhysicalAddress();
-		for(int i = 0; i < capacity; i += 1){
+		for (int i = 0; i < capacity; i += 1) {
 			val packet = builder.virtual(virtual).physical(physical).build();
+			if (BuildConfig.DEBUG) log.debug("Packets {}th allocated: {}", i, packet);
 			buffers.add(packet);
 			virtual += packetSize;
 			physical += packetSize;
