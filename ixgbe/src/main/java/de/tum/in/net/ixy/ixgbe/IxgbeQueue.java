@@ -1,6 +1,5 @@
 package de.tum.in.net.ixy.ixgbe;
 
-import de.tum.in.net.ixy.generic.InvalidSizeException;
 import de.tum.in.net.ixy.generic.IxyMemoryManager;
 import de.tum.in.net.ixy.generic.IxyQueue;
 import lombok.AccessLevel;

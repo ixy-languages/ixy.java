@@ -1,6 +1,5 @@
 package de.tum.in.net.ixy.ixgbe;
 
-import de.tum.in.net.ixy.generic.InvalidSizeException;
 import de.tum.in.net.ixy.generic.IxyMemoryManager;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
