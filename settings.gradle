@@ -1,13 +1,8 @@
 // Set the project name
-rootProject.name = 'ixy.java'
+rootProject.name = 'ixy'
 
-// Include the rest of the projects and override their names
-include 'generic', 'generator', 'forwarder', 'app', 'pci', 'memory', 'stats', 'ixgbe'
-findProject(':generic')?.name   = 'ixy.generic'
-findProject(':generator')?.name = 'ixy.generator'
-findProject(':forwarder')?.name = 'ixy.forwarder'
-findProject(':app')?.name       = 'ixy.app'
-findProject(':pci')?.name       = 'ixy.pci'
-findProject(':memory')?.name    = 'ixy.memory'
-findProject(':stats')?.name     = 'ixy.stats'
-findProject(':ixgbe')?.name     = 'ixy.ixgbe'
+// Include the submodules
+include 'ixy', 'pktgen', 'pktfwd'
+findProject(':ixy')?.name    = 'library'
+findProject(':pktgen')?.name = 'pktgen'
+findProject(':pktfwd')?.name = 'pktfwd'

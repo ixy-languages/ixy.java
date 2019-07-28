@@ -80,7 +80,7 @@ configure_openjdk() {
 ## Installs the OpenJDK if necessary
 install_openjdk() {
 	if command -v java > /dev/null; then
-		version=$(java --version)
+		version=$(java -version)
 		if [ $(cut -d' ' -f-2) = "openjdk ${JDK_VERSION}" ]; then
 			echo "OpenJDK ${JDK_VERSION} is already installed, skipping installation"
 			return

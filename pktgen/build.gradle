@@ -1,0 +1,165 @@
+// Include all the plugins this module depends on
+plugins {
+	id 'application'                                   // Java application plugin
+	id 'com.github.gmazzo.buildconfig' version '1.5.0' // Build time constants
+	id 'io.freefair.lombok'            version '3.7.1' // Lombok
+	id 'com.adarshr.test-logger'       version '1.7.0' // Gradle Test Logger
+}
+
+// Set the entry point of the application
+mainClassName = 'de.tum.in.net.ixy.generator.Main'
+
+// Configure the group and version of the project, which should match the root project's
+group 'de.tum.in.net.ixy'
+version '1.0'
+
+// Set the Java compatibility of the source code and the generated artifact
+sourceCompatibility = 1.12
+targetCompatibility = 1.12
+
+// Use BinTray's jCenter repository, which is faster and bigger than Maven's
+repositories {
+	jcenter()
+}
+
+// Define a set of custom properties which may or may not be useful, but should be inherited from the root project
+ext {
+	moduleName = 'ixy.pktgen'
+
+	LOG_NONE  = rootProject.ext.has("LOG_NONE")  ? rootProject.ext.LOG_NONE  : 0
+	LOG_ERROR = rootProject.ext.has("LOG_ERROR") ? rootProject.ext.LOG_ERROR : 1
+	LOG_WARN  = rootProject.ext.has("LOG_WARN")  ? rootProject.ext.LOG_WARN  : 2
+	LOG_INFO  = rootProject.ext.has("LOG_INFO")  ? rootProject.ext.LOG_INFO  : 3
+	LOG_DEBUG = rootProject.ext.has("LOG_DEBUG") ? rootProject.ext.LOG_DEBUG : 4
+	LOG_TRACE = rootProject.ext.has("LOG_TRACE") ? rootProject.ext.LOG_TRACE : 5
+	DEBUG     = rootProject.ext.has("DEBUG")     ? rootProject.ext.DEBUG     : LOG_TRACE
+
+	PREFER_UNSAFE  = rootProject.ext.has("PREFER_UNSAFE")  ? rootProject.ext.PREFER_UNSAFE  : 1
+	PREFER_JNI     = rootProject.ext.has("PREFER_JNI")     ? rootProject.ext.PREFER_JNI     : 2
+	MEMORY_MANAGER = rootProject.ext.has("MEMORY_MANAGER") ? rootProject.ext.MEMORY_MANAGER : PREFER_UNSAFE
+
+	OPTIMIZED = rootProject.ext.has("OPTIMIZED") ? rootProject.ext.OPTIMIZED : false
+
+	DEFAULT_HUGEPAGE_PATH = rootProject.ext.has("DEFAULT_HUGEPAGE_PATH") ? rootProject.ext.DEFAULT_HUGEPAGE_PATH : "/mnt/huge"
+}
+
+// Compute the package name without sequential repetition of the different package levels
+def FQPN = { ->
+	def mPackages = "${project.group}.ixy.generator".split("\\.")
+	def previous = mPackages[0]
+	for (int i = 1; i < mPackages.length; i += 1)
+		if (mPackages[i] == previous)
+			mPackages[i] = null
+		else
+			previous = mPackages[i]
+	Arrays.stream(mPackages).filter(Objects.&nonNull).toArray().join('.')
+}.call()
+
+// Configure the build time constants (allows the compiler to remove dead code)
+buildConfig {
+	packageName FQPN
+	language    'java'
+
+	buildConfigField 'int', 'LOG_NONE',  "${project.LOG_NONE}"
+	buildConfigField 'int', 'LOG_ERROR', "${project.LOG_ERROR}"
+	buildConfigField 'int', 'LOG_WARN',  "${project.LOG_WARN}"
+	buildConfigField 'int', 'LOG_INFO',  "${project.LOG_INFO}"
+	buildConfigField 'int', 'LOG_DEBUG', "${project.LOG_DEBUG}"
+	buildConfigField 'int', 'LOG_TRACE', "${project.LOG_TRACE}"
+	buildConfigField 'int', 'DEBUG',     "${project.DEBUG}"
+
+	buildConfigField 'int', 'PREFER_UNSAFE',   "${project.PREFER_UNSAFE}"
+	buildConfigField 'int', 'PREFER_JNI',      "${project.PREFER_JNI}"
+	buildConfigField 'int', 'PREFER_JNI_FULL', "${project.PREFER_JNI_FULL}"
+	buildConfigField 'int', 'MEMORY_MANAGER',  "${project.MEMORY_MANAGER}"
+
+	buildConfigField 'boolean', 'OPTIMIZED', "${project.OPTIMIZED}"
+
+	buildConfigField 'String', 'DEFAULT_HUGEPAGE_PATH', "\"${project.DEFAULT_HUGEPAGE_PATH}\""
+}
+
+// Configure the working directory and the standard input
+run {
+	workingDir = rootProject.projectDir
+	standardInput = System.in
+}
+
+// Configure the program binary with all the libraries
+task uberjar(type: Jar, dependsOn: ["compileJava"]) {
+	zip64 = true
+	manifest {
+		attributes 'Main-Class': "${project.mainClassName}",
+				'Implementation-Title': 'Ixy Packet Generator',
+				'Implementation-Version': project.version
+	}
+	archiveBaseName = "ixy-pktgen"
+	from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+	with jar
+}
+
+// Define the dependencies and the minimum scope needed for them to work
+dependencies {
+	compile     project(':library')
+	compile     group: 'org.slf4j',      name: 'slf4j-api',       version: '1.8.0-beta4'
+	compile     group: 'ch.qos.logback', name: 'logback-classic', version: '1.3.0-alpha4'
+	compileOnly group: 'org.jetbrains',  name: 'annotations',     version: '17.0.0'
+
+	testCompile     group: 'org.junit.jupiter', name: 'junit-jupiter-params',  version: '5.5.0-M1'
+	testCompile     group: 'org.assertj',       name: 'assertj-core',          version: '3.12.2'
+	testCompile     group: 'org.mockito',       name: 'mockito-core',          version: '2.28.2'
+	testCompile     group: 'org.mockito',       name: 'mockito-junit-jupiter', version: '2.28.2'
+	testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine',  version: '5.5.0-M1'
+	testRuntimeOnly group: 'org.slf4j',         name: 'slf4j-nop',             version: '1.8.0-beta4'
+}
+
+// Disable the "@Generated" annotation used by the BuildConfig generated class
+tasks.withType(com.github.gmazzo.gradle.plugins.tasks.BuildConfigTask) {
+	addGeneratedAnnotation = false
+}
+
+// Disable the warning about the Unsafe proprietary API during compilation
+tasks.withType(JavaCompile) {
+	options.compilerArgs << '-XDignore.symbol.file'
+}
+
+// Add the links to the official documentation
+tasks.withType(Javadoc) {
+	options.links << 'https://docs.oracle.com/en/java/javase/12/docs/api/'
+	options.addBooleanOption('html5', true)
+	options.noQualifiers 'all'
+}
+
+// Exclude the tests that will fail always if no NICs are available
+test {
+	// Enable JUnit 5 and execute all tests always
+	useJUnitPlatform { failFast = false }
+
+	// Use all processor cores to test
+	maxParallelForks = Runtime.runtime.availableProcessors()
+
+	// Configure JUnit to execute things in parallel
+	systemProperty 'junit.jupiter.execution.parallel.enabled',         true
+	systemProperty 'junit.jupiter.execution.parallel.mode.default',    'concurrent'
+	systemProperty 'junit.jupiter.execution.parallel.config.strategy', 'dynamic'
+
+	// Configure Gradle's default test logger
+	testLogging {
+		events = ['passed', 'failed', 'skipped']
+		showStandardStreams = true
+	}
+
+	// Configure the Gradle Test Logger plugin
+	testlogger {
+		theme                      'mocha-parallel'
+		showExceptions             true
+		slowThreshold              2000
+		showSummary                true
+		showPassed                 true
+		showSkipped                true
+		showFailed                 true
+		showStandardStreams        true
+		showPassedStandardStreams  true
+		showSkippedStandardStreams true
+		showFailedStandardStreams  true
+	}
+}
