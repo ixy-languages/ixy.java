@@ -36,6 +36,9 @@ public final class Stats {
 	/** Factor used to convert from/to mega. */
 	private static final double FACTOR_MEGA = 1_000_000.0;
 
+	/** Factor used to convert from/to giga. */
+	private static final double FACTOR_GIGA = 1_000_000_000.0;
+
 	/** The preamble, SFD, IFG and other fields that need to be taken into account when computing the throughput. */
 	private static final int EXTRA_BYTES = 20;
 
@@ -48,6 +51,7 @@ public final class Stats {
 	 * @param y An addend.
 	 * @return The sum.
 	 */
+	@SuppressWarnings("MagicNumber")
 	private static long unsignedSum(final long x, final long y) {
 		val sum = x + y;
 		return Long.compareUnsigned(x, sum) > 0 ? 0xFFFFFFFFFFFFFFFFL : sum;
@@ -57,7 +61,7 @@ public final class Stats {
 
 	/** The counters index. */
 	@ToString.Include(name = "index", rank = 5)
-	private int index = 0;
+	private int index;
 
 	/** The RX packet counters. */
 	@ToString.Include(name = "rx_packets", rank = 4)
@@ -136,6 +140,7 @@ public final class Stats {
 	 * @throws IOException If an I/O error occurs.
 	 */
 	@Contract(pure = true)
+	@SuppressWarnings("HardcodedFileSeparator")
 	public void writeStats(final @NotNull OutputStream out, final @NotNull String device, final long delta)
 			throws IOException {
 		if (!OPTIMIZED && delta <= 0) {
@@ -145,7 +150,7 @@ public final class Stats {
 
 		// Compute the index of the previous record and transform the time to SI
 		val other = (index + 1) % 2;
-		val seconds = delta / 1_000_000_000.0;
+		val seconds = delta / FACTOR_GIGA;
 
 		// Get the string representation of the packets
 		val rxPacketsStr = Long.toUnsignedString(rxPackets[index]);
@@ -186,15 +191,16 @@ public final class Stats {
 	/**
 	 * Compares the statistics counters without taking into account the index in which they are stored.
 	 *
-	 * @param o The other object to compare with.
+	 * @param stats The other object to compare with.
 	 * @return Whether the objects are equal or not.
 	 */
 	@Override
-	public boolean equals(final Object o) {
-		if (o == this) {
+	@SuppressWarnings({"NonFinalFieldReferenceInEquals", "OverlyComplexBooleanExpression"})
+	public boolean equals(final Object stats) {
+		if (stats == this) {
 			return true;
-		} else if (o instanceof Stats) {
-			val other = (Stats) o;
+		} else if (stats instanceof Stats) {
+			val other = (Stats) stats;
 			val newIndex = index == 0 ? 1 : 0;
 			val newOtherIndex = other.index == 0 ? 1 : 0;
 			return rxPackets[index] == other.rxPackets[other.index]
@@ -215,6 +221,7 @@ public final class Stats {
 	 * @return The hash code.
 	 */
 	@Override
+	@SuppressWarnings("NonFinalFieldReferencedInHashCode")
 	public int hashCode() {
 		val prime = 59;
 		var result = 1;
