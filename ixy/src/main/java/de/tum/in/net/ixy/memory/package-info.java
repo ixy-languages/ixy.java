@@ -1,5 +1,5 @@
 /**
- * Contains the classes related to direct memory access.
+ * Contains the classes related to memory access, including DMA, packet buffer wrappers and memory pools.
  *
  * @author Esaú García Sánchez-Torija
  */
