@@ -11,9 +11,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.ProviderNotFoundException;
 import java.nio.file.StandardCopyOption;
-import java.util.Set;
+import java.util.Collection;
 import java.util.TreeSet;
 
+import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -33,16 +34,16 @@ import static de.tum.in.net.ixy.BuildConfig.LOG_TRACE;
  * @author Esaú García Sánchez-Torija
  */
 @Slf4j
-@NoArgsConstructor
-@SuppressWarnings("ConstantConditions")
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class Native {
 
 	///////////////////////////////////////////////// STATIC VARIABLES /////////////////////////////////////////////////
 
 	/** The set of loaded libraries. */
-	private static final @NotNull Set<Path> loaded = new TreeSet<>();
+	private static final @NotNull Collection<Path> loaded = new TreeSet<>();
 
 	/** Temporary directory which will contain the DLLs/SOs. */
+	@SuppressWarnings("RedundantFieldInitialization")
 	private static @Nullable File tempdir = null;
 
 	////////////////////////////////////////////////// STATIC METHODS //////////////////////////////////////////////////
@@ -54,7 +55,7 @@ public final class Native {
 	 * @param path The path inside the JAR to the library.
 	 */
 	@SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE")
-	@SuppressWarnings({"PMD.AvoidCatchingNPE", "PMD.DataflowAnomalyAnalysis"})
+	@SuppressWarnings({"LoadLibraryWithNonConstantString", "PMD.AvoidCatchingNPE", "PMD.DataflowAnomalyAnalysis"})
 	public static void loadLibrary(final @NotNull String name, @NotNull String path) {
 		// Load the library using the classic method
 		if (DEBUG >= LOG_INFO) log.info("Loading native library '{}'.", name);
@@ -129,9 +130,9 @@ public final class Native {
 	@Contract(pure = true)
 	private static boolean isPosixCompliant() {
 		if (DEBUG >= LOG_TRACE) log.trace("Checking POSIX compliance.");
-		try {
-			return FileSystems.getDefault().supportedFileAttributeViews().contains("posix");
-		} catch (final FileSystemNotFoundException | ProviderNotFoundException | SecurityException e) {
+		try (val fs = FileSystems.getDefault()) {
+			return fs.supportedFileAttributeViews().contains("posix");
+		} catch (final FileSystemNotFoundException | ProviderNotFoundException | SecurityException | IOException e) {
 			return false;
 		}
 	}
@@ -144,6 +145,7 @@ public final class Native {
 	 * @throws IOException If an I/O error occurs.
 	 */
 	@Contract(pure = true)
+	@SuppressWarnings("SameParameterValue")
 	private static @NotNull File createTempDirectory(@NotNull String prefix) throws IOException {
 		if (DEBUG >= LOG_TRACE) log.trace("Creating temporal directory with prefix '{}'.", prefix);
 		val tempdir = System.getProperty("java.io.tmpdir");

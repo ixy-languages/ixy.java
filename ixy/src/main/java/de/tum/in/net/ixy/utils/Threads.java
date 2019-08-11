@@ -1,5 +1,7 @@
 package de.tum.in.net.ixy.utils;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -8,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author Esaú García Sánchez-Torija
  */
 @Slf4j
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class Threads {
 
 	/**

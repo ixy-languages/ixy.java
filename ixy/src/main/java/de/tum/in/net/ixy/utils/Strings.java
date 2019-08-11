@@ -24,7 +24,7 @@ public final class Strings {
 	 * @param n The repetition count.
 	 * @return The repeated character string.
 	 */
-	@SuppressWarnings("PMD.DataflowAnomalyAnalysis")
+	@SuppressWarnings({"MagicCharacter", "PMD.DataflowAnomalyAnalysis"})
 	private static @NotNull String repeat(int n) {
 		val buff = new char[n];
 		while (n > 0) {
