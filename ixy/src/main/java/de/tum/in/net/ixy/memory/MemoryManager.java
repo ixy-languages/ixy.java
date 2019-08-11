@@ -1,6 +1,7 @@
 package de.tum.in.net.ixy.memory;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import lombok.val;
@@ -72,6 +73,7 @@ public interface MemoryManager {
 	 * @return The base address of the allocated memory region.
 	 */
 	@Contract(pure = true)
+	@SuppressWarnings("BooleanParameter")
 	long allocate(long bytes, boolean huge, boolean lock);
 
 	/**
@@ -82,6 +84,7 @@ public interface MemoryManager {
 	 * @param huge    Whether to enable huge memory pages.
 	 * @param lock    Whether to enable memory locking.
 	 */
+	@SuppressWarnings("BooleanParameter")
 	void free(long address, long bytes, boolean huge, boolean lock);
 
 	/////////////////////////////////////////////// MAPPERS & UNMAPPERS ////////////////////////////////////////////////
@@ -93,10 +96,12 @@ public interface MemoryManager {
 	 * @param huge Whether to enable huge memory pages.
 	 * @param lock Whether to enable memory locking.
 	 * @return The base address of the mapped memory region.
-	 * @throws IOException If an I/O error occurs.
+	 * @throws FileNotFoundException If the file does not exist.
+	 * @throws IOException           If an I/O error occurs.
 	 */
 	@Contract(pure = true)
-	long mmap(@NotNull File file, boolean huge, boolean lock) throws IOException;
+	@SuppressWarnings("BooleanParameter")
+	long mmap(@NotNull File file, boolean huge, boolean lock) throws FileNotFoundException, IOException;
 
 	/**
 	 * Destroys a memory mapping created with {@link #mmap(File, boolean, boolean)}.
@@ -105,9 +110,11 @@ public interface MemoryManager {
 	 * @param file    The file.
 	 * @param huge    Whether huge memory pages was enabled.
 	 * @param lock    Whether memory locking was enabled.
+	 * @throws FileNotFoundException If the file does not exist.
 	 * @throws IOException If an I/O error occurs.
 	 */
-	void munmap(long address, @NotNull File file, boolean huge, boolean lock) throws IOException;
+	@SuppressWarnings("BooleanParameter")
+	void munmap(long address, @NotNull File file, boolean huge, boolean lock) throws FileNotFoundException, IOException;
 
 	///////////////////////////////////////////////////// GETTERS //////////////////////////////////////////////////////
 
@@ -298,6 +305,7 @@ public interface MemoryManager {
 	 * @return The DMA memory.
 	 */
 	@Contract(pure = true)
+	@SuppressWarnings("BooleanParameter")
 	default @NotNull DmaMemory dmaAllocate(final long bytes, final boolean huge, final boolean lock) {
 		if (!OPTIMIZED && bytes <= 0) throw new IllegalArgumentException("The parameter 'bytes' MUST be positive.");
 		val virtual = allocate(bytes, huge, lock);

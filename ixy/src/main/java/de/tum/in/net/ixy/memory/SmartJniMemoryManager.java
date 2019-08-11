@@ -45,7 +45,7 @@ import static java.io.File.separator;
 @ToString(onlyExplicitlyIncluded = true, doNotUseGetters = true)
 @SuppressWarnings({"ConstantConditions", "Duplicates", "PMD.BeanMembersShouldSerialize"})
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, doNotUseGetters = true, callSuper = true)
-public class SmartJniMemoryManager extends JniMemoryManager {
+public final class SmartJniMemoryManager extends JniMemoryManager {
 
 	//////////////////////////////////////////////////// FILE PATHS ////////////////////////////////////////////////////
 
@@ -60,6 +60,9 @@ public class SmartJniMemoryManager extends JniMemoryManager {
 
 	///////////////////////////////////////////////// STATIC VARIABLES /////////////////////////////////////////////////
 
+	/** The factor of 2^10 used for {K,M,G,T}iB units. */
+	private static final int K_FACTOR = 1024;
+
 	/**
 	 * A cached instance of this class.
 	 * -- GETTER --
@@ -69,7 +72,7 @@ public class SmartJniMemoryManager extends JniMemoryManager {
 	 */
 	@Getter
 	@SuppressWarnings("JavaDoc")
-	private static final SmartJniMemoryManager singleton = new SmartJniMemoryManager();
+	private static final MemoryManager singleton = new SmartJniMemoryManager();
 
 	///////////////////////////////////////////////// MEMBER VARIABLES /////////////////////////////////////////////////
 
@@ -80,7 +83,6 @@ public class SmartJniMemoryManager extends JniMemoryManager {
 
 	/** Private constructor that does nothing. */
 	private SmartJniMemoryManager() {
-		super();
 		if (DEBUG >= LOG_TRACE) log.trace("Created a smart JNI-backed memory manager.");
 		pageSize = getPageSize();
 	}
@@ -177,7 +179,7 @@ public class SmartJniMemoryManager extends JniMemoryManager {
 	 * @return Whether the entry exists.
 	 */
 	@Contract(pure = true)
-	@SuppressWarnings({"SameParameterValue", "PMD.DataflowAnomalyAnalysis"})
+	@SuppressWarnings({"HardcodedFileSeparator", "SameParameterValue", "PMD.DataflowAnomalyAnalysis"})
 	private static boolean existsInMtab(final @NotNull String path,
 										final @NotNull String fs,
 										final @NotNull String mnt,
@@ -228,11 +230,13 @@ public class SmartJniMemoryManager extends JniMemoryManager {
 	private static long applyFactor(@Range(from = 0, to = Long.MAX_VALUE) long x, final @NotNull String unit) {
 		switch (unit) {
 			case "GB":
-				x *= 1024; // fall through
+				x *= K_FACTOR; // fall through
+			// fall through
 			case "MB":
-				x *= 1024; // fall through
+				x *= K_FACTOR; // fall through
+			// fall through
 			case "kB":
-				x *= 1024; // fall through
+				x *= K_FACTOR; // fall through
 				break;
 			default:
 				x *= 0;

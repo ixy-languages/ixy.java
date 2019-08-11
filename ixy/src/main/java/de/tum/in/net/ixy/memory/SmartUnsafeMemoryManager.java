@@ -74,6 +74,9 @@ public final class SmartUnsafeMemoryManager extends UnsafeMemoryManager {
 
 	///////////////////////////////////////////////// STATIC VARIABLES /////////////////////////////////////////////////
 
+	/** The factor of 2^10 used for {K,M,G,T}iB units. */
+	private static final int K_FACTOR = 1024;
+
 	/**
 	 * A cached instance of this class.
 	 * -- GETTER --
@@ -83,7 +86,7 @@ public final class SmartUnsafeMemoryManager extends UnsafeMemoryManager {
 	 */
 	@Getter
 	@SuppressWarnings("JavaDoc")
-	private static final SmartUnsafeMemoryManager singleton = new SmartUnsafeMemoryManager();
+	private static final MemoryManager singleton = new SmartUnsafeMemoryManager();
 
 	///////////////////////////////////////////////// MEMBER VARIABLES /////////////////////////////////////////////////
 
@@ -163,7 +166,6 @@ public final class SmartUnsafeMemoryManager extends UnsafeMemoryManager {
 
 	/** Private constructor that sets the fields {@link #pageSize} and {@link #hugepageSize}. */
 	private SmartUnsafeMemoryManager() {
-		super();
 		log.trace("Created a smart Unsafe-based memory manager.");
 		pageSize = super.getPageSize();
 		hugepageSize = getHugepageSize();
@@ -185,13 +187,6 @@ public final class SmartUnsafeMemoryManager extends UnsafeMemoryManager {
 		} catch (final UnsatisfiedLinkError e) {
 			return false;
 		}
-	}
-
-	/** {@inheritDoc} */
-	@Override
-	@Contract(pure = true)
-	public int getAddressSize() {
-		return super.getAddressSize();
 	}
 
 	/** {@inheritDoc} */
@@ -237,6 +232,7 @@ public final class SmartUnsafeMemoryManager extends UnsafeMemoryManager {
 	/** {@inheritDoc} */
 	@Override
 	@Contract(pure = true)
+	@SuppressWarnings("BooleanParameter")
 	public long allocate(long bytes, boolean huge, boolean lock) {
 		if (!OPTIMIZED) {
 			if (unsafe == null) throw new NullPointerException("The Unsafe object is not available.");
@@ -274,6 +270,7 @@ public final class SmartUnsafeMemoryManager extends UnsafeMemoryManager {
 
 	/** {@inheritDoc} */
 	@Override
+	@SuppressWarnings("BooleanParameter")
 	public void free(long address, long bytes, final boolean huge, final boolean lock) {
 		if (!OPTIMIZED) {
 			if (unsafe == null) throw new NullPointerException("The Unsafe object is not available.");
@@ -315,8 +312,9 @@ public final class SmartUnsafeMemoryManager extends UnsafeMemoryManager {
 	/** {@inheritDoc} */
 	@Override
 	@Contract(pure = true)
-	@SuppressWarnings("deprecation")
-	public long mmap(final @NotNull File file, final boolean huge, final boolean lock) throws IOException {
+	@SuppressWarnings({"deprecation", "BooleanParameter", "IOResourceOpenedButNotSafelyClosed", "resource"})
+	public long mmap(final @NotNull File file, final boolean huge, final boolean lock)
+			throws FileNotFoundException, IOException {
 		if (!OPTIMIZED) {
 			if (file == null) throw new NullPointerException("The parameter 'file' MUST NOT be null.");
 			if (!file.exists()) throw new FileNotFoundException("The parameter 'file' MUST exist.");
@@ -337,9 +335,9 @@ public final class SmartUnsafeMemoryManager extends UnsafeMemoryManager {
 
 	/** {@inheritDoc} */
 	@Override
-	@SuppressWarnings({"deprecation", "PMD.DataflowAnomalyAnalysis"})
+	@SuppressWarnings({"deprecation", "BooleanParameter", "PMD.DataflowAnomalyAnalysis"})
 	public void munmap(final long address, final @NotNull File file, final boolean huge, final boolean lock)
-			throws IOException {
+			throws FileNotFoundException, IOException {
 		if (!OPTIMIZED) {
 			if (address == 0) throw new IllegalArgumentException("The parameter 'address' MUST NOT be 0.");
 			if (file == null) throw new NullPointerException("The parameter 'file' MUST NOT be null.");
@@ -397,8 +395,8 @@ public final class SmartUnsafeMemoryManager extends UnsafeMemoryManager {
 
 	/** {@inheritDoc} */
 	@Override
-	@SuppressWarnings("deprecation")
 	@Contract(value = "_, _, _ -> fail", pure = true)
+	@SuppressWarnings({"deprecation", "BooleanParameter"})
 	public @NotNull DmaMemory dmaAllocate(final long bytes, final boolean huge, final boolean lock) {
 		if (!OPTIMIZED) {
 			if (unsafe == null) throw new NullPointerException("The Unsafe object is not available.");
@@ -424,7 +422,7 @@ public final class SmartUnsafeMemoryManager extends UnsafeMemoryManager {
 	 * @return Whether the entry exists.
 	 */
 	@Contract(pure = true)
-	@SuppressWarnings({"SameParameterValue", "PMD.DataflowAnomalyAnalysis"})
+	@SuppressWarnings({"HardcodedFileSeparator", "SameParameterValue", "PMD.DataflowAnomalyAnalysis"})
 	private static boolean existsInMtab(final @NotNull String path,
 										final @NotNull String fs,
 										final @NotNull String mnt,
@@ -475,11 +473,13 @@ public final class SmartUnsafeMemoryManager extends UnsafeMemoryManager {
 	private static long applyFactor(@Range(from = 0, to = Long.MAX_VALUE) long x, final @NotNull String unit) {
 		switch (unit) {
 			case "GB":
-				x *= 1024; // fall through
+				x *= K_FACTOR; // fall through
+			// fall through
 			case "MB":
-				x *= 1024; // fall through
+				x *= K_FACTOR; // fall through
+			// fall through
 			case "kB":
-				x *= 1024; // fall through
+				x *= K_FACTOR; // fall through
 				break;
 			default:
 				x *= 0;

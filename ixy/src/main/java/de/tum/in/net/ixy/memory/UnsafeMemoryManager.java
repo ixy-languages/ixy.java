@@ -62,18 +62,20 @@ class UnsafeMemoryManager implements MemoryManager {
 	 */
 	@Getter
 	@SuppressWarnings("JavaDoc")
-	private static final UnsafeMemoryManager singleton = new UnsafeMemoryManager();
+	private static final MemoryManager singleton = new UnsafeMemoryManager();
 
 	///////////////////////////////////////////////// MEMBER VARIABLES /////////////////////////////////////////////////
 
 	/** {@link Unsafe The unsafe object} used to access and manipulate the memory. */
 	@EqualsAndHashCode.Include
 	@ToString.Include(name = "unsafe", rank = 1)
+	@SuppressWarnings({"UseOfSunClasses", "PackageVisibleField"})
 	final @Nullable Unsafe unsafe;
 
 	////////////////////////////////////////////////// MEMBER METHODS //////////////////////////////////////////////////
 
 	/** Package-private constructor that sets the {@link #unsafe} field. */
+	@SuppressWarnings({"NestedTryStatement", "UseOfSunClasses"})
 	UnsafeMemoryManager() {
 		Unsafe tmp = null;
 		try {
@@ -117,6 +119,7 @@ class UnsafeMemoryManager implements MemoryManager {
 	 */
 	@Override
 	@Deprecated
+	@SuppressWarnings("BooleanParameter")
 	@Contract(value = "_, _, _ -> fail", pure = true)
 	public long mmap(final @NotNull File file, final boolean huge, final boolean lock) throws IOException {
 		if (!OPTIMIZED) {
@@ -135,7 +138,8 @@ class UnsafeMemoryManager implements MemoryManager {
 	 */
 	@Override
 	@Deprecated
-	@Contract(value = "_, _, _, _ -> fail")
+	@SuppressWarnings("BooleanParameter")
+	@Contract(value = "_, _, _, _ -> fail", pure = true)
 	public void munmap(final long address, final @NotNull File file, final boolean huge, final boolean lock)
 			throws IOException {
 		if (!OPTIMIZED) {
@@ -170,6 +174,7 @@ class UnsafeMemoryManager implements MemoryManager {
 	 */
 	@Override
 	@Deprecated
+	@SuppressWarnings("BooleanParameter")
 	@Contract(value = "_, _, _ -> fail", pure = true)
 	public @NotNull DmaMemory dmaAllocate(final long bytes, final boolean huge, final boolean lock) {
 		if (!OPTIMIZED) {
@@ -209,6 +214,7 @@ class UnsafeMemoryManager implements MemoryManager {
 
 	/** {@inheritDoc} */
 	@Override
+	@SuppressWarnings("BooleanParameter")
 	@Contract(value = "_, true, _ -> fail; _, _, true -> fail", pure = true)
 	public long allocate(final long bytes, final boolean huge, final boolean lock) {
 		if (!OPTIMIZED) {
@@ -223,6 +229,7 @@ class UnsafeMemoryManager implements MemoryManager {
 
 	/** {@inheritDoc} */
 	@Override
+	@SuppressWarnings("BooleanParameter")
 	@Contract("_, _, true, _ -> fail; _, _, _, true -> fail")
 	public void free(final long address, final long bytes, final boolean huge, final boolean lock) {
 		if (!OPTIMIZED) {

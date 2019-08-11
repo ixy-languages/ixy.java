@@ -9,7 +9,6 @@ import java.util.Collection;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.Queue;
-import java.util.Set;
 import java.util.TreeMap;
 
 import lombok.AccessLevel;
@@ -108,8 +107,8 @@ public final class Mempool implements Queue<PacketBufferWrapper>, Comparable<Mem
 	@ToString.Include
 	@EqualsAndHashCode.Include
 	@SuppressWarnings("JavaDoc")
-	@Getter(value = AccessLevel.PROTECTED)
-	private final @NotNull Deque<PacketBufferWrapper> packetBufferWrappers = new ArrayDeque<>();
+	@Getter(AccessLevel.PROTECTED)
+	private final @NotNull Deque<PacketBufferWrapper> packetBufferWrappers;
 
 	/**
 	 * The unique identifier of the memory pool.
@@ -140,9 +139,11 @@ public final class Mempool implements Queue<PacketBufferWrapper>, Comparable<Mem
 	 *
 	 * @param capacity The capacity of the memory pool.
 	 */
+	@SuppressWarnings("ThisEscapedInObjectConstruction")
 	public Mempool(final int capacity) {
 		if (DEBUG >= LOG_TRACE) log.trace("Creating memory pool.");
 		this.capacity = capacity;
+		this.packetBufferWrappers = new ArrayDeque<>(capacity);
 		id = pools.isEmpty() ? 0 : getValidId();
 		pools.put(id, this);
 	}
@@ -422,140 +423,6 @@ public final class Mempool implements Queue<PacketBufferWrapper>, Comparable<Mem
 		if (DEBUG >= LOG_TRACE) log.trace("Returning the head or null.");
 		return packetBufferWrappers.peek();
 	}
-
-//	////////////////////////////////////////////////// DEQUE METHODS ///////////////////////////////////////////////////
-//
-//	@Override
-//	public void addFirst(final @NotNull PacketBufferWrapper buffer) {
-//		if (!OPTIMIZED && buffer == null) throw new NullPointerException("The parameter 'buffer' MUST NOT be null.");
-//		if (DEBUG >= LOG_TRACE) log.trace("Inserting packet buffer wrapper before the head: {}.", buffer);
-//		packetBufferWrappers.addFirst(buffer);
-//	}
-//
-//	@Override
-//	public void addLast(final @NotNull PacketBufferWrapper buffer) {
-//		if (!OPTIMIZED && buffer == null) throw new NullPointerException("The parameter 'buffer' MUST NOT be null.");
-//		if (DEBUG >= LOG_TRACE) log.trace("Inserting packet buffer wrapper after the tail: {}.", buffer);
-//		packetBufferWrappers.addLast(buffer);
-//	}
-//
-//	@Override
-//	public boolean offerFirst(final @NotNull PacketBufferWrapper buffer) {
-//		if (!OPTIMIZED && buffer == null) throw new NullPointerException("The parameter 'buffer' MUST NOT be null.");
-//		if (DEBUG >= LOG_TRACE) log.trace("Inserting packet buffer wrapper before the head: {}.", buffer);
-//		return packetBufferWrappers.offerFirst(buffer);
-//	}
-//
-//	@Override
-//	public boolean offerLast(final @NotNull PacketBufferWrapper buffer) {
-//		if (!OPTIMIZED && buffer == null) throw new NullPointerException("The parameter 'buffer' MUST NOT be null.");
-//		if (DEBUG >= LOG_TRACE) log.trace("Inserting packet buffer wrapper after the tail: {}.", buffer);
-//		return packetBufferWrappers.offerLast(buffer);
-//	}
-//
-//	@Override
-//	public @NotNull PacketBufferWrapper removeFirst() {
-//		if (DEBUG >= LOG_TRACE) log.trace("Extracting head packet buffer wrapper or failing.");
-//		return packetBufferWrappers.removeFirst();
-//	}
-//
-//	@Override
-//	public @NotNull PacketBufferWrapper removeLast() {
-//		if (DEBUG >= LOG_TRACE) log.trace("Extracting tail packet buffer wrapper or failing.");
-//		return packetBufferWrappers.removeLast();
-//	}
-//
-//	@Override
-//	@SuppressWarnings("checkstyle:OverloadMethodsDeclarationOrder")
-//	public @Nullable PacketBufferWrapper pollFirst() {
-//		if (DEBUG >= LOG_TRACE) log.trace("Extracting head packet buffer wrapper or null.");
-//		return packetBufferWrappers.pollFirst();
-//	}
-//
-//	@Override
-//	public @Nullable PacketBufferWrapper pollLast() {
-//		if (DEBUG >= LOG_TRACE) log.trace("Extracting tail packet buffer wrapper or null.");
-//		return packetBufferWrappers.pollFirst();
-//	}
-//
-//	@Override
-//	@Contract(pure = true)
-//	public @NotNull PacketBufferWrapper getFirst() {
-//		if (DEBUG >= LOG_TRACE) log.trace("Returning head packet buffer wrapper or failing.");
-//		return packetBufferWrappers.getFirst();
-//	}
-//
-//	@Override
-//	@Contract(pure = true)
-//	public @NotNull PacketBufferWrapper getLast() {
-//		if (DEBUG >= LOG_TRACE) log.trace("Returning tail packet buffer wrapper or failing.");
-//		return packetBufferWrappers.getLast();
-//	}
-//
-//	@Override
-//	@Contract(pure = true)
-//	public @Nullable PacketBufferWrapper peekFirst() {
-//		if (DEBUG >= LOG_TRACE) log.trace("Returning head packet buffer wrapper or null.");
-//		return packetBufferWrappers.peekFirst();
-//	}
-//
-//	@Override
-//	@Contract(pure = true)
-//	public @Nullable PacketBufferWrapper peekLast() {
-//		if (DEBUG >= LOG_TRACE) log.trace("Returning tail packet buffer wrapper or null.");
-//		return packetBufferWrappers.peekLast();
-//	}
-//
-//	/**
-//	 * {@inheritDoc}
-//	 * @deprecated Not supported.
-//	 */
-//	@Override
-//	@Deprecated
-//	public boolean removeFirstOccurrence(final @NotNull Object buffer) {
-//		if (!OPTIMIZED && buffer == null) throw new NullPointerException("The parameter 'buffer' MUST NOT be null.");
-//		throw new UnsupportedOperationException("Cannot remove elements from the collection without returning them.");
-//	}
-//
-//	/**
-//	 * {@inheritDoc}
-//	 * @deprecated Not supported.
-//	 */
-//	@Override
-//	@Deprecated
-//	public boolean removeLastOccurrence(final @NotNull Object buffer) {
-//		if (!OPTIMIZED && buffer == null) throw new NullPointerException("The parameter 'buffer' MUST NOT be null.");
-//		throw new UnsupportedOperationException("Cannot remove elements from the collection without returning them.");
-//	}
-//
-//	/**
-//	 * {@inheritDoc}
-//	 * @deprecated Use {@link #addFirst(PacketBufferWrapper)}.
-//	 */
-//	@Override
-//	@Deprecated
-//	public void push(final @NotNull PacketBufferWrapper buffer) {
-//		if (!OPTIMIZED && buffer == null) throw new NullPointerException("The parameter 'buffer' MUST NOT be null.");
-//		if (DEBUG >= LOG_TRACE) log.trace("Inserting packet buffer wrapper before the head : {}.", buffer);
-//		packetBufferWrappers.push(buffer);
-//	}
-//
-//	/**
-//	 * {@inheritDoc}
-//	 * @deprecated Use {@link #removeFirst()}.
-//	 */
-//	@Override
-//	@Deprecated
-//	public @NotNull PacketBufferWrapper pop() {
-//		if (DEBUG >= LOG_TRACE) log.trace("Extracting head packet buffer wrapper.");
-//		return packetBufferWrappers.pop();
-//	}
-//
-//	@Override
-//	@Contract(pure = true)
-//	public @NotNull Iterator<PacketBufferWrapper> descendingIterator() {
-//		return new ImmutableIterator<>(packetBufferWrappers.descendingIterator());
-//	}
 
 	//////////////////////////////////////////////// COMPARABLE METHODS ////////////////////////////////////////////////
 

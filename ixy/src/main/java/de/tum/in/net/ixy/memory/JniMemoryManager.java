@@ -47,7 +47,7 @@ public class JniMemoryManager implements MemoryManager {
 	 */
 	@Getter
 	@SuppressWarnings("JavaDoc")
-	private static final JniMemoryManager singleton = new JniMemoryManager();
+	private static final MemoryManager singleton = new JniMemoryManager();
 
 	////////////////////////////////////////////////// NATIVE METHODS //////////////////////////////////////////////////
 
@@ -340,6 +340,7 @@ public class JniMemoryManager implements MemoryManager {
 	////////////////////////////////////////////////// MEMBER METHODS //////////////////////////////////////////////////
 
 	/** Package-private constructor that sets the field {@link #hugepageSize}. */
+	@SuppressWarnings("ResultOfMethodCallIgnored")
 	JniMemoryManager() {
 		if (DEBUG >= LOG_TRACE) log.trace("Creating a JNI-backed memory manager.");
 		Native.loadLibrary("ixy", "resources");
@@ -393,6 +394,7 @@ public class JniMemoryManager implements MemoryManager {
 	/** {@inheritDoc} */
 	@Override
 	@Contract(pure = true)
+	@SuppressWarnings("BooleanParameter")
 	public long allocate(long bytes, final boolean huge, final boolean lock) {
 		if (!OPTIMIZED && bytes <= 0) throw new IllegalArgumentException("The parameter 'bytes' MUST be positive.");
 
@@ -424,6 +426,7 @@ public class JniMemoryManager implements MemoryManager {
 
 	/** {@inheritDoc} */
 	@Override
+	@SuppressWarnings("BooleanParameter")
 	public void free(long address, long bytes, final boolean huge, final boolean lock) {
 		if (!OPTIMIZED) {
 			if (address == 0) throw new IllegalArgumentException("The parameter 'address' MUST NOT be 0.");
@@ -461,7 +464,9 @@ public class JniMemoryManager implements MemoryManager {
 	/** {@inheritDoc} */
 	@Override
 	@Contract(pure = true)
-	public long mmap(final @NotNull File file, final boolean huge, final boolean lock) throws IOException {
+	@SuppressWarnings({"BooleanParameter", "IOResourceOpenedButNotSafelyClosed", "resource"})
+	public long mmap(final @NotNull File file, final boolean huge, final boolean lock)
+			throws FileNotFoundException, IOException {
 		if (!OPTIMIZED) {
 			if (file == null) throw new NullPointerException("The parameter 'file' MUST NOT be null.");
 			if (!file.exists()) throw new FileNotFoundException("The parameter 'file' MUST exist.");
@@ -482,8 +487,9 @@ public class JniMemoryManager implements MemoryManager {
 
 	/** {@inheritDoc} */
 	@Override
+	@SuppressWarnings("BooleanParameter")
 	public void munmap(final long address, final @NotNull File file, final boolean huge, final boolean lock)
-			throws IOException {
+			throws FileNotFoundException, IOException {
 		if (!OPTIMIZED) {
 			if (address == 0) throw new IllegalArgumentException("The parameter 'address' MUST NOT be 0.");
 			if (file == null) throw new NullPointerException("The parameter 'file' MUST NOT be null.");
@@ -685,6 +691,7 @@ public class JniMemoryManager implements MemoryManager {
 		c_put(dest, bytes, src, offset);
 	}
 
+	/** {@inheritDoc} */
 	@Override
 	@Contract(pure = true)
 	public long virt2phys(final long address) {

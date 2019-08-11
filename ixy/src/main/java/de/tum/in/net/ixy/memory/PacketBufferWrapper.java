@@ -54,8 +54,8 @@ public final class PacketBufferWrapper implements Comparable<PacketBufferWrapper
 	/** The size of the memory pool index field. */
 	private static final int MPI_SIZE = Integer.SIZE;
 
-	/** The size of the packet size field. */
-	private static final int PKT_SIZE = Integer.SIZE;
+//	/** The size of the packet size field. */
+//	private static final int PKT_SIZE = Integer.SIZE;
 
 	/** The size of the packet buffer header. */
 	private static final int HEADER_SIZE = 64 * Byte.SIZE;
@@ -71,8 +71,8 @@ public final class PacketBufferWrapper implements Comparable<PacketBufferWrapper
 	/** The bytes of the memory pool index field. */
 	private static final int MPI_BYTES = MPI_SIZE / Byte.SIZE;
 
-	/** The bytes of the packet size field. */
-	private static final int PKT_BYTES = PKT_SIZE / Byte.SIZE;
+//	/** The bytes of the packet size field. */
+//	private static final int PKT_BYTES = PKT_SIZE / Byte.SIZE;
 
 	/** The bytes of the packet buffer header. */
 	private static final int HEADER_BYTES = HEADER_SIZE / Byte.SIZE;
@@ -100,6 +100,7 @@ public final class PacketBufferWrapper implements Comparable<PacketBufferWrapper
 	///////////////////////////////////////////////// STATIC VARIABLES /////////////////////////////////////////////////
 
 	/** The memory manager. */
+	@SuppressWarnings("NestedConditionalExpression")
 	private static final MemoryManager mmanager = MEMORY_MANAGER == PREFER_JNI_FULL
 			? JniMemoryManager.getSingleton()
 			: MEMORY_MANAGER == PREFER_JNI
