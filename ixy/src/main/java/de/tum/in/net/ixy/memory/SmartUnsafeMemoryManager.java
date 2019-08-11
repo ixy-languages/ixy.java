@@ -405,7 +405,7 @@ public final class SmartUnsafeMemoryManager extends UnsafeMemoryManager {
 			if (bytes <= 0) throw new IllegalArgumentException("The parameter 'bytes' MUST BE positive.");
 		}
 		val virtual = allocate(bytes, huge, lock);
-		putByte(virtual, getByte(virtual));
+		if (virtual != 0) putByte(virtual, getByte(virtual));
 		val physical = virt2phys(virtual);
 		return new DmaMemory(virtual, physical);
 	}

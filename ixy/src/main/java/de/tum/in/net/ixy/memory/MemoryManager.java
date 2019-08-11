@@ -301,7 +301,7 @@ public interface MemoryManager {
 	default @NotNull DmaMemory dmaAllocate(final long bytes, final boolean huge, final boolean lock) {
 		if (!OPTIMIZED && bytes <= 0) throw new IllegalArgumentException("The parameter 'bytes' MUST be positive.");
 		val virtual = allocate(bytes, huge, lock);
-		putByte(virtual, getByte(virtual));
+		if (virtual != 0) putByte(virtual, getByte(virtual));
 		val physical = virt2phys(virtual);
 		return new DmaMemory(virtual, physical);
 	}
