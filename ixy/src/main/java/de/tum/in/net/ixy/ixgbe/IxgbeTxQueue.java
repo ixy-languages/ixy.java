@@ -81,6 +81,9 @@ final class IxgbeTxQueue extends IxgbeQueue {
 					xcmdTypeLength, xdescriptorAddress, CMD_TYPE_LENGTH_OFFSET);
 		}
 		mmanager.putIntVolatile(descriptorAddress + CMD_TYPE_LENGTH_OFFSET, cmdTypeLength);
+		if (!OPTIMIZED && mmanager.getIntVolatile(descriptorAddress + CMD_TYPE_LENGTH_OFFSET) != cmdTypeLength) {
+			throw new IllegalStateException("Command type length was NOT written.");
+		}
 	}
 
 	/**
@@ -117,6 +120,9 @@ final class IxgbeTxQueue extends IxgbeQueue {
 					xoffloadInfoStatus, xdescriptorAddress, OFFLOAD_STATUS_OFFSET);
 		}
 		mmanager.putIntVolatile(descriptorAddress + OFFLOAD_STATUS_OFFSET, offloadingStatusInfo);
+		if (!OPTIMIZED && mmanager.getIntVolatile(descriptorAddress + OFFLOAD_STATUS_OFFSET) != offloadingStatusInfo) {
+			throw new IllegalStateException("Offload info status WAS not written.");
+		}
 	}
 
 }

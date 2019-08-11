@@ -135,6 +135,9 @@ abstract class IxgbeQueue {
 					xbufferAddress, xdescriptorAddress);
 		}
 		mmanager.putLongVolatile(descriptorAddress, bufferAddress);
+		if (!OPTIMIZED && mmanager.getLongVolatile(descriptorAddress) != bufferAddress) {
+			throw new IllegalStateException("Buffer address is not set.");
+		}
 	}
 
 }

@@ -70,6 +70,9 @@ final class IxgbeRxQueue extends IxgbeQueue {
 					xpacketBufferHeaderAddress, xdescriptorAddress, OFFSET_HEADER);
 		}
 		mmanager.putLongVolatile(descriptorAddress + OFFSET_HEADER, packetBufferHeaderAddress);
+		if (!OPTIMIZED && mmanager.getLongVolatile(descriptorAddress + OFFSET_HEADER) != packetBufferHeaderAddress) {
+			throw new IllegalStateException("Header buffer address was NOT written.");
+		}
 	}
 
 	/**
