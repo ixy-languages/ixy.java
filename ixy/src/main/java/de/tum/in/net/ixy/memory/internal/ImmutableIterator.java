@@ -20,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
  */
 @Slf4j
 @RequiredArgsConstructor
+@SuppressWarnings("deprecation")
 @ToString(onlyExplicitlyIncluded = true, doNotUseGetters = true)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, doNotUseGetters = true)
 public final class ImmutableIterator<E> implements Iterator<E> {
