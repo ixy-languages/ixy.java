@@ -32,7 +32,7 @@ import static de.tum.in.net.ixy.forwarder.BuildConfig.PREFER_JNI;
 import static de.tum.in.net.ixy.forwarder.BuildConfig.PREFER_JNI_FULL;
 
 @Slf4j
-@SuppressWarnings("ConstantConditions")
+@SuppressWarnings({"ConstantConditions", "UseOfSystemOutOrSystemErr", "CallToSystemGC"})
 public final class Main {
 
 	///////////////////////////////////////////// PROGRAM STATIC VARIABLES /////////////////////////////////////////////
@@ -46,18 +46,16 @@ public final class Main {
 	/** The default batch size to use. */
 	private static final int DEFAULT_BATCH_SIZE = 64;
 
-	/** The default buffer count to use. */
-	private static final int DEFAULT_BUFFER_COUNT = 2048;
-
 	/////////////////////////////////////////////// PACKET DATA TEMPLATE ///////////////////////////////////////////////
 
 	/** The minimum number of batches processed between two prints. */
-	private static final int BATCHES_PER_PRINT = 64_000;
+	private static final int ITERATIONS_PER_NANOTIME = 0xFFFFFF;
 
 	/** The minimum number of nanoseconds between two prints. */
 	private static final int NANOS_PER_PRINT = 1_000_000_000;
 
 	/** The memory manager. */
+	@SuppressWarnings("NestedConditionalExpression")
 	private static final @NotNull MemoryManager mmanager = MEMORY_MANAGER == PREFER_JNI_FULL
 			? JniMemoryManager.getSingleton()
 			: MEMORY_MANAGER == PREFER_JNI
@@ -105,16 +103,6 @@ public final class Main {
 			} else if (!nic1.isSupported() || !nic2.isSupported()) {
 				System.err.println("The selected device driver does not support this NIC.");
 				return;
-			}
-
-			// Preparing instances to be used
-			if (DEBUG >= LOG_INFO) log.info("Allocating resources.");
-			var argvCapacity = 0;
-			try {
-				val argvCapacityStr = argumentsKeyValue.getOrDefault("--buffer-count", String.valueOf(DEFAULT_BUFFER_COUNT));
-				argvCapacity = Integer.parseInt(argvCapacityStr);
-			} catch (final NumberFormatException e) {
-				argvCapacity = DEFAULT_BUFFER_COUNT;
 			}
 
 			// Call the packet forwarder routine
@@ -178,7 +166,7 @@ public final class Main {
 			forward(nic2, 0, nic1, 0, buffers);
 
 			// Log if necessary
-			if (counter++ % BATCHES_PER_PRINT == 0) {
+			if (counter++ % ITERATIONS_PER_NANOTIME == 0) {
 				val endTime = System.nanoTime();
 				val nanos = endTime - startTime;
 				if (nanos > NANOS_PER_PRINT) {
@@ -189,7 +177,7 @@ public final class Main {
 						System.out.println();
 						stats2.writeStats(System.out, nic2.name, nanos);
 						System.out.println(System.lineSeparator());
-					} catch (IOException e) {
+					} catch (final IOException e) {
 						if (DEBUG >= LOG_ERROR) log.error("Could not write the stats.", e);
 					}
 					stats1.swap();
@@ -213,10 +201,13 @@ public final class Main {
 		// possible and drop the unsent packets
 		if (rxCount > 0) {
 			val mempool = Mempool.find(buffers[0]);
+			for (var i = 0; i < rxCount; i++) {
+				buffers[i].putInt(0, 1);
+			}
 			val txCount = txDev.txBatch(txQueue, buffers, 0, rxCount);
 			for (var i = txCount; i < rxCount; i += 1) {
 				mempool.offer(buffers[i]);
-				buffers[i] = null;
+//				buffers[i] = null;
 			}
 		}
 	}
@@ -237,7 +228,7 @@ public final class Main {
 				argumentsList.add(param);
 			} else if (i + 1 < argv.length && argv[i + 1].charAt(0) != '-' || param.contains("=")) {
 				val parts = param.split("=");
-				if (parts.length > 1) { ;
+				if (parts.length > 1) {
 					val value = param.replaceFirst(Pattern.quote(parts[0]), "");
 					if (DEBUG >= LOG_DEBUG) log.debug(">>> Found key value argument '{}' => '{}'.", parts[0], value);
 					argumentsKeyValue.put(parts[0], value);
