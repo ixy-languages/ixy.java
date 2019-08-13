@@ -36,4 +36,9 @@ export JAVA_OPTS="$JAVA_OPTS -Xshare:off"
 #export JAVA_OPTS="$JAVA_OPTS -Xmx16g"
 export JAVA_OPTS="$JAVA_OPTS -server"
 export JAVA_OPTS="$JAVA_OPTS -Dlogback.configurationFile=$(realpath logback.xml)"
-bash pktgen/build/install/pktgen/bin/pktgen $IXY_IXGBE_ADDR_1
+
+if [ $# -eq 0 ]; then
+	bash pktgen/build/install/pktgen/bin/pktgen $IXY_IXGBE_ADDR_1
+else
+	bash pktgen/build/install/pktgen/bin/pktgen $@
+fi
