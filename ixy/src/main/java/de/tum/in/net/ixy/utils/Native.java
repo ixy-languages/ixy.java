@@ -128,11 +128,12 @@ public final class Native {
 	 * @return The file system POSIX compatibility.
 	 */
 	@Contract(pure = true)
+	@SuppressWarnings("resource")
 	private static boolean isPosixCompliant() {
 		if (DEBUG >= LOG_TRACE) log.trace("Checking POSIX compliance.");
-		try (val fs = FileSystems.getDefault()) {
-			return fs.supportedFileAttributeViews().contains("posix");
-		} catch (final FileSystemNotFoundException | ProviderNotFoundException | SecurityException | IOException e) {
+		try {
+			return FileSystems.getDefault().supportedFileAttributeViews().contains("posix");
+		} catch (final FileSystemNotFoundException | ProviderNotFoundException | SecurityException e) {
 			return false;
 		}
 	}
