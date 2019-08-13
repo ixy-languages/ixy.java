@@ -112,6 +112,7 @@ install_dependencies() {
 	install_dependency 'sed'
 	install_dependency 'gawk'
 	install_dependency 'wget'
+	install_dependency 'linux-cpupower'
 }
 
 # Execute everything
