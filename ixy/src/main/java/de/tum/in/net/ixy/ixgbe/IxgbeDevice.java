@@ -14,10 +14,13 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import static de.tum.in.net.ixy.BuildConfig.DEBUG;
@@ -45,6 +48,9 @@ public final class IxgbeDevice extends Device {
 	/** The maximum number of queues supported. */
 	private static final int MAX_QUEUES = 64;
 
+	/** The minimum number of entries of the memory pool. */
+	private static final int MIN_MEMPOOL_ENTRIES = 4096;
+
 	/** The maximum number of entries per RX queue. */
 	private static final short RX_MAX_ENTRIES = 4096;
 
@@ -69,6 +75,9 @@ public final class IxgbeDevice extends Device {
 	/** The factor used to transform Mbps to bps. */
 	private static final int CLASS_NIC = 0x02;
 
+	/** The number of milliseconds to wait for the link to come up. */
+	private static final int WAIT_LINK_MS = 10_000;
+
 	////////////////////////////////////////////////// STATIC METHODS //////////////////////////////////////////////////
 
 	static {
@@ -88,14 +97,18 @@ public final class IxgbeDevice extends Device {
 	 * Keeps track of the {@link PacketBufferWrapper} instances passed to {@link
 	 * #txBatch(int, PacketBufferWrapper[], int, int)} to return them to the correct memory pool.
 	 */
+	@SuppressWarnings("FieldNotUsedInToString")
 	private final @NotNull PacketBufferWrapper[][] cleanablePool;
 
 	/** The memory manager. */
+	@SuppressWarnings({"FieldNotUsedInToString", "NestedConditionalExpression"})
 	private final @NotNull MemoryManager mmanager = MEMORY_MANAGER == PREFER_JNI_FULL
 			? JniMemoryManager.getSingleton()
 			: MEMORY_MANAGER == PREFER_JNI
 			? SmartJniMemoryManager.getSingleton()
 			: SmartUnsafeMemoryManager.getSingleton();
+
+	private final @NotNull MemoryManager _mmanager = SmartJniMemoryManager.getSingleton();
 
 	/** The memory mapping of the PCI resource. */
 	private long mapResource;
@@ -128,7 +141,7 @@ public final class IxgbeDevice extends Device {
 		this.rxQueues = new IxgbeRxQueue[rxQueues];
 		this.txQueues = new IxgbeTxQueue[txQueues];
 		this.cleanablePool = new PacketBufferWrapper[txQueues][TX_ENTRIES];
-		mapResource = map();
+		mapResource = super.map();
 	}
 
 	/** Does all the appropriate calls to reset and initialize the link properly. */
@@ -197,6 +210,7 @@ public final class IxgbeDevice extends Device {
 	}
 
 	/** Initializes the RX queues. */
+	@SuppressWarnings({"Duplicates", "HardcodedFileSeparator", "LawOfDemeter"})
 	private void initRx() {
 		if (DEBUG >= LOG_DEBUG) log.debug("Initializing RX queues.");
 
@@ -221,26 +235,37 @@ public final class IxgbeDevice extends Device {
 			if (DEBUG >= LOG_DEBUG) log.debug(">>> Initializing RX queue #{}.", i);
 
 			if (DEBUG >= LOG_TRACE) log.trace("Enabling advanced RX descriptors.");
-			setRegister(IxgbeDefs.SRRCTL(i), (getRegister(IxgbeDefs.SRRCTL(i)) & ~IxgbeDefs.SRRCTL_DESCTYPE_MASK)
+			setRegister(IxgbeDefs.SRRCTL(i), ((getRegister(IxgbeDefs.SRRCTL(i)) & ~IxgbeDefs.SRRCTL_DESCTYPE_MASK))
 					| IxgbeDefs.SRRCTL_DESCTYPE_ADV_ONEBUF);
 
 			if (DEBUG >= LOG_TRACE) log.trace("Dropping packets if not descriptors available.");
 			setFlags(IxgbeDefs.SRRCTL(i), IxgbeDefs.SRRCTL_DROP_EN);
 
 			if (DEBUG >= LOG_TRACE) log.trace("Enabling descriptor ring.");
-			int ringSizeBytes = RX_ENTRIES * RX_DESCRIPTOR_SIZE;
-			var dma = mmanager.dmaAllocate(ringSizeBytes, true, true);
-			setRegister(IxgbeDefs.RDBAL(i), (int) (dma.getPhysical() & 0xFFFFFFFFL));
-			setRegister(IxgbeDefs.RDBAH(i), (int) (dma.getPhysical() >> Integer.SIZE));
-			setRegister(IxgbeDefs.RDLEN(i), ringSizeBytes);
-			if (DEBUG >= LOG_DEBUG) {
-				log.debug("RX ring {} virtual address 0x{}.", i, leftPad(dma.getVirtual()));
-				log.debug("RX ring {} physical address 0x{}.", i, leftPad(dma.getPhysical()));
+			val ringSizeBytes = RX_ENTRIES * RX_DESCRIPTOR_SIZE;
+			val dma = mmanager.dmaAllocate(ringSizeBytes, true, true);
+
+			if (DEBUG >= LOG_TRACE) log.trace("Setting everything to -1.");
+			var addr = dma.getVirtual();
+			val max = addr + ringSizeBytes;
+			while (addr < max) {
+				mmanager.putLongVolatile(addr, -1L);
+				addr += Long.BYTES;
+			}
+
+			val buff = ByteBuffer.allocate(Long.BYTES).order(ByteOrder.nativeOrder()).putLong(0, dma.getPhysical())
+					.asIntBuffer();
+			waitAndSetRegister(IxgbeDefs.RDBAL(i), buff.get(0));
+			waitAndSetRegister(IxgbeDefs.RDBAH(i), buff.get(1));
+			waitAndSetRegister(IxgbeDefs.RDLEN(i), ringSizeBytes);
+			if (DEBUG >= LOG_INFO) {
+				log.info("RX ring {} virtual address 0x{}.", i, leftPad(dma.getVirtual()));
+				log.info("RX ring {} physical address 0x{}.", i, leftPad(dma.getPhysical()));
 			}
 
 			if (DEBUG >= LOG_TRACE) log.trace("Emptying the ring.");
-			setRegister(IxgbeDefs.RDH(i), 0);
-			setRegister(IxgbeDefs.RDT(i), 0);
+			waitAndSetRegister(IxgbeDefs.RDH(i), 0);
+			waitAndSetRegister(IxgbeDefs.RDT(i), 0);
 
 			val queue = new IxgbeRxQueue(dma.getVirtual(), RX_ENTRIES);
 			queue.index = 0;
@@ -256,10 +281,11 @@ public final class IxgbeDevice extends Device {
 		}
 
 		if (DEBUG >= LOG_TRACE) log.trace("Enabling RX.");
-		setRegister(IxgbeDefs.RXCTRL, IxgbeDefs.RXCTRL_RXEN);
+		setFlags(IxgbeDefs.RXCTRL, IxgbeDefs.RXCTRL_RXEN);
 	}
 
 	/** Initializes the TX queues. */
+	@SuppressWarnings({"Duplicates", "LawOfDemeter", "MagicNumber"})
 	private void initTx() {
 		if (DEBUG >= LOG_DEBUG) log.debug("Initializing TX queues.");
 
@@ -284,23 +310,27 @@ public final class IxgbeDevice extends Device {
 			var dma = mmanager.dmaAllocate(ringSizeBytes, true, true);
 
 			if (DEBUG >= LOG_TRACE) log.trace("Setting everything to -1.");
-			for (var j = 0; j < ringSizeBytes; j += 1) {
-				mmanager.putByte(dma.getVirtual() + j, (byte) -1);
+			var addr = dma.getVirtual();
+			val max = addr + ringSizeBytes;
+			while (addr < max) {
+				mmanager.putLongVolatile(addr, -1L);
+				addr += Long.BYTES;
 			}
 
 			if (DEBUG >= LOG_TRACE) log.trace("Enabling descriptor ring.");
-			setRegister(IxgbeDefs.TDBAL(i), (int) (dma.getPhysical() & 0xFFFFFFFFL));
-			setRegister(IxgbeDefs.TDBAH(i), (int) (dma.getPhysical() >> Integer.SIZE));
-			setRegister(IxgbeDefs.TDLEN(i), ringSizeBytes);
-			if (DEBUG >= LOG_DEBUG) {
-				log.debug("TX ring {} virtual address 0x{}.", i, leftPad(dma.getVirtual()));
-				log.debug("TX ring {} physical address 0x{}.", i, leftPad(dma.getPhysical()));
+			val buff = ByteBuffer.allocate(Long.BYTES).order(ByteOrder.nativeOrder()).putLong(0, dma.getPhysical()).asIntBuffer();
+			waitAndSetRegister(IxgbeDefs.TDBAL(i), buff.get(0));
+			waitAndSetRegister(IxgbeDefs.TDBAH(i), buff.get(1));
+			waitAndSetRegister(IxgbeDefs.TDLEN(i), ringSizeBytes);
+			if (DEBUG >= LOG_INFO) {
+				log.info("TX ring {} virtual address 0x{}.", i, leftPad(dma.getVirtual()));
+				log.info("TX ring {} physical address 0x{}.", i, leftPad(dma.getPhysical()));
 			}
 
 			if (DEBUG >= LOG_TRACE) log.trace("Enabling writeback magic values.");
 			var txdctl = getRegister(IxgbeDefs.TXDCTL(i));
-			txdctl &= ~((0x3F * 26) | (0x3F << 8) | 0x3F);
-			txdctl |= ((4 * 26) | (8 << 8) | 36);
+			txdctl &= ~((0x3F << 16) | (0x3F << 8) | 0x3F);
+			txdctl |= ((4 << 16) | (8 << 8) | 36);
 			setRegister(IxgbeDefs.TXDCTL(i), txdctl);
 
 			var queue = new IxgbeTxQueue(dma.getVirtual(), TX_ENTRIES);
@@ -317,6 +347,7 @@ public final class IxgbeDevice extends Device {
 	 *
 	 * @param queueId The queue id.
 	 */
+	@SuppressWarnings("LawOfDemeter")
 	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
 	private void startRxQueue(final int queueId) {
 		if (DEBUG >= LOG_DEBUG) log.debug("Starting RX queue #{}.", queueId);
@@ -324,7 +355,7 @@ public final class IxgbeDevice extends Device {
 
 		if (DEBUG >= LOG_TRACE) log.trace("Allocating memory pool.");
 		val  mempoolSize = RX_ENTRIES + TX_ENTRIES;
-		queue.mempool = allocateMempool(Math.max(4096, mempoolSize), 2048);
+		queue.mempool = allocateMempool(Math.max(MIN_MEMPOOL_ENTRIES, mempoolSize), 2048);
 
 		if (DEBUG >= LOG_DEBUG) log.debug("Setting descriptor addresses:");
 		for (var i = 0; i < queue.capacity; i += 1) {
@@ -352,10 +383,8 @@ public final class IxgbeDevice extends Device {
 		waitSetFlags(IxgbeDefs.RXDCTL(queueId), IxgbeDefs.RXDCTL_ENABLE);
 
 		// Rx queue starts out full
-		setRegister(IxgbeDefs.RDH(queueId), 0);
-
-		// Set the tail again, just in case
-		setRegister(IxgbeDefs.RDT(queueId), (queue.capacity - 1));
+		waitAndSetRegister(IxgbeDefs.RDH(queueId), 0);
+		waitAndSetRegister(IxgbeDefs.RDT(queueId), (queue.capacity - 1));
 	}
 
 	/**
@@ -367,8 +396,8 @@ public final class IxgbeDevice extends Device {
 		if (DEBUG >= LOG_DEBUG) log.debug("Starting TX queue #{}.", queueId);
 
 		// TX queue starts out empty
-		setRegister(IxgbeDefs.TDH(queueId), 0);
-		setRegister(IxgbeDefs.TDT(queueId), 0);
+		waitAndSetRegister(IxgbeDefs.TDH(queueId), 0);
+		waitAndSetRegister(IxgbeDefs.TDT(queueId), 0);
 
 		if (DEBUG >= LOG_TRACE) log.trace("Enabling and waiting for TX queue #{}.", queueId);
 		setFlags(IxgbeDefs.TXDCTL(queueId), IxgbeDefs.TXDCTL_ENABLE);
@@ -380,14 +409,14 @@ public final class IxgbeDevice extends Device {
 	 * <p>
 	 * After 10 seconds a warning is issued and it is assumed it is ready.
 	 */
-	@SuppressWarnings("PMD.AvoidLiteralsInIfCondition")
+	@SuppressWarnings({"HardcodedFileSeparator", "PMD.AvoidLiteralsInIfCondition"})
 	private void waitLink() {
 		if (DEBUG >= LOG_INFO) log.info("Waiting for link.");
 
 		// Active block until 10.000 iterations or the link speed is available
 		var waited = 0;
 		var speed = getLinkSpeed();
-		while (speed == 0 && waited < 20_000) {
+		while (speed == 0 && waited < WAIT_LINK_MS) {
 			Threads.sleep(10);
 			waited += 10;
 			speed = getLinkSpeed();
@@ -419,7 +448,7 @@ public final class IxgbeDevice extends Device {
 			throw new IllegalArgumentException("The buffer size of a packet buffer wrapper MUST be"
 					+ " a divisor of the size of a huge memory page.");
 		}
-		val dma = mmanager.dmaAllocate(capacity * entrySize, true, true);
+		val dma = mmanager.dmaAllocate((long) capacity * entrySize, true, true);
 		val mempool = new Mempool(capacity);
 		mempool.allocate(entrySize, dma);
 		return mempool;
@@ -431,8 +460,7 @@ public final class IxgbeDevice extends Device {
 	@Override
 	@SuppressWarnings("PMD.AvoidLiteralsInIfCondition")
 	public long map() {
-		if (mapResource != 0L) return mapResource;
-		return mapResource = super.map();
+		return (mapResource != 0L)  ? mapResource : (mapResource = super.map());
 	}
 
 	/** {@inheritDoc} */
@@ -444,6 +472,7 @@ public final class IxgbeDevice extends Device {
 
 	/** {@inheritDoc} */
 	@Override
+	@SuppressWarnings("SwitchStatementWithTooManyBranches")
 	public boolean isSupported() throws IOException {
 		if (getClassId() != CLASS_NIC) return false;
 		if (getVendorId() != IxgbeDefs.INTEL_VENDOR_ID) return false;
@@ -529,13 +558,13 @@ public final class IxgbeDevice extends Device {
 	/** {@inheritDoc} */
 	@Override
 	@SuppressWarnings("PMD.AvoidLiteralsInIfCondition")
-	protected int getRegister(final int offset) {
+	public int getRegister(final int offset) {
 		if (!OPTIMIZED) {
 			if (mapResource == 0L) throw new IllegalStateException("the memory MUST be mapped.");
 			if (offset < 0) throw new IllegalArgumentException("The parameter 'offset' MUST NOT be negative.");
 		}
 		if (DEBUG >= LOG_TRACE) log.trace("Reading register @ 0x{} + 0x{}.", leftPad(mapResource), leftPad(offset));
-		return mmanager.getInt(mapResource + offset);
+		return mmanager.getIntVolatile(mapResource + offset);
 	}
 
 	/** {@inheritDoc} */
@@ -550,7 +579,7 @@ public final class IxgbeDevice extends Device {
 			log.trace("Writing value 0x{} to register @ 0x{} + 0x{}.",
 					leftPad(value), leftPad(mapResource), leftPad(offset));
 		}
-		mmanager.putInt(mapResource + offset, value);
+		mmanager.putIntVolatile(mapResource + offset, value);
 	}
 
 	/** {@inheritDoc} */
@@ -593,7 +622,7 @@ public final class IxgbeDevice extends Device {
 			case IxgbeDefs.LINKS_SPEED_100_82599:
 				return 100;
 			case IxgbeDefs.LINKS_SPEED_1G_82599:
-				return 1000;
+				return 1_000;
 			case IxgbeDefs.LINKS_SPEED_10G_82599:
 				return 10_000;
 			default:
@@ -605,7 +634,7 @@ public final class IxgbeDevice extends Device {
 	/** {@inheritDoc} */
 	@Override
 	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
-	@SuppressWarnings("PMD.DataflowAnomalyAnalysis")
+	@SuppressWarnings({"Duplicates", "ForLoopWithMissingComponent", "LawOfDemeter", "PMD.DataflowAnomalyAnalysis"})
 	public int rxBatch(final int queueId, final @NotNull PacketBufferWrapper[] buffers, final int offset, int length) {
 		if (!OPTIMIZED) {
 			if (queueId < 0 || queueId >= rxQueues.length) {
@@ -629,13 +658,13 @@ public final class IxgbeDevice extends Device {
 
 		// Prepare for the loop
 		val queue = rxQueues[queueId];
-		var bufInd = offset;
-		val max = bufInd + length;
 		var rxIndex = queue.index;
 		var lastRxIndex = rxIndex;
+		var bufInd = offset;
+		val max = bufInd + length;
 
 		// Try to read as many packets as the user wants
-		for (bufInd = offset; bufInd < max; bufInd += 1) {
+		for (; bufInd < max; bufInd += 1) {
 
 			// Get a descriptor and its status
 			val descAddr = queue.getDescriptorAddress(rxIndex);
@@ -673,7 +702,7 @@ public final class IxgbeDevice extends Device {
 
 		// Notify the hardware that we are done
 		if (rxIndex != lastRxIndex) {
-			setRegister(IxgbeDefs.RDT(queueId), lastRxIndex);
+			waitAndSetRegister(IxgbeDefs.RDT(queueId), lastRxIndex);
 			queue.index = rxIndex;
 		}
 
@@ -683,7 +712,7 @@ public final class IxgbeDevice extends Device {
 
 	/** {@inheritDoc} */
 	@Override
-	@SuppressWarnings("PMD.DataflowAnomalyAnalysis")
+	@SuppressWarnings({"Duplicates", "ForLoopWithMissingComponent", "LawOfDemeter", "PMD.DataflowAnomalyAnalysis"})
 	public int txBatch(final int queueId, final @NotNull PacketBufferWrapper[] buffers, final int offset, int length) {
 		if (!OPTIMIZED) {
 			if (queueId < 0 || queueId >= txQueues.length) {
@@ -746,7 +775,7 @@ public final class IxgbeDevice extends Device {
 					if (pool == null) throw new IllegalStateException("Could NOT find mempool with the given id.");
 				}
 				pool.offer(packetBuffer);
-				cleanablePool[queueId][i] = null;
+//				cleanablePool[queueId][i] = null;
 				if (i == cleanupTo) break;
 				i = wrapRing(i, queue.capacity);
 			}
@@ -770,7 +799,7 @@ public final class IxgbeDevice extends Device {
 
 			// Get the packet buffer, remove it from the original array and cache it for cleaning purposes
 			var buffer = buffers[sent];
-			buffers[sent] = null;
+//			buffers[sent] = null;
 			cleanablePool[queueId][currentIndex] = buffer;
 
 			// Remember the virtual address to clean it up later
@@ -811,6 +840,19 @@ public final class IxgbeDevice extends Device {
 		stats.addTxBytes(txBytes);
 	}
 
+	/** {@inheritDoc} */
+	@Override
+	public @NotNull String toString() {
+		return "IxgbeDevice"
+				+ "("
+				+ "name=" + name
+				+ ", driver=ixgbe"
+				+ ", address=" + mapResource
+				+ ", rx_queues=" + rxQueues.length
+				+ ", tx_queues=" + txQueues.length
+				+ ")";
+	}
+
 	/**
 	 * Computes the next index of a ring buffer.
 	 *
@@ -818,7 +860,7 @@ public final class IxgbeDevice extends Device {
 	 * @param ringSize The ring buffer size.
 	 * @return The next index.
 	 */
-	private short wrapRing(final short index, final short ringSize) {
+	private static short wrapRing(final short index, final short ringSize) {
 		return (short) ((index + 1) & (ringSize - 1));
 	}
 
