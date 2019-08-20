@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 source /etc/profile.d/jdk.sh
-eval "$(bash pci2nic-baltikum.sh)"
+eval "$(bash pci2nic.sh)"
 
 # Shenandoah Garbage Collector
 #export JAVA_OPTS="-XX:+UnlockExperimentalVMOptions"
