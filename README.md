@@ -16,7 +16,7 @@ source /etc/profile.d/jdk.sh
 
 By default, the driver is built in release mode (a.k.a. `OPTIMIZED`), with logging optimization (only messages of priority `INFO` or more are compiled), with the `Unsafe` object as memory manager and with the path `/mnt/huge` as the `hugetlbfs` mount point.
 
-To disable the optimizations, edit property `MEMORY_MANAGER` of the root Gradle build script.
+To disable the optimizations, edit the property `MEMORY_MANAGER` of the root Gradle build script.
 All the possible values are `true` or `false`.
 Hare you can see a slice of the file (line 44).
 ```groovy
@@ -29,7 +29,7 @@ ext {
 // ...
 ```
 
-To use a different logging level optimization, edit property `DEBUG` of the root Gradle build script.
+To use a different logging level optimization, edit the property `DEBUG` of the root Gradle build script.
 All the possible values are right above the property.
 Hare you can see a slice of the file (lines 31-37).
 ```groovy
@@ -140,7 +140,7 @@ It will download the latest commit of **MoonGen**, remove the compiler flags tha
 
 ## License
 
-ixy.java is licensed under the GPL license.
+ixy.java is licensed under the GPLv2 license.
 
 ## Disclaimer
 
