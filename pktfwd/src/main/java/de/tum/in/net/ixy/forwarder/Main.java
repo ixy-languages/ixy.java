@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
 
+import de.tum.in.net.ixy.utils.Threads;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
@@ -200,14 +201,14 @@ public final class Main {
 		// If we received something, get the memory pool of the first packet of the batch forward as many packets as
 		// possible and drop the unsent packets
 		if (rxCount > 0) {
-			val mempool = Mempool.find(buffers[0]);
 			for (var i = 0; i < rxCount; i++) {
 				buffers[i].putInt(0, 1);
 			}
+			val mempool = Mempool.find(buffers[0]);
 			val txCount = txDev.txBatch(txQueue, buffers, 0, rxCount);
 			for (var i = txCount; i < rxCount; i += 1) {
-				mempool.offer(buffers[i]);
-//				buffers[i] = null;
+				mempool.push(buffers[i]);
+				buffers[i] = null;
 			}
 		}
 	}

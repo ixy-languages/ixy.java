@@ -7,6 +7,7 @@ import de.tum.in.net.ixy.memory.JniMemoryManager;
 import de.tum.in.net.ixy.memory.MemoryManager;
 import de.tum.in.net.ixy.memory.Mempool;
 import de.tum.in.net.ixy.memory.PacketBufferWrapper;
+import de.tum.in.net.ixy.memory.PacketBufferWrapperConstants;
 import de.tum.in.net.ixy.memory.SmartJniMemoryManager;
 import de.tum.in.net.ixy.memory.SmartUnsafeMemoryManager;
 
@@ -225,6 +226,7 @@ public final class Main {
 	private static final int NANOS_PER_PRINT = 1_000_000_000;
 
 	/** The memory manager. */
+	@SuppressWarnings("NestedConditionalExpression")
 	private static final @NotNull MemoryManager mmanager = MEMORY_MANAGER == PREFER_JNI_FULL
 			? JniMemoryManager.getSingleton()
 			: MEMORY_MANAGER == PREFER_JNI
@@ -288,7 +290,7 @@ public final class Main {
 			val dma = mmanager.dmaAllocate((long) argvCapacity * 21, true, true);
 			if (DEBUG >= LOG_DEBUG) log.info(">>> Allocating memory pool.");
 			mempool = new Mempool(argvCapacity);
-			mempool.allocate(PacketBufferWrapper.DATA_OFFSET + PACKET_SIZE, dma);
+			mempool.allocate(PacketBufferWrapperConstants.PAYLOAD_OFFSET + PACKET_SIZE, dma);
 
 			// Write the correct data into the packets
 			initPackets();
@@ -342,7 +344,7 @@ public final class Main {
 		var startTime = System.nanoTime();
 		while (true) {
 			// Read some data
-			val batch = mempool.pollFirst(buffers);
+			val batch = mempool.pop(buffers);
 			if (batch == 0) {
 				if (DEBUG >= LOG_WARN) log.warn("No more packets buffers available.");
 				break;
@@ -416,31 +418,38 @@ public final class Main {
 			log.debug("UDP payload     : {}.", toHexString(packetData, UDP_PAYLOAD_OFFSET, UDP_PAYLOAD_SIZE));
 		}
 
+		val tmp = new PacketBufferWrapper[mempool.capacity()];
+		var counter = 0;
+		PacketBufferWrapper buffer;
 		if (DEBUG >= LOG_DEBUG) {
-			var counter = 0;
-			for (val packetBufferWrapper : mempool) {
-				if (packetBufferWrapper == null) {
+			while ((buffer = mempool.pop()) != null) {
+				if (buffer == null) {
 					log.error("A packet buffer wrapper was 'null' and that MUST NOT happen.");
 					System.exit(0);
 				}
 
-				log.debug(">>> Writing packet data to packet #{}: {}", counter++, packetBufferWrapper);
+				log.debug(">>> Writing packet data to packet #{}: {}", counter, buffer);
 
 				if (DEBUG >= LOG_TRACE) log.trace("Setting packet size.");
-				packetBufferWrapper.setSize(packetData.length);
+				buffer.setSize(packetData.length);
 
 				if (DEBUG >= LOG_TRACE) log.trace("Write data.");
-				packetBufferWrapper.put(0, packetData.length, packetData);
+				buffer.put(0, packetData.length, packetData);
+				tmp[counter++] = buffer;
 			}
 		} else {
-			for (val packetBufferWrapper : mempool) {
-				if (packetBufferWrapper == null) {
+			while ((buffer = mempool.pop()) != null) {
+				if (buffer == null) {
 					if (DEBUG >= LOG_ERROR) log.error("A packet buffer wrapper was 'null' and that MUST NOT happen.");
 					System.exit(0);
 				}
-				packetBufferWrapper.setSize(packetData.length);
-				packetBufferWrapper.put(0, packetData.length, packetData);
+				buffer.setSize(packetData.length);
+				buffer.put(0, packetData.length, packetData);
+				tmp[counter++] = buffer;
 			}
+		}
+		for (var i = tmp.length - 1; i >= 0; i--) {
+			mempool.push(tmp[i]);
 		}
 	}
 

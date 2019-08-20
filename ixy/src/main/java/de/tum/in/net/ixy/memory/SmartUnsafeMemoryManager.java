@@ -171,7 +171,11 @@ public final class SmartUnsafeMemoryManager extends UnsafeMemoryManager {
 		hugepageSize = getHugepageSize();
 		Native.loadLibrary("ixy", "resources");
 		if (!isValid()) {
-			System.loadLibrary("ixy");
+			try {
+				System.loadLibrary("ixy");
+			} catch (final UnsatisfiedLinkError e) {
+//				e.printStackTrace();
+			}
 		}
 	}
 
@@ -265,7 +269,11 @@ public final class SmartUnsafeMemoryManager extends UnsafeMemoryManager {
 		}
 
 		// Call the C implementation
-		return c_allocate(bytes, huge, lock, DEFAULT_HUGEPAGE_PATH);
+		try {
+			return c_allocate(bytes, huge, lock, DEFAULT_HUGEPAGE_PATH);
+		} catch (final UnsatisfiedLinkError e) {
+			return 0;
+		}
 	}
 
 	/** {@inheritDoc} */

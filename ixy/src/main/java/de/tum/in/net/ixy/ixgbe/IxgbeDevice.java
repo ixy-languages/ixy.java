@@ -2,12 +2,9 @@ package de.tum.in.net.ixy.ixgbe;
 
 import de.tum.in.net.ixy.Device;
 import de.tum.in.net.ixy.Stats;
-import de.tum.in.net.ixy.memory.JniMemoryManager;
-import de.tum.in.net.ixy.memory.MemoryManager;
 import de.tum.in.net.ixy.memory.Mempool;
 import de.tum.in.net.ixy.memory.PacketBufferWrapper;
-import de.tum.in.net.ixy.memory.SmartJniMemoryManager;
-import de.tum.in.net.ixy.memory.SmartUnsafeMemoryManager;
+import de.tum.in.net.ixy.memory.PacketBufferWrapperConstants;
 import de.tum.in.net.ixy.utils.Threads;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -20,18 +17,15 @@ import java.nio.ByteOrder;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import static de.tum.in.net.ixy.BuildConfig.DEBUG;
 import static de.tum.in.net.ixy.BuildConfig.LOG_DEBUG;
 import static de.tum.in.net.ixy.BuildConfig.LOG_INFO;
 import static de.tum.in.net.ixy.BuildConfig.LOG_TRACE;
 import static de.tum.in.net.ixy.BuildConfig.LOG_WARN;
-import static de.tum.in.net.ixy.BuildConfig.MEMORY_MANAGER;
 import static de.tum.in.net.ixy.BuildConfig.OPTIMIZED;
-import static de.tum.in.net.ixy.BuildConfig.PREFER_JNI;
-import static de.tum.in.net.ixy.BuildConfig.PREFER_JNI_FULL;
 import static de.tum.in.net.ixy.utils.Strings.leftPad;
 
 /**
@@ -98,17 +92,7 @@ public final class IxgbeDevice extends Device {
 	 * #txBatch(int, PacketBufferWrapper[], int, int)} to return them to the correct memory pool.
 	 */
 	@SuppressWarnings("FieldNotUsedInToString")
-	private final @NotNull PacketBufferWrapper[][] cleanablePool;
-
-	/** The memory manager. */
-	@SuppressWarnings({"FieldNotUsedInToString", "NestedConditionalExpression"})
-	private final @NotNull MemoryManager mmanager = MEMORY_MANAGER == PREFER_JNI_FULL
-			? JniMemoryManager.getSingleton()
-			: MEMORY_MANAGER == PREFER_JNI
-			? SmartJniMemoryManager.getSingleton()
-			: SmartUnsafeMemoryManager.getSingleton();
-
-	private final @NotNull MemoryManager _mmanager = SmartJniMemoryManager.getSingleton();
+	private final @Nullable PacketBufferWrapper[][] cleanablePool;
 
 	/** The memory mapping of the PCI resource. */
 	private long mapResource;
@@ -200,10 +184,8 @@ public final class IxgbeDevice extends Device {
 		waitSetFlags(IxgbeDefs.RDRXCTL, IxgbeDefs.RDRXCTL_DMAIDONE);
 
 		if (DEBUG >= LOG_TRACE) log.trace("Configuring EEPROM again.");
-		setRegister(IxgbeDefs.AUTOC, (getRegister(IxgbeDefs.AUTOC) & ~IxgbeDefs.AUTOC_LMS_MASK)
-				| IxgbeDefs.AUTOC_LMS_10G_SERIAL);
-		setRegister(IxgbeDefs.AUTOC, (getRegister(IxgbeDefs.AUTOC) & ~IxgbeDefs.AUTOC_10G_PMA_PMD_MASK)
-				| IxgbeDefs.AUTOC_10G_XAUI);
+		setRegister(IxgbeDefs.AUTOC, (getRegister(IxgbeDefs.AUTOC) & ~IxgbeDefs.AUTOC_LMS_MASK) | IxgbeDefs.AUTOC_LMS_10G_SERIAL);
+		setRegister(IxgbeDefs.AUTOC, (getRegister(IxgbeDefs.AUTOC) & ~IxgbeDefs.AUTOC_10G_PMA_PMD_MASK) | IxgbeDefs.AUTOC_10G_XAUI);
 
 		if (DEBUG >= LOG_TRACE) log.trace("Negotiating link automatically.");
 		setFlags(IxgbeDefs.AUTOC, IxgbeDefs.AUTOC_AN_RESTART);
@@ -235,8 +217,7 @@ public final class IxgbeDevice extends Device {
 			if (DEBUG >= LOG_DEBUG) log.debug(">>> Initializing RX queue #{}.", i);
 
 			if (DEBUG >= LOG_TRACE) log.trace("Enabling advanced RX descriptors.");
-			setRegister(IxgbeDefs.SRRCTL(i), ((getRegister(IxgbeDefs.SRRCTL(i)) & ~IxgbeDefs.SRRCTL_DESCTYPE_MASK))
-					| IxgbeDefs.SRRCTL_DESCTYPE_ADV_ONEBUF);
+			setRegister(IxgbeDefs.SRRCTL(i), ((getRegister(IxgbeDefs.SRRCTL(i)) & ~IxgbeDefs.SRRCTL_DESCTYPE_MASK)) | IxgbeDefs.SRRCTL_DESCTYPE_ADV_ONEBUF);
 
 			if (DEBUG >= LOG_TRACE) log.trace("Dropping packets if not descriptors available.");
 			setFlags(IxgbeDefs.SRRCTL(i), IxgbeDefs.SRRCTL_DROP_EN);
@@ -253,8 +234,7 @@ public final class IxgbeDevice extends Device {
 				addr += Long.BYTES;
 			}
 
-			val buff = ByteBuffer.allocate(Long.BYTES).order(ByteOrder.nativeOrder()).putLong(0, dma.getPhysical())
-					.asIntBuffer();
+			val buff = ByteBuffer.allocate(Long.BYTES).order(ByteOrder.nativeOrder()).putLong(0, dma.getPhysical()).asIntBuffer();
 			waitAndSetRegister(IxgbeDefs.RDBAL(i), buff.get(0));
 			waitAndSetRegister(IxgbeDefs.RDBAH(i), buff.get(1));
 			waitAndSetRegister(IxgbeDefs.RDLEN(i), ringSizeBytes);
@@ -347,7 +327,6 @@ public final class IxgbeDevice extends Device {
 	 *
 	 * @param queueId The queue id.
 	 */
-	@SuppressWarnings("LawOfDemeter")
 	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
 	private void startRxQueue(final int queueId) {
 		if (DEBUG >= LOG_DEBUG) log.debug("Starting RX queue #{}.", queueId);
@@ -362,20 +341,18 @@ public final class IxgbeDevice extends Device {
 			if (DEBUG >= LOG_DEBUG) log.debug(">>> Setting descriptor address #{}.", i);
 
 			if (DEBUG >= LOG_TRACE) log.trace("Extracting free packet buffer wrapper.");
-			val packetBufferWrapper = queue.mempool.poll();
-			if (packetBufferWrapper == null) throw new IllegalStateException("Could not allocate packet buffer.");
+			val packet = queue.mempool.pop();
+			if (packet == null) throw new IllegalStateException("Could not allocate packet buffer.");
 
 			if (DEBUG >= LOG_TRACE) {
-				log.trace("Configuring queue with packet buffer wrapper data: {}.", packetBufferWrapper);
+				log.trace("Configuring queue with packet buffer wrapper data: {}.", packet);
 			}
 			val descrAddr = queue.getDescriptorAddress(i);
-			queue.setPacketBufferAddress(descrAddr,
-					packetBufferWrapper.getPhysicalAddress() + PacketBufferWrapper.DATA_OFFSET);
+			queue.setPacketBufferAddress(descrAddr, packet.getPhysicalAddress() + PacketBufferWrapperConstants.PAYLOAD_OFFSET);
 			queue.setPacketBufferHeaderAddress(descrAddr, 0);
-			queue.buffers[i] = packetBufferWrapper.getVirtual();
+			queue.buffers[i] = packet.getVirtualAddress();
 
 			if (DEBUG >= LOG_TRACE) log.trace("Adding packet buffer back.");
-			queue.mempool.offer(packetBufferWrapper);
 		}
 
 		if (DEBUG >= LOG_TRACE) log.trace("Enabling and waiting for RX queue #{}.", queueId);
@@ -684,15 +661,15 @@ public final class IxgbeDevice extends Device {
 
 			// This would be the place to implement RX offloading by translating the device-specific
 			// flags to an independent representation in that buffer (similar to how DPDK works)
-			val newBuf = queue.mempool.poll();
+			val newBuf = queue.mempool.pop();
 			if (newBuf == null) {
 				throw new OutOfMemoryError("Failed to allocate buffer for RX; memory leaking or small memory pool.");
 			}
 
 			// Register the packet in the RX queue
-			queue.setPacketBufferAddress(descAddr, newBuf.getPhysicalAddress() + PacketBufferWrapper.DATA_OFFSET);
+			queue.setPacketBufferAddress(descAddr, newBuf.getPhysicalAddress() + PacketBufferWrapperConstants.PAYLOAD_OFFSET);
 			queue.setPacketBufferHeaderAddress(descAddr, 0);
-			queue.buffers[rxIndex] = newBuf.getVirtual();
+			queue.buffers[rxIndex] = newBuf.getVirtualAddress();
 			buffers[bufInd] = packetBuffer;
 
 			// Want to read the next one in the next iteration but we still need the current one to update RDT later
@@ -738,8 +715,7 @@ public final class IxgbeDevice extends Device {
 		val queue = txQueues[queueId];
 		var cleanIndex = queue.cleanIndex;
 		var currentIndex = queue.index;
-		val cmdTypeFlags = IxgbeDefs.ADVTXD_DCMD_EOP | IxgbeDefs.ADVTXD_DCMD_RS | IxgbeDefs.ADVTXD_DCMD_IFCS
-				| IxgbeDefs.ADVTXD_DCMD_DEXT | IxgbeDefs.ADVTXD_DTYP_DATA;
+		val cmdTypeFlags = IxgbeDefs.ADVTXD_DCMD_EOP | IxgbeDefs.ADVTXD_DCMD_RS | IxgbeDefs.ADVTXD_DCMD_IFCS | IxgbeDefs.ADVTXD_DCMD_DEXT | IxgbeDefs.ADVTXD_DTYP_DATA;
 
 		// All packet buffers that will be handled here will belong to the same mempool
 		Mempool pool = null;
@@ -769,13 +745,12 @@ public final class IxgbeDevice extends Device {
 			var i = cleanIndex;
 			while (true) {
 				val packetBuffer = cleanablePool[queueId][i];
-//				val packetBuffer = new PacketBufferWrapper(queue.buffers[i]);
 				if (pool == null) {
 					pool = Mempool.find(packetBuffer);
 					if (pool == null) throw new IllegalStateException("Could NOT find mempool with the given id.");
 				}
-				pool.offer(packetBuffer);
-//				cleanablePool[queueId][i] = null;
+				pool.push(packetBuffer);
+				cleanablePool[queueId][i] = null;
 				if (i == cleanupTo) break;
 				i = wrapRing(i, queue.capacity);
 			}
@@ -799,16 +774,16 @@ public final class IxgbeDevice extends Device {
 
 			// Get the packet buffer, remove it from the original array and cache it for cleaning purposes
 			var buffer = buffers[sent];
-//			buffers[sent] = null;
+			buffers[sent] = null;
 			cleanablePool[queueId][currentIndex] = buffer;
 
 			// Remember the virtual address to clean it up later
-			queue.buffers[currentIndex] = buffer.getVirtual();
+			queue.buffers[currentIndex] = buffer.getVirtualAddress();
 			queue.index = wrapRing(queue.index, queue.capacity);
 
 			// NIC will read the data from here
 			val descAddr = queue.getDescriptorAddress(currentIndex);
-			queue.setPacketBufferAddress(descAddr, buffer.getPhysicalAddress() + PacketBufferWrapper.DATA_OFFSET);
+			queue.setPacketBufferAddress(descAddr, buffer.getPhysicalAddress() + PacketBufferWrapperConstants.PAYLOAD_OFFSET);
 
 			// Always the same flags: One buffer (EOP), advanced data descriptor, CRC offload, data length
 			var bufSize = buffer.getSize();

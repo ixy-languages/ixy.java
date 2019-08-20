@@ -349,7 +349,11 @@ public class JniMemoryManager implements MemoryManager {
 		} catch (final UnsatisfiedLinkError e) {
 			System.loadLibrary("ixy");
 		} finally {
-			hugepageSize = c_hugepage_size();
+			try {
+				hugepageSize = c_hugepage_size();
+			} catch (final UnsatisfiedLinkError e) {
+				e.printStackTrace();
+			}
 		}
 	}
 

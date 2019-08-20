@@ -1,15 +1,11 @@
 package de.tum.in.net.ixy.memory;
 
-import de.tum.in.net.ixy.memory.internal.ImmutableIterator;
-
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.util.ArrayDeque;
-import java.util.Collection;
 import java.util.Deque;
-import java.util.Iterator;
-import java.util.Queue;
 import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
@@ -26,7 +22,10 @@ import static de.tum.in.net.ixy.BuildConfig.DEBUG;
 import static de.tum.in.net.ixy.BuildConfig.LOG_DEBUG;
 import static de.tum.in.net.ixy.BuildConfig.LOG_TRACE;
 import static de.tum.in.net.ixy.BuildConfig.LOG_WARN;
+import static de.tum.in.net.ixy.BuildConfig.MEMORY_MANAGER;
 import static de.tum.in.net.ixy.BuildConfig.OPTIMIZED;
+import static de.tum.in.net.ixy.BuildConfig.PREFER_JNI;
+import static de.tum.in.net.ixy.BuildConfig.PREFER_JNI_FULL;
 
 /**
  * A collection of {@link PacketBufferWrapper wrapped packet buffers}.
@@ -37,15 +36,23 @@ import static de.tum.in.net.ixy.BuildConfig.OPTIMIZED;
 @ToString(onlyExplicitlyIncluded = true, doNotUseGetters = true)
 @SuppressWarnings({"ConstantConditions", "PMD.AvoidDuplicateLiterals"})
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, doNotUseGetters = true)
-public final class Mempool implements Queue<PacketBufferWrapper>, Comparable<Mempool> {
+public final class Mempool {
 
 	////////////////////////////////////////////////// STATIC MEMBERS //////////////////////////////////////////////////
+
+	/** The memory manager. */
+	@SuppressWarnings("NestedConditionalExpression")
+	private static final MemoryManager mmanager = MEMORY_MANAGER == PREFER_JNI_FULL
+			? JniMemoryManager.getSingleton()
+			: MEMORY_MANAGER == PREFER_JNI
+			? SmartJniMemoryManager.getSingleton()
+			: SmartUnsafeMemoryManager.getSingleton();
 
 	/** Holds a reference to every {@link Mempool memory pool} ever created. */
 	private static final TreeMap<Long, Mempool> pools = new TreeMap<>();
 
-	/** A variable that indicates if an overflow of {@link #pools} keys has been reached. */
-	private static boolean notOverflow = true;
+	/** A variable that indicates the next id to use. */
+	private static final AtomicLong nextId = new AtomicLong(0);
 
 	////////////////////////////////////////////////// STATIC METHODS //////////////////////////////////////////////////
 
@@ -57,19 +64,9 @@ public final class Mempool implements Queue<PacketBufferWrapper>, Comparable<Mem
 	@Contract(pure = true)
 	private static long getValidId() {
 		long id;
-		if (notOverflow) {
-			val last = pools.lastKey();
-			id = last + 1;
-			if (id < last) {
-				notOverflow = false;
-				id = getValidId();
-			}
-		} else {
-			val last = pools.firstKey();
-			id = last - 1;
-			if (id > last) throw new IllegalStateException("No more memory pool ids available.");
-		}
-		if (DEBUG >= LOG_DEBUG) log.debug("Found valid memory pool id '{}'.", id);
+		do {
+			id = nextId.getAndIncrement();
+		} while (pools.containsKey(id));
 		return id;
 	}
 
@@ -91,14 +88,14 @@ public final class Mempool implements Queue<PacketBufferWrapper>, Comparable<Mem
 	 * @return The memory pool instance.
 	 */
 	@Contract(pure = true)
-	public static @Nullable Mempool find(final @Nullable PacketBufferWrapper packetBufferWrapper) {
-		return packetBufferWrapper == null ? null : find(packetBufferWrapper.getMemoryPoolId());
+	public static @Nullable Mempool find(final @NotNull PacketBufferWrapper packetBufferWrapper) {
+		return find(packetBufferWrapper.getMemoryPoolPointer());
 	}
 
 	///////////////////////////////////////////////// MEMBER VARIABLES /////////////////////////////////////////////////
 
 	/**
-	 * Double ended queue with a bunch of pre-allocated {@link PacketBufferWrapper} instances.
+	 * A bunch of pre-allocated {@link PacketBufferWrapper} instances.
 	 * -- GETTER --
 	 * Returns the internal storage of packets.
 	 *
@@ -144,9 +141,10 @@ public final class Mempool implements Queue<PacketBufferWrapper>, Comparable<Mem
 		if (DEBUG >= LOG_TRACE) log.trace("Creating memory pool.");
 		this.capacity = capacity;
 		this.packetBufferWrappers = new ArrayDeque<>(capacity);
-		id = pools.isEmpty() ? 0 : getValidId();
+		id = getValidId();
 		pools.put(id, this);
 	}
+
 
 	/**
 	 * Allocates as many packet buffers as indicated by {@link #capacity} and configures their virtual and physical
@@ -158,44 +156,29 @@ public final class Mempool implements Queue<PacketBufferWrapper>, Comparable<Mem
 	@SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
 	@SuppressWarnings({"PMD.AssignmentInOperand", "PMD.DataflowAnomalyAnalysis"})
 	public void allocate(final int entrySize, final @NotNull DmaMemory dma) {
-		if (DEBUG >= LOG_DEBUG) log.debug("Allocating {} packets @ {}", capacity, dma);
+		if (DEBUG >= LOG_DEBUG) log.debug("Allocating {} packets @ {}.", capacity, dma);
 
-		// Discard previous packets, if any
-		if (!packetBufferWrappers.isEmpty()) {
-			if (DEBUG >= LOG_TRACE) log.warn("Discarding previous packet buffer wrapper instances.");
-			var size = packetBufferWrappers.size();
-			while (size-- > 0) {
-				val buffer = packetBufferWrappers.pollFirst();
-				val bufferId = buffer.getMemoryPoolId();
-				if (bufferId != id) {
-					find(bufferId).packetBufferWrappers.offerLast(buffer);
-				}
-			}
-		}
-
-		// The base virtual and physical address which will be incremented on every iteration
-		var virtual = dma.getVirtual();
-		var physical = dma.getPhysical();
+		// The base virtual address which will be incremented on every iteration
+		val virtual = dma.getVirtual();
 
 		// Allocate the packet buffer wrappers
-		for (int i = 0; i < capacity; i += 1) {
-			val packet = new PacketBufferWrapper(virtual);
-			packet.setPhysicalAddress(physical);
-			packet.setMemoryPoolId(id);
-			packet.setSize(entrySize - PacketBufferWrapper.DATA_OFFSET);
+		for (var i = capacity - 1; i >= 0; i--) {
+			val addr = virtual + i*entrySize;
+			val packet = new PacketBufferWrapper(addr);
+			packet.setPhysicalAddress(mmanager.virt2phys(addr));
+			packet.setMemoryPoolPointer(id);
+			packet.setSize(entrySize - PacketBufferWrapperConstants.HEADER_BYTES);
 
 			// Trace message
 			if (DEBUG >= LOG_TRACE) log.trace("Allocated packet buffer wrapper #{}: {}", i, packet);
 
-			// Add the packet buffer wrapper and update the addresses
-			packetBufferWrappers.offerLast(packet);
-			virtual += entrySize;
-			physical += entrySize;
+			// Add the packet buffer wrapper
+			packetBufferWrappers.push(packet);
 		}
 	}
 
 	/**
-	 * Polls up to {@code size} elements from the original store and stores them in the parameter {@code buffers},
+	 * Pops up to {@code size} elements from the original store and stores them in the parameter {@code buffers},
 	 * starting at the index {@code offset}.
 	 *
 	 * @param buffers The array where the packet buffer wrappers will be stored.
@@ -205,7 +188,7 @@ public final class Mempool implements Queue<PacketBufferWrapper>, Comparable<Mem
 	 */
 	@Contract(mutates = "param1")
 	@SuppressWarnings("PMD.AssignmentInOperand")
-	private int pollFirst(final @NotNull PacketBufferWrapper[] buffers, int offset, int size) {
+	private int pop(final @NotNull PacketBufferWrapper[] buffers, int offset, int size) {
 		if (!OPTIMIZED) {
 			if (buffers == null) throw new NullPointerException("The parameter 'buffers' MUST NOT be null.");
 			if (offset < 0) throw new IndexOutOfBoundsException("The parameter 'offset' MUST be positive.");
@@ -246,16 +229,21 @@ public final class Mempool implements Queue<PacketBufferWrapper>, Comparable<Mem
 		if (OPTIMIZED) {
 			val sizeCopy = size;
 			while (size-- > 0) {
-				buffers[offset++] = packetBufferWrappers.pollFirst();
+				if ((buffers[offset++] = packetBufferWrappers.pop()) == null) {
+					size += 1;
+					break;
+				}
 			}
-			return sizeCopy;
+			return sizeCopy - size - 1;
 		} else {
 			var counter = 0;
 			while (size-- > 0) {
-				val buffer = packetBufferWrappers.pollFirst();
+				val buffer = packetBufferWrappers.pop();
 				if (buffer != null) {
 					buffers[offset++] = buffer;
 					counter += 1;
+				} else {
+					break;
 				}
 			}
 			return counter;
@@ -263,174 +251,60 @@ public final class Mempool implements Queue<PacketBufferWrapper>, Comparable<Mem
 	}
 
 	/**
-	 * Wrapper of {@link #pollFirst(PacketBufferWrapper[], int, int)} with the {@code offset} set to {@code 0} and the
-	 * {@code size} to the maximum possible value.
+	 * Wrapper of {@link #pop(PacketBufferWrapper[], int, int)} with the {@code offset} set to {@code 0} and the {@code
+	 * size} to the maximum possible value.
 	 *
 	 * @param buffers The array where the packet buffer wrappers will be stored.
 	 * @return The amount of extracted buffers.
 	 */
 	@Contract(mutates = "param1")
-	public int pollFirst(final @NotNull PacketBufferWrapper[] buffers) {
-		return pollFirst(buffers, 0, buffers.length);
+	public int pop(final @NotNull PacketBufferWrapper[] buffers) {
+		return pop(buffers, 0, buffers.length);
 	}
 
-	//////////////////////////////////////////////// COLLECTION METHODS ////////////////////////////////////////////////
+	//////////////////////////////////////////////// DELEGATED METHODS /////////////////////////////////////////////////
 
-	@Override
+	/**
+	 * Frees a {@link PacketBufferWrapper packet buffer wrapper}.
+	 *
+	 * @param buffer The packet buffer wrapper.
+	 */
+	public void push(final @NotNull PacketBufferWrapper buffer) {
+		if (!OPTIMIZED && buffer == null) throw new NullPointerException("The parameter 'buffer' MUST NOT be null.");
+		if (DEBUG >= LOG_TRACE) log.trace("Pushing packet buffer wrapper to the memory pool: {}", buffer);
+		packetBufferWrappers.offerFirst(buffer);
+	}
+
+	/**
+	 * Allocates a {@link PacketBufferWrapper packet buffer wrapper}.
+	 *
+	 * @return The packet buffer wrapper.
+	 */
+	public @Nullable PacketBufferWrapper pop() {
+		if (DEBUG >= LOG_TRACE) log.trace("Extracting packet buffer wrapper or null.");
+		return packetBufferWrappers.pollFirst();
+	}
+
+	/**
+	 * Returns the capacity of the memory pool.
+	 *
+	 * @return The capacity of the memory pool.
+	 */
+	@Contract(pure = true)
+	public int capacity() {
+		if (DEBUG >= LOG_TRACE) log.trace("Checking capacity.");
+		return capacity;
+	}
+
+	/**
+	 * Returns the size of the memory pool.
+	 *
+	 * @return The size of the memory pool.
+	 */
 	@Contract(pure = true)
 	public int size() {
 		if (DEBUG >= LOG_TRACE) log.trace("Checking size.");
 		return packetBufferWrappers.size();
-	}
-
-	@Override
-	@Contract(pure = true)
-	public boolean isEmpty() {
-		if (DEBUG >= LOG_TRACE) log.trace("Checking emptiness.");
-		return packetBufferWrappers.isEmpty();
-	}
-
-	@Override
-	@Contract(pure = true)
-	public boolean contains(final @NotNull Object buffer) {
-		if (!OPTIMIZED && buffer == null) throw new NullPointerException("The parameter 'buffer' MUST NOT be null.");
-		if (DEBUG >= LOG_TRACE) {
-			log.trace("Checking whether packet buffer wrapper is inside the memory pool: {}", buffer);
-		}
-		return packetBufferWrappers.contains(buffer);
-	}
-
-	@Override
-	@Contract(pure = true)
-	public @NotNull Iterator<PacketBufferWrapper> iterator() {
-		if (DEBUG >= LOG_TRACE) log.trace("Creating immutable iterator.");
-		return new ImmutableIterator<>(packetBufferWrappers.iterator());
-	}
-
-	@Override
-	@Contract(pure = true)
-	public @NotNull Object[] toArray() {
-		if (DEBUG >= LOG_TRACE) log.trace("Returning Object array store.");
-		return packetBufferWrappers.toArray();
-	}
-
-	@Override
-	@Contract(pure = true)
-	public <T> @NotNull T[] toArray(final @NotNull T[] a) {
-		if (!OPTIMIZED && a == null) throw new NullPointerException("Null arrays are not supported.");
-		if (DEBUG >= LOG_TRACE) log.trace("Returning T array store.");
-		return packetBufferWrappers.toArray(a);
-	}
-
-	@Override
-	public boolean add(final @NotNull PacketBufferWrapper buffer) {
-		if (!OPTIMIZED && buffer == null) throw new NullPointerException("The parameter 'buffer' MUST NOT be null.");
-		if (DEBUG >= LOG_TRACE) log.trace("Adding packet buffer wrapper to the memory pool.");
-		return packetBufferWrappers.add(buffer);
-	}
-
-	@Override
-	@Deprecated
-	@Contract(value = "_ -> fail", pure = true)
-	public boolean remove(final @NotNull Object buffer) {
-		if (!OPTIMIZED && buffer == null) throw new NullPointerException("The parameter 'buffer' MUST NOT be null.");
-		throw new UnsupportedOperationException("Cannot remove elements from the collection without returning them.");
-	}
-
-	@Override
-	@Contract(pure = true)
-	public boolean containsAll(final @NotNull Collection<?> buffers) {
-		if (!OPTIMIZED && buffers == null) throw new NullPointerException("The parameter 'buffers' MUST NOT be null.");
-		if (DEBUG >= LOG_TRACE) log.trace("Checking whether packet buffer wrapper are inside the memory pool.");
-		return packetBufferWrappers.containsAll(buffers);
-	}
-
-	@Override
-	public boolean addAll(final @NotNull Collection<? extends PacketBufferWrapper> buffers) {
-		if (!OPTIMIZED && buffers == null) throw new NullPointerException("The parameter 'buffers' MUST NOT be null.");
-		if (DEBUG >= LOG_TRACE) log.trace("Adding packet buffer wrappers to the memory pool.");
-		return packetBufferWrappers.addAll(buffers);
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * @deprecated Not supported.
-	 */
-	@Override
-	@Deprecated
-	@Contract(value = "_ -> fail", pure = true)
-	public boolean removeAll(final @NotNull Collection<?> buffers) {
-		if (!OPTIMIZED && buffers == null) throw new NullPointerException("The parameter 'buffers' MUST NOT be null.");
-		throw new UnsupportedOperationException("Cannot remove elements from the collection without returning them.");
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * @deprecated Not supported.
-	 */
-	@Override
-	@Deprecated
-	@Contract(value = "_ -> fail", pure = true)
-	public boolean retainAll(final @NotNull Collection<?> buffers) {
-		if (!OPTIMIZED && buffers == null) throw new NullPointerException("The parameter 'buffers' MUST NOT be null.");
-		throw new UnsupportedOperationException("Cannot remove elements from the collection without returning them.");
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * @deprecated Not supported.
-	 */
-	@Override
-	@Deprecated
-	@Contract(value = " -> fail", pure = true)
-	public void clear() {
-		if (DEBUG >= LOG_TRACE) log.trace("Clearing memory pool.");
-		throw new UnsupportedOperationException("Cannot remove elements from the collection without returning them.");
-	}
-
-	////////////////////////////////////////////////// QUEUE METHODS ///////////////////////////////////////////////////
-
-	@Override
-	public boolean offer(final @NotNull PacketBufferWrapper buffer) {
-		if (!OPTIMIZED && buffer == null) throw new NullPointerException("The parameter 'buffer' MUST NOT be null.");
-		if (DEBUG >= LOG_TRACE) log.trace("Adding packet buffer wrappers to the memory pool: {}", buffer);
-		return packetBufferWrappers.offer(buffer);
-	}
-
-	@Override
-	@SuppressWarnings("checkstyle:OverloadMethodsDeclarationOrder")
-	public @NotNull PacketBufferWrapper remove() {
-		if (DEBUG >= LOG_TRACE) log.trace("Extracting packet buffer wrapper or failing.");
-		return packetBufferWrappers.remove();
-	}
-
-	@Override
-	public @Nullable PacketBufferWrapper poll() {
-		if (DEBUG >= LOG_TRACE) log.trace("Extracting packet buffer wrapper or null.");
-		return packetBufferWrappers.poll();
-	}
-
-	@Override
-	@Contract(pure = true)
-	public @NotNull PacketBufferWrapper element() {
-		if (DEBUG >= LOG_TRACE) log.trace("Returning the head or failing.");
-		return packetBufferWrappers.element();
-	}
-
-	@Override
-	@Contract(pure = true)
-	public @Nullable PacketBufferWrapper peek() {
-		if (DEBUG >= LOG_TRACE) log.trace("Returning the head or null.");
-		return packetBufferWrappers.peek();
-	}
-
-	//////////////////////////////////////////////// COMPARABLE METHODS ////////////////////////////////////////////////
-
-	@Override
-	@Contract(pure = true)
-	public int compareTo(final @NotNull Mempool mempool) {
-		if (DEBUG >= LOG_TRACE) log.trace("Comparing with another Mempool.");
-		return Long.compare(id, mempool.id);
 	}
 
 }

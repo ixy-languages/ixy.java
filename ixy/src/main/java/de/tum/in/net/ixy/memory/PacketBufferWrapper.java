@@ -16,86 +16,23 @@ import static de.tum.in.net.ixy.BuildConfig.MEMORY_MANAGER;
 import static de.tum.in.net.ixy.BuildConfig.OPTIMIZED;
 import static de.tum.in.net.ixy.BuildConfig.PREFER_JNI;
 import static de.tum.in.net.ixy.BuildConfig.PREFER_JNI_FULL;
+import static de.tum.in.net.ixy.memory.PacketBufferWrapperConstants.MPP_OFFSET;
+import static de.tum.in.net.ixy.memory.PacketBufferWrapperConstants.PAP_OFFSET;
+import static de.tum.in.net.ixy.memory.PacketBufferWrapperConstants.PAYLOAD_OFFSET;
+import static de.tum.in.net.ixy.memory.PacketBufferWrapperConstants.PKT_OFFSET;
 import static de.tum.in.net.ixy.utils.Strings.leftPad;
 
 /**
  * Simple implementation of Ixy's packet buffer specification.
- * <p>
- * The memory layout is depicted below:
- * <pre>
- *                  64 bits
- * /---------------------------------------\
- * |       Physical Address Pointer        |
- * |---------------------------------------|
- * |          Memory Pool Pointer          |
- * |---------------------------------------|
- * | Memory Pool Index |    Packet Size    | 64 bytes
- * |---------------------------------------|
- * |          Headroom (variable)          |
- * \---------------------------------------/
- * </pre>
  *
  * @author Esaú García Sánchez-Torija
+ * @see PacketBufferWrapperConstants
  */
 @Slf4j
 @RequiredArgsConstructor
 @SuppressWarnings("ConstantConditions")
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, doNotUseGetters = true)
 public final class PacketBufferWrapper implements Comparable<PacketBufferWrapper> {
-
-	/////////////////////////////////////////////////////// SIZES //////////////////////////////////////////////////////
-
-	/** The size of the physical address pointer field. */
-	private static final int PAP_SIZE = Long.SIZE;
-
-	/** The size of the memory pool pointer field. */
-	private static final int MPP_SIZE = Long.SIZE;
-
-	/** The size of the memory pool index field. */
-	private static final int MPI_SIZE = Integer.SIZE;
-
-//	/** The size of the packet size field. */
-//	private static final int PKT_SIZE = Integer.SIZE;
-
-	/** The size of the packet buffer header. */
-	private static final int HEADER_SIZE = 64 * Byte.SIZE;
-
-	/////////////////////////////////////////////////////// BYTES //////////////////////////////////////////////////////
-
-	/** The bytes of the physical address pointer field. */
-	private static final int PAP_BYTES = PAP_SIZE / Byte.SIZE;
-
-	/** The bytes of the memory pool pointer field. */
-	private static final int MPP_BYTES = MPP_SIZE / Byte.SIZE;
-
-	/** The bytes of the memory pool index field. */
-	private static final int MPI_BYTES = MPI_SIZE / Byte.SIZE;
-
-//	/** The bytes of the packet size field. */
-//	private static final int PKT_BYTES = PKT_SIZE / Byte.SIZE;
-
-	/** The bytes of the packet buffer header. */
-	private static final int HEADER_BYTES = HEADER_SIZE / Byte.SIZE;
-
-	///////////////////////////////////////////////////// OFFSETS //////////////////////////////////////////////////////
-
-	/** The offset of the header. */
-	private static final int HEADER_OFFSET = 0;
-
-	/** The offset of the physical address pointer field. */
-	private static final int PAP_OFFSET = HEADER_OFFSET;
-
-	/** The offset of the memory pool pointer field. */
-	private static final int MPP_OFFSET = PAP_OFFSET + PAP_BYTES;
-
-	/** The offset of the memory pool index field. */
-	private static final int MPI_OFFSET = MPP_OFFSET + MPP_BYTES;
-
-	/** The offset of the packet size field. */
-	private static final int PKT_OFFSET = MPI_OFFSET + MPI_BYTES;
-
-	/** The offset of the data of the buffer. */
-	public static final int DATA_OFFSET = HEADER_OFFSET + HEADER_BYTES;
 
 	///////////////////////////////////////////////// STATIC VARIABLES /////////////////////////////////////////////////
 
@@ -119,7 +56,7 @@ public final class PacketBufferWrapper implements Comparable<PacketBufferWrapper
 	@Getter
 	@EqualsAndHashCode.Include
 	@SuppressWarnings("JavaDoc")
-	private final long virtual;
+	private final long virtualAddress;
 
 	////////////////////////////////////////////////// MEMBER METHODS //////////////////////////////////////////////////
 
@@ -131,9 +68,9 @@ public final class PacketBufferWrapper implements Comparable<PacketBufferWrapper
 	@Contract(pure = true)
 	public long getPhysicalAddress() {
 		if (DEBUG >= LOG_TRACE) {
-			log.trace("Reading physical address pointer field @ 0x{} + {}.", leftPad(virtual), PAP_OFFSET);
+			log.trace("Reading physical address pointer field @ 0x{} + {}.", leftPad(virtualAddress), PAP_OFFSET);
 		}
-		return mmanager.getLongVolatile(virtual + PAP_OFFSET);
+		return mmanager.getLongVolatile(virtualAddress + PAP_OFFSET);
 	}
 
 	/**
@@ -143,34 +80,34 @@ public final class PacketBufferWrapper implements Comparable<PacketBufferWrapper
 	 */
 	void setPhysicalAddress(final long physicalAddress) {
 		if (DEBUG >= LOG_TRACE) {
-			log.trace("Writing physical address pointer field @ 0x{} + {}.", leftPad(virtual), PAP_OFFSET);
+			log.trace("Writing physical address pointer field @ 0x{} + {}.", leftPad(virtualAddress), PAP_OFFSET);
 		}
-		mmanager.putLongVolatile(virtual + PAP_OFFSET, physicalAddress);
+		mmanager.putLongVolatile(virtualAddress + PAP_OFFSET, physicalAddress);
 	}
 
 	/**
-	 * Returns the memory pool identifier of the memory pool that manages this packet buffer.
+	 * Returns the memory pool pointer of the memory pool that manages this packet buffer.
 	 *
-	 * @return The memory pool identifier.
+	 * @return The memory pool pointer.
 	 */
 	@Contract(pure = true)
-	long getMemoryPoolId() {
+	long getMemoryPoolPointer() {
 		if (DEBUG >= LOG_TRACE) {
-			log.trace("Reading memory pool identifier field @ 0x{} + {}.", leftPad(virtual), MPP_OFFSET);
+			log.trace("Reading memory pool identifier field @ 0x{} + {}.", leftPad(virtualAddress), MPP_OFFSET);
 		}
-		return mmanager.getLongVolatile(virtual + MPP_OFFSET);
+		return mmanager.getLongVolatile(virtualAddress + MPP_OFFSET);
 	}
 
 	/**
-	 * Sets the memory pool identifier of the memory pool that manages this packet buffer.
+	 * Sets the memory pool pointer of the memory pool that manages this packet buffer.
 	 *
-	 * @param memoryPoolId The memory pool identifier.
+	 * @param memoryPoolId The memory pool pointer.
 	 */
-	void setMemoryPoolId(final long memoryPoolId) {
+	void setMemoryPoolPointer(final long memoryPoolId) {
 		if (DEBUG >= LOG_TRACE) {
-			log.trace("Writing memory pool identifier field @ 0x{} + {}.", leftPad(virtual), MPP_OFFSET);
+			log.trace("Writing memory pool identifier field @ 0x{} + {}.", leftPad(virtualAddress), MPP_OFFSET);
 		}
-		mmanager.putLongVolatile(virtual + MPP_OFFSET, memoryPoolId);
+		mmanager.putLongVolatile(virtualAddress + MPP_OFFSET, memoryPoolId);
 	}
 
 	/**
@@ -181,9 +118,9 @@ public final class PacketBufferWrapper implements Comparable<PacketBufferWrapper
 	@Contract(pure = true)
 	public int getSize() {
 		if (DEBUG >= LOG_TRACE) {
-			log.trace("Reading packet size field @ 0x{} + {}.", leftPad(virtual), PKT_OFFSET);
+			log.trace("Reading packet size field @ 0x{} + {}.", leftPad(virtualAddress), PKT_OFFSET);
 		}
-		return mmanager.getIntVolatile(virtual + PKT_OFFSET);
+		return mmanager.getIntVolatile(virtualAddress + PKT_OFFSET);
 	}
 
 	/**
@@ -193,29 +130,151 @@ public final class PacketBufferWrapper implements Comparable<PacketBufferWrapper
 	 */
 	public void setSize(final int size) {
 		if (DEBUG >= LOG_TRACE) {
-			log.trace("Writing packet size field @ 0x{} + {}.", leftPad(virtual), PKT_OFFSET);
+			log.trace("Writing packet size field @ 0x{} + {}.", leftPad(virtualAddress), PKT_OFFSET);
 		}
-		mmanager.putIntVolatile(virtual + PKT_OFFSET, size);
+		mmanager.putIntVolatile(virtualAddress + PKT_OFFSET, size);
 	}
 
 	/**
-	 * Writes an {@code int} to the packet data.
+	 * Reads a {@code byte} from the packet payload.
+	 *
+	 * @param offset The offset.
+	 */
+	public byte getByte(final int offset) {
+		val address = virtualAddress + PAYLOAD_OFFSET;
+		if (DEBUG >= LOG_TRACE) {
+			log.trace("Reading payload byte @ 0x{} + {}.", leftPad(virtualAddress), offset);
+		}
+		return mmanager.getByte(address + offset);
+	}
+
+	/**
+	 * Writes a {@code byte} to the packet payload.
 	 *
 	 * @param offset The offset.
 	 * @param value  The value to store.
 	 */
-	public void putInt(int offset, int value) {
-		val address = virtual + DATA_OFFSET;
+	public void putByte(final int offset, final byte value) {
+		val address = virtualAddress + PAYLOAD_OFFSET;
 		if (DEBUG >= LOG_TRACE) {
-			log.trace("Writing data long @ 0x{} + {}.", leftPad(virtual), offset);
+			log.trace("Writing payload byte @ 0x{} + {}.", leftPad(virtualAddress), offset);
+		}
+		mmanager.putByte(address + offset, value);
+	}
+
+	/**
+	 * Reads a {@code short} from the packet payload.
+	 *
+	 * @param offset The offset.
+	 */
+	public short getShort(final int offset) {
+		val address = virtualAddress + PAYLOAD_OFFSET;
+		if (DEBUG >= LOG_TRACE) {
+			log.trace("Reading payload short @ 0x{} + {}.", leftPad(virtualAddress), offset);
+		}
+		return mmanager.getShort(address + offset);
+	}
+
+	/**
+	 * Writes a {@code short} to the packet payload.
+	 *
+	 * @param offset The offset.
+	 * @param value  The value to store.
+	 */
+	public void putShort(final int offset, final short value) {
+		val address = virtualAddress + PAYLOAD_OFFSET;
+		if (DEBUG >= LOG_TRACE) {
+			log.trace("Writing payload short @ 0x{} + {}.", leftPad(virtualAddress), offset);
+		}
+		mmanager.putShort(address + offset, value);
+	}
+
+	/**
+	 * Reads an {@code int} from the packet payload.
+	 *
+	 * @param offset The offset.
+	 */
+	public int getInt(final int offset) {
+		val address = virtualAddress + PAYLOAD_OFFSET;
+		if (DEBUG >= LOG_TRACE) {
+			log.trace("Reading payload int @ 0x{} + {}.", leftPad(virtualAddress), offset);
+		}
+		return mmanager.getInt(address + offset);
+	}
+
+	/**
+	 * Writes an {@code int} to the packet payload.
+	 *
+	 * @param offset The offset.
+	 * @param value  The value to store.
+	 */
+	public void putInt(final int offset, final int value) {
+		val address = virtualAddress + PAYLOAD_OFFSET;
+		if (DEBUG >= LOG_TRACE) {
+			log.trace("Writing payload int @ 0x{} + {}.", leftPad(virtualAddress), offset);
 		}
 		mmanager.putInt(address + offset, value);
 	}
 
 	/**
+	 * Reads a {@code long} from the packet payload.
+	 *
+	 * @param offset The offset.
+	 */
+	public long getLong(final int offset) {
+		val address = virtualAddress + PAYLOAD_OFFSET;
+		if (DEBUG >= LOG_TRACE) {
+			log.trace("Reading payload long @ 0x{} + {}.", leftPad(virtualAddress), offset);
+		}
+		return mmanager.getLong(address + offset);
+	}
+
+	/**
+	 * Writes a {@code long} to the packet payload.
+	 *
+	 * @param offset The offset.
+	 * @param value  The value to store.
+	 */
+	public void putLong(final int offset, final long value) {
+		val address = virtualAddress + PAYLOAD_OFFSET;
+		if (DEBUG >= LOG_TRACE) {
+			log.trace("Writing payload long @ 0x{} + {}.", leftPad(virtualAddress), offset);
+		}
+		mmanager.putLong(address + offset, value);
+	}
+
+	/**
+	 * Copies from a packet data region using a primitive byte array as store.
+	 *
+	 * @param offset The offset from which to start copying to {@code buffer}.
+	 * @param bytes  The number of bytes to copy.
+	 * @param buffer The primitive array to copy to.
+	 */
+	public void get(final int offset, int bytes, final @NotNull byte[] buffer) {
+		if (!OPTIMIZED) {
+			if (buffer == null) throw new NullPointerException("The parameter 'buffer' MUST NOT be null.");
+			if (offset < 0 || offset >= buffer.length) {
+				throw new ArrayIndexOutOfBoundsException("The parameter 'offset' MUST be in [0, buffer.length).");
+			}
+			if (bytes < 0) throw new IllegalArgumentException("The parameter 'bytes' MUST be positive.");
+			if (buffer.length < bytes) {
+				if (DEBUG >= LOG_WARN) {
+					log.warn("You are trying to read more bytes than the buffer can hold. Adapting bytes.");
+				}
+				bytes = buffer.length;
+			}
+			if (bytes == 0) return;
+		}
+		if (DEBUG >= LOG_TRACE) {
+			log.trace("Reading packet payload chunk of {} bytes @ offset '{}'.", bytes, leftPad(offset));
+		}
+		mmanager.get(virtualAddress + PAYLOAD_OFFSET, bytes, buffer, offset);
+	}
+
+	/**
 	 * Copies into a packet data region using a primitive byte array as store.
 	 *
-	 * @param offset The offset from which to start copying to {@code dest}.
+	 * @param offset The offset from which to start copying from {@code buffer}.
 	 * @param bytes  The number of bytes to copy.
 	 * @param buffer The primitive array to copy from.
 	 */
@@ -235,9 +294,9 @@ public final class PacketBufferWrapper implements Comparable<PacketBufferWrapper
 			if (bytes == 0) return;
 		}
 		if (DEBUG >= LOG_TRACE) {
-			log.trace("Writing packet data region of {} bytes @ offset '{}'.", bytes, leftPad(offset));
+			log.trace("Writing packet payload chunk of {} bytes @ offset '{}'.", bytes, leftPad(offset));
 		}
-		mmanager.put(virtual + DATA_OFFSET, bytes, buffer, 0);
+		mmanager.put(virtualAddress + PAYLOAD_OFFSET, bytes, buffer, offset);
 	}
 
 	//////////////////////////////////////////////// OVERRIDDEN METHODS ////////////////////////////////////////////////
@@ -246,7 +305,7 @@ public final class PacketBufferWrapper implements Comparable<PacketBufferWrapper
 	@Contract(pure = true)
 	public int compareTo(final @NotNull PacketBufferWrapper o) {
 		if (DEBUG >= LOG_TRACE) log.trace("Comparing with another packet buffer wrapper.");
-		return Long.compare(virtual, o.virtual);
+		return Long.compare(virtualAddress, o.virtualAddress);
 	}
 
 	@Override
@@ -254,7 +313,7 @@ public final class PacketBufferWrapper implements Comparable<PacketBufferWrapper
 	public @NotNull String toString() {
 		return "PacketBufferWrapper"
 				+ "("
-				+ "virtual=0x" + leftPad(virtual)
+				+ "virtual=0x" + leftPad(virtualAddress)
 				+ ")";
 	}
 

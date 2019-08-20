@@ -1,7 +1,9 @@
 package de.tum.in.net.ixy;
 
+import de.tum.in.net.ixy.memory.JniMemoryManager;
 import de.tum.in.net.ixy.memory.MemoryManager;
 import de.tum.in.net.ixy.memory.PacketBufferWrapper;
+import de.tum.in.net.ixy.memory.SmartJniMemoryManager;
 import de.tum.in.net.ixy.memory.SmartUnsafeMemoryManager;
 import de.tum.in.net.ixy.utils.Threads;
 
@@ -35,7 +37,10 @@ import static de.tum.in.net.ixy.BuildConfig.LOG_DEBUG;
 import static de.tum.in.net.ixy.BuildConfig.LOG_ERROR;
 import static de.tum.in.net.ixy.BuildConfig.LOG_TRACE;
 import static de.tum.in.net.ixy.BuildConfig.LOG_WARN;
+import static de.tum.in.net.ixy.BuildConfig.MEMORY_MANAGER;
 import static de.tum.in.net.ixy.BuildConfig.OPTIMIZED;
+import static de.tum.in.net.ixy.BuildConfig.PREFER_JNI;
+import static de.tum.in.net.ixy.BuildConfig.PREFER_JNI_FULL;
 import static de.tum.in.net.ixy.utils.Strings.leftPad;
 
 import static java.io.File.separator;
@@ -165,7 +170,12 @@ public abstract class Device implements Closeable {
 	private final @NotNull ByteBuffer buffer;
 
 	/** The memory manager. */
-	protected final @NotNull MemoryManager mmanager = SmartUnsafeMemoryManager.getSingleton();
+	@SuppressWarnings({"NestedConditionalExpression"})
+	protected final @NotNull MemoryManager mmanager = MEMORY_MANAGER == PREFER_JNI_FULL
+			? JniMemoryManager.getSingleton()
+			: MEMORY_MANAGER == PREFER_JNI
+			? SmartJniMemoryManager.getSingleton()
+			: SmartUnsafeMemoryManager.getSingleton();
 
 	/** Holds the name of the device. */
 	@EqualsAndHashCode.Include

@@ -41,7 +41,7 @@ public final class DmaMemory {
 	@Override
 	@Contract(pure = true)
 	public @NotNull String toString() {
-		return "DmaMemory()"
+		return "DmaMemory"
 				+ "("
 				+ "virtual=0x" + leftPad(virtual)
 				+ ", physical=0x" + leftPad(physical)

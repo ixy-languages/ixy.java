@@ -25,11 +25,12 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
 
-import org.mockito.internal.matchers.Null;
 import sun.misc.Unsafe;
 
 import static de.tum.in.net.ixy.BuildConfig.DEFAULT_HUGEPAGE_PATH;
@@ -109,7 +110,7 @@ final class SmartUnsafeMemoryManagerTest {
 
 	@Test
 	@DisplayName("mmap(File, boolean, boolean)")
-	void mmap_munmap(final @TempDir Path dir) throws IOException {
+	void mmap_munmap(@TempDir final Path dir) throws IOException {
 		assumeTrue(mmanager != null);
 		for (val huge : Arrays.asList(false)) {
 			for (val lock : Arrays.asList(false, true)) {

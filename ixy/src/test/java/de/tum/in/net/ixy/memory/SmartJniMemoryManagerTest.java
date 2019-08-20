@@ -25,6 +25,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
@@ -44,6 +46,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  *
  * @author Esaú García Sánchez-Torija
  */
+@EnabledOnOs(OS.LINUX)
 @DisplayName("SmartJniMemoryManager")
 @Execution(ExecutionMode.CONCURRENT)
 final class SmartJniMemoryManagerTest {
