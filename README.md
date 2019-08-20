@@ -94,7 +94,7 @@ Before running it, in case you haven't modified the default `hugetlbfs` mount pa
 To ease the execution of the packet generator and forwarder, a helper script can be evaluated to have all the NICs associated to environment variables.
 ```bash
 ./pci2nic.sh           # To see the variables that will be created
-eval '$(./pci2nic.sh)' # To evaluate the export statements
+eval "$(./pci2nic.sh)" # To evaluate the export statements
 ```
 
 This creates environment variables of the form `IXY_*_ADDR_*` and `IXY_*_NAME_*` to associated interface names with their fully qualified PCI addresses.
