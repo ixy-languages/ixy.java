@@ -172,6 +172,12 @@ public final class IxgbeDevice extends Device {
 
 		if (DEBUG >= LOG_TRACE) log.trace("Disabling all interrupts again.");
 		setRegister(IxgbeDefs.EIMC, Integer.MAX_VALUE);
+
+		// the reset apparently isn't 100% reliable on some systems, these registers should be set to 0 by the reset
+		if (getRegister(IxgbeDefs.RDH(0)) != 0 || getRegister(IxgbeDefs.RDT(0)) != 0
+		|| getRegister(IxgbeDefs.TDH(0)) != 0 || getRegister(IxgbeDefs.TDT(0)) != 0) {
+			throw new IllegalStateException("failed to reset device");
+		}
 	}
 
 	/** Initializes the link. */
@@ -237,17 +243,17 @@ public final class IxgbeDevice extends Device {
 			}
 
 			val buff = ByteBuffer.allocate(Long.BYTES).order(ByteOrder.nativeOrder()).putLong(0, dma.getPhysical()).asIntBuffer();
-			waitAndSetRegister(IxgbeDefs.RDBAL(i), buff.get(0));
-			waitAndSetRegister(IxgbeDefs.RDBAH(i), buff.get(1));
-			waitAndSetRegister(IxgbeDefs.RDLEN(i), ringSizeBytes);
+			setRegister(IxgbeDefs.RDBAL(i), buff.get(0));
+			setRegister(IxgbeDefs.RDBAH(i), buff.get(1));
+			setRegister(IxgbeDefs.RDLEN(i), ringSizeBytes);
 			if (DEBUG >= LOG_INFO) {
 				log.info("RX ring {} virtual address 0x{}.", i, leftPad(dma.getVirtual()));
 				log.info("RX ring {} physical address 0x{}.", i, leftPad(dma.getPhysical()));
 			}
 
 			if (DEBUG >= LOG_TRACE) log.trace("Emptying the ring.");
-			waitAndSetRegister(IxgbeDefs.RDH(i), 0);
-			waitAndSetRegister(IxgbeDefs.RDT(i), 0);
+			setRegister(IxgbeDefs.RDH(i), 0);
+			setRegister(IxgbeDefs.RDT(i), 0);
 
 			val queue = new IxgbeRxQueue(dma.getVirtual(), RX_ENTRIES);
 			queue.index = 0;
@@ -301,9 +307,9 @@ public final class IxgbeDevice extends Device {
 
 			if (DEBUG >= LOG_TRACE) log.trace("Enabling descriptor ring.");
 			val buff = ByteBuffer.allocate(Long.BYTES).order(ByteOrder.nativeOrder()).putLong(0, dma.getPhysical()).asIntBuffer();
-			waitAndSetRegister(IxgbeDefs.TDBAL(i), buff.get(0));
-			waitAndSetRegister(IxgbeDefs.TDBAH(i), buff.get(1));
-			waitAndSetRegister(IxgbeDefs.TDLEN(i), ringSizeBytes);
+			setRegister(IxgbeDefs.TDBAL(i), buff.get(0));
+			setRegister(IxgbeDefs.TDBAH(i), buff.get(1));
+			setRegister(IxgbeDefs.TDLEN(i), ringSizeBytes);
 			if (DEBUG >= LOG_INFO) {
 				log.info("TX ring {} virtual address 0x{}.", i, leftPad(dma.getVirtual()));
 				log.info("TX ring {} physical address 0x{}.", i, leftPad(dma.getPhysical()));
@@ -362,8 +368,8 @@ public final class IxgbeDevice extends Device {
 		waitSetFlags(IxgbeDefs.RXDCTL(queueId), IxgbeDefs.RXDCTL_ENABLE);
 
 		// Rx queue starts out full
-		waitAndSetRegister(IxgbeDefs.RDH(queueId), 0);
-		waitAndSetRegister(IxgbeDefs.RDT(queueId), (queue.capacity - 1));
+		setRegister(IxgbeDefs.RDH(queueId), 0);
+		setRegister(IxgbeDefs.RDT(queueId), (queue.capacity - 1));
 	}
 
 	/**
@@ -375,8 +381,8 @@ public final class IxgbeDevice extends Device {
 		if (DEBUG >= LOG_DEBUG) log.debug("Starting TX queue #{}.", queueId);
 
 		// TX queue starts out empty
-		waitAndSetRegister(IxgbeDefs.TDH(queueId), 0);
-		waitAndSetRegister(IxgbeDefs.TDT(queueId), 0);
+		setRegister(IxgbeDefs.TDH(queueId), 0);
+		setRegister(IxgbeDefs.TDT(queueId), 0);
 
 		if (DEBUG >= LOG_TRACE) log.trace("Enabling and waiting for TX queue #{}.", queueId);
 		setFlags(IxgbeDefs.TXDCTL(queueId), IxgbeDefs.TXDCTL_ENABLE);
@@ -681,7 +687,7 @@ public final class IxgbeDevice extends Device {
 
 		// Notify the hardware that we are done
 		if (rxIndex != lastRxIndex) {
-			waitAndSetRegister(IxgbeDefs.RDT(queueId), lastRxIndex);
+			setRegister(IxgbeDefs.RDT(queueId), lastRxIndex);
 			queue.index = rxIndex;
 		}
 

@@ -468,37 +468,6 @@ public abstract class Device implements Closeable {
 	protected abstract void setRegister(int offset, int value);
 
 	/**
-	 * Blocks the calling thread until the given {@code value} is written.
-	 *
-	 * @param offset The offset of the register.
-	 * @param value  The value to check for.
-	 */
-	@Contract(pure = true)
-	@SuppressWarnings("PMD.AssignmentInOperand")
-	protected void waitAndSetRegister(final int offset, final int value) {
-		if (DEBUG >= LOG_TRACE) {
-			val xflags = leftPad(Integer.toHexString(value), Integer.BYTES * 2);
-			log.trace("Waiting for flags 0b{} to be set on the register @ offset 0x{}.", xflags, leftPad(offset));
-			var counter = 0L;
-			var current = getRegister(offset);
-			while (current != value) {
-				setRegister(offset, value);
-				current = getRegister(offset);
-				if (counter++ == Long.MAX_VALUE) {
-					log.warn("The value is not set even after {} cycles.", counter);
-				}
-			}
-			if (counter != 0) log.trace("It took {} cycles for the register to have the desired value.", counter);
-		} else {
-			var current = getRegister(offset);
-			while (current != value) {
-				setRegister(offset, value);
-				current = getRegister(offset);
-			}
-		}
-	}
-
-	/**
 	 * Sets the bits of a flag to {@code 1}.
 	 *
 	 * @param offset The offset to start writing to.
