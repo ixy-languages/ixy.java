@@ -10,7 +10,7 @@ To build this project you will need a C compiler and the JDK 12.
 A handful script will install all the dependencies needed to build the project and the dependencies needed by other bash scripts.
 
 ```bash
-./boothstrap.sh
+./bootstrap.sh
 source /etc/profile.d/jdk.sh
 ```
 
@@ -31,7 +31,7 @@ ext {
 
 To use a different logging level optimization, edit the property `DEBUG` of the root Gradle build script.
 All the possible values are right above the property.
-Hare you can see a slice of the file (lines 31-37).
+Here you can see a slice of the file (lines 31-37).
 ```groovy
 // ...
 ext {
@@ -49,7 +49,7 @@ ext {
 
 To use a different memory manager, edit the property `MEMORY_MANAGER` of the root Gradle build script.
 All the possible values are right above the property.
-Hare you can see a slice of the file (lines 39-42).
+Here you can see a slice of the file (lines 39-42).
 ```groovy
 // ...
 ext {
@@ -64,7 +64,7 @@ ext {
 ```
 
 To use a different memory manager, edit the property `DEFAULT_HUGEPAGE_PATH` of the root Gradle build script.
-Hare you can see a slice of the file (line 46).
+Here you can see a slice of the file (line 46).
 ```groovy
 // ...
 ext {
@@ -81,12 +81,12 @@ To configure the Logback logging behaviour, edit the file `logback.xml` found on
 
 After the build script has been configured, the project can be built with:
 ```bash
-gradlew installDist
+./gradlew installDist
 ```
 
 Before running it, in case you haven't modified the default `hugetlbfs` mount path, you can use a handful script to reserve 512 hugepages.
 ```bash
-./hugetlbfs.sh
+sudo ./hugetlbfs.sh
 ```
 
 ## Usage
@@ -105,7 +105,7 @@ To use it in your own scripts you can loop as many times as `IXY_*_COUNT` says a
 
 To run the packet generator:
 ```bash
-sudo ./ixy-pktgen [--batch-size N] XXXX:XX:XX.X
+sudo ./ixy-pktgen.sh [--batch-size N] XXXX:XX:XX.X
 ```
 
 Remember to use the fully qualified PCI address of the NIC; do not omit the prefix.
@@ -114,7 +114,7 @@ Remember to use the fully qualified PCI address of the NIC; do not omit the pref
 
 To run the packet forwarder:
 ```bash
-sudo ./ixy-pktfwd [--batch-size N] XXXX:XX:XX.X YYYY:YY:YY.Y
+sudo ./ixy-pktfwd.sh [--batch-size N] XXXX:XX:XX.X YYYY:YY:YY.Y
 ```
 
 Remember to use the fully qualified PCI address of the NIC; do not omit the prefix.
