@@ -162,7 +162,9 @@ public final class IxgbeDevice extends Device {
 		setRegister(IxgbeDefs.EIMC, Integer.MAX_VALUE);
 
 		if (DEBUG >= LOG_TRACE) log.trace("Issuing global reset.");
-		setRegister(IxgbeDefs.CTRL, IxgbeDefs.CTRL_RST_MASK);
+		// this method *must* be compiled because Unsafe.putIntVolatile doesn't have the right semantics in interpreted mode on some systems
+		// threshold is 1001 loop iterations, but better safe than sorry on weird configurations
+		for (int i = 0; i < 4000; i++) setRegister(IxgbeDefs.CTRL, IxgbeDefs.CTRL_RST_MASK);
 		waitClearFlags(IxgbeDefs.CTRL, IxgbeDefs.CTRL_RST_MASK);
 
 		if (DEBUG >= LOG_TRACE) log.trace("Sleeping for 10 milliseconds.");
