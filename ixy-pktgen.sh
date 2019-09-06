@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 source /etc/profile.d/jdk.sh
-eval "$(bash pci2nic.sh)"
 
 # Shenandoah Garbage Collector
 #export JAVA_OPTS="-XX:+UnlockExperimentalVMOptions"
@@ -37,8 +36,4 @@ export JAVA_OPTS="$JAVA_OPTS -Xshare:off"
 export JAVA_OPTS="$JAVA_OPTS -server"
 export JAVA_OPTS="$JAVA_OPTS -Dlogback.configurationFile=$(realpath logback.xml)"
 
-if [ $# -eq 0 ]; then
-	bash pktgen/build/install/pktgen/bin/pktgen $IXY_IXGBE_ADDR_1
-else
-	bash pktgen/build/install/pktgen/bin/pktgen $@
-fi
+bash pktgen/build/install/pktgen/bin/pktgen $@

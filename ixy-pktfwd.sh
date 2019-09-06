@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 source /etc/profile.d/jdk.sh
-eval "$(bash pci2nic.sh)"
 
 # Shenandoah Garbage Collector
 #export JAVA_OPTS="-XX:+UnlockExperimentalVMOptions"
@@ -11,7 +10,7 @@ eval "$(bash pci2nic.sh)"
 #export JAVA_OPTS="-XX:+UseSerialGC"
 
 # G1 Garbage Collector
-export JAVA_OPTS="-XX:+UseG1GC"
+#export JAVA_OPTS="-XX:+UseG1GC"
 #export JAVA_OPTS="$JAVA_OPTS -XX:+AggressiveHeap"
 
 # Parallel Garbage Collector
@@ -21,8 +20,8 @@ export JAVA_OPTS="-XX:+UseG1GC"
 #export JAVA_OPTS="-XX:+UnlockExperimentalVMOptions"
 #export JAVA_OPTS="$JAVA_OPTS -XX:+UseEpsilonGC"
 
-# CMS Garbage Collector
-#export JAVA_OPTS="-XX:+UseConcMarkSweepGC"
+# CMS Garbage Collector, this is the fastest one for forwarding
+export JAVA_OPTS="-XX:+UseConcMarkSweepGC"
 
 # Z Garbage Collector
 #export JAVA_OPTS="-XX:+UnlockExperimentalVMOptions"
@@ -37,8 +36,4 @@ export JAVA_OPTS="$JAVA_OPTS -Xshare:off"
 export JAVA_OPTS="$JAVA_OPTS -server"
 export JAVA_OPTS="$JAVA_OPTS -Dlogback.configurationFile=$(realpath logback.xml)"
 
-if [ $# -eq 0 ]; then
-	bash pktfwd/build/install/pktfwd/bin/pktfwd $IXY_IXGBE_ADDR_1 $IXY_IXGBE_ADDR_2
-else
-	bash pktfwd/build/install/pktfwd/bin/pktfwd $@
-fi
+bash pktfwd/build/install/pktfwd/bin/pktfwd $@
