@@ -31,8 +31,10 @@ fi
 main() {
 	install_openjdk ${JDK_VERSION}
 	install_dependencies
+	echo "Run this to put JDK ${JDK_VERSION} on your path:"
+	echo "source /etc/profile.d/jdk.sh"
 }
-set -x
+
 ## Downloads an OpenJDK release given its version number
 download_openjdk() {
 	JDK_TAR="openjdk-${1}_linux-x64_bin.tar.gz"
