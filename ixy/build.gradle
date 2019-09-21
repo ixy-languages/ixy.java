@@ -6,17 +6,16 @@ plugins {
 	id 'pmd'                                                               // Official PMD plugin
 	id 'checkstyle'                                                        // Official Checkstyle plugin
 	id 'com.github.gmazzo.buildconfig'                    version '1.5.0'  // Build time constants
-	id 'io.freefair.lombok'                               version '3.7.1'  // Lombok
+	id 'io.freefair.lombok'                               version '4.1.0'  // Lombok
 	id 'com.adarshr.test-logger'                          version '1.7.0'  // Gradle Test Logger
 	id 'com.github.andygoossens.gradle-modernizer-plugin' version '1.2.0'  // Legacy APIs detector
-	id 'com.github.spotbugs'                              version '2.0.0'  // Bug finder
 	id 'com.github.ben-manes.versions'                    version '0.21.0' // Outdated dependencies detector
 	id 'com.github.ksoichiro.build.info'                  version '0.2.0'  // Adds Git information to the builds
 }
 
 // Set the Java compatibility of the source code and the generated artifact
-sourceCompatibility = 1.12
-targetCompatibility = 1.12
+sourceCompatibility = 1.13
+targetCompatibility = 1.13
 
 // Define a set of custom properties which may or may not be useful, but should be inherited from the root project
 ext {

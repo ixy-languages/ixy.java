@@ -18,8 +18,8 @@
 ##  * wget
 
 # Variables that shape the behaviour of this script
-JDK_VERSION='12.0.2'
-JDK_MINOR=10
+JDK_VERSION='13'
+JDK_MINOR=33
 
 # Make sure that we are root or we won't able to write into the sysfs mount
 if [ $(id -u) -ne 0 ]; then
@@ -39,7 +39,7 @@ main() {
 download_openjdk() {
 	JDK_TAR="openjdk-${1}_linux-x64_bin.tar.gz"
 	echo "Downloading OpenJDK ${1}. This could take some time..."
-	wget -q https://github.com/AdoptOpenJDK/openjdk12-binaries/releases/download/jdk-${JDK_VERSION}%2B${JDK_MINOR}/OpenJDK12U-jdk_x64_linux_hotspot_${JDK_VERSION}_${JDK_MINOR}.tar.gz -O ${JDK_TAR}
+	wget -q https://github.com/AdoptOpenJDK/openjdk13-binaries/releases/download/jdk-${JDK_VERSION}%2B${JDK_MINOR}/OpenJDK13U-jdk_x64_linux_hotspot_${JDK_VERSION}_${JDK_MINOR}.tar.gz -O ${JDK_TAR}
 }
 
 

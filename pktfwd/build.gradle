@@ -2,7 +2,7 @@
 plugins {
 	id 'application'                                   // Java application plugin
 	id 'com.github.gmazzo.buildconfig' version '1.5.0' // Build time constants
-	id 'io.freefair.lombok'            version '3.7.1' // Lombok
+	id 'io.freefair.lombok'            version '4.1.0' // Lombok
 	id 'com.adarshr.test-logger'       version '1.7.0' // Gradle Test Logger
 }
 
@@ -14,8 +14,8 @@ group 'de.tum.in.net.ixy'
 version '1.0'
 
 // Set the Java compatibility of the source code and the generated artifact
-sourceCompatibility = 1.12
-targetCompatibility = 1.12
+sourceCompatibility = 1.13
+targetCompatibility = 1.13
 
 // Use BinTray's jCenter repository, which is faster and bigger than Maven's
 repositories {

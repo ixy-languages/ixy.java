@@ -1,3 +1,8 @@
+# JDK 13: WIP
+
+This is our Java 13 branch. Caution: this doesn't work yet, Lombok doesn't seem to be ready yet.
+If you want to give it a try: install a snapshot/nightly of gradle 6 and try running it
+
 # Ixy.java
 
 ixy.java is a Java port of the [ixy](https://github.com/emmericp/ixy) user space network device driver.
