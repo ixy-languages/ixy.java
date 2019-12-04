@@ -1,0 +1,82 @@
+# Custom rules
+.vagrant
+.vs
+.vscode
+bin
+
+# From the Java template
+*.class
+*.log
+*.jar
+*.zip
+hs_err_pid*
+
+# From the Gradle template
+gradle
+.gradle
+build
+!gradle-wrapper.jar
+!gradle-wrapper.properties
+
+# From the Windows template
+Thumbs.db
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# From the Linux template
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# From the JetBrains template
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/**/dictionaries
+.idea/**/shelf
+.idea/**/dataSources/
+.idea/**/dataSources.ids
+.idea/**/dataSources.local.xml
+.idea/**/sqlDataSources.xml
+.idea/**/dynamic.xml
+.idea/**/uiDesigner.xml
+.idea/**/dbnavigator.xml
+.idea/**/gradle.xml
+.idea/**/libraries
+.idea/**/mongoSettings.xml
+.idea/replstate.xml
+.idea/httpRequests
+.idea_modules/
+*.iws
+cmake-build-debug/
+cmake-build-release/
+out/
+
+# From the macOS template
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk

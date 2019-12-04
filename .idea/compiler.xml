@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile default="true" name="Default" enabled="true" />
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="ixy.generator.main" target="12" />
+      <module name="ixy.generator.test" target="12" />
+      <module name="ixy.ixy.generator.main" target="12" />
+      <module name="ixy.ixy.generator.test" target="12" />
+      <module name="ixy.ixy.library.main" target="12" />
+      <module name="ixy.ixy.library.test" target="12" />
+      <module name="ixy.main" target="12" />
+      <module name="ixy.test" target="12" />
+    </bytecodeTargetLevel>
+  </component>
+</project>

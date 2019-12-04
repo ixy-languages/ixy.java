@@ -1,0 +1,45 @@
+<configuration debug="false">
+	<!-- Create an appender for the error console -->
+	<appender name="STDERR" class="ch.qos.logback.core.ConsoleAppender">
+		<!-- Use the standard error -->
+		<target>System.err</target>
+		<!-- Filter only error and warning messages -->
+		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+			<level>WARN</level>
+		</filter>
+		<!-- Encoders are assigned the type ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+		<encoder>
+			<pattern>%relative | %-13thread | %5p | %-20.20class{0} | %m%n</pattern>
+		</encoder>
+	</appender>
+	<!-- Create an appender for the standard console -->
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<!-- Use the standard output -->
+		<target>System.out</target>
+		<!-- Filter only info and higher level messages -->
+		<filter class="ch.qos.logback.classic.filter.LevelFilter">
+			<level>INFO</level>
+			<onMatch>ACCEPT</onMatch>
+			<onMismatch>NEUTRAL</onMismatch>
+		</filter>
+		<filter class="ch.qos.logback.classic.filter.LevelFilter">
+			<level>DEBUG</level>
+			<onMatch>ACCEPT</onMatch>
+			<onMismatch>NEUTRAL</onMismatch>
+		</filter>
+		<filter class="ch.qos.logback.classic.filter.LevelFilter">
+			<level>TRACE</level>
+			<onMatch>ACCEPT</onMatch>
+			<onMismatch>DENY</onMismatch>
+		</filter>
+		<!-- Encoders are assigned the type ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+		<encoder>
+			<pattern>%relative | %-13thread | %5p | %-20.20class{0} | %m%n</pattern>
+		</encoder>
+	</appender>
+	<!-- Configure the basic configuration of all loggers -->
+	<root level="TRACE">
+		<appender-ref ref="STDERR" />
+		<appender-ref ref="STDOUT" />
+	</root>
+</configuration>

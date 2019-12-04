@@ -1,0 +1,131 @@
+// Apply some miscellaneous plugins
+plugins {
+	id 'net.rdrei.android.buildtimetracker'  version '0.11.0' // Build time metrics to detect bottlenecks
+//	id 'io.freefair.aggregate-javadoc'       version '3.8.0'  // Aggregated JavaDoc
+}
+
+// Applying the plugin instead of using the 'plugins' closure, prevents it from being inherited by subprojects
+apply plugin: 'jacoco'
+
+// Configure the build metrics tracker
+buildtimetracker {
+	reporters {
+		csv {
+			output 'build/times.csv'
+			append true
+			header false
+		}
+		summary {
+			ordered   false
+			threshold 50
+			barstyle  'unicode'
+		}
+		csvSummary {
+			csv 'build/times.csv'
+		}
+	}
+}
+
+// Define a set of custom properties which may or may not be useful, but should be inherited from the root project
+ext {
+	LOG_NONE  = 0
+	LOG_ERROR = 1
+	LOG_WARN  = 2
+	LOG_INFO  = 3
+	LOG_DEBUG = 4
+	LOG_TRACE = 5
+	DEBUG     = LOG_INFO
+
+	PREFER_UNSAFE   = 1
+	PREFER_JNI      = 2
+	PREFER_JNI_FULL = 3
+	MEMORY_MANAGER  = PREFER_UNSAFE
+
+	OPTIMIZED = true
+
+	DEFAULT_HUGEPAGE_PATH = "/mnt/huge"
+}
+
+// Creates a JaCoCo report merging the contents of all the subproject's JaCoCo reports
+task jacocoTestReport(type: JacocoReport) {
+
+	// Prevent this task from being considered up to date
+	outputs.upToDateWhen { false }
+
+	// Work-around to allow us to build list of executionData files in doFirst
+	onlyIf = { true }
+
+	// Builds list of source directories, class directories, and 'executionData' files
+	// when the task is being executed, not when the script is being evaluated
+	doFirst {
+		subprojects.findAll {
+			it.pluginManager.hasPlugin('java') && it.pluginManager.hasPlugin('jacoco') &&
+					!it.jacocoTestReport.executionData.findAll { it.exists() }.isEmpty()
+		}.each { subproj ->
+			additionalSourceDirs files((Set<File>) subproj.sourceSets.main.allJava.srcDirs)
+			additionalClassDirs ((FileCollection) subproj.sourceSets.main.output)
+			if (subproj.pluginManager.hasPlugin('jacoco')) {
+				executionData subproj.jacocoTestReport.executionData
+			}
+		}
+		executionData.from files(executionData.findAll { it.exists() })
+	}
+}
+
+// Set the common configuration for all projects
+allprojects { proj ->
+
+	// Set the group and version
+	group 'de.tum.in.net.ixy'
+	version '1.0'
+
+	// Use BinTray's jCenter repository (faster and bigger than Maven)
+	repositories {
+		jcenter()
+	}
+
+	// Export the JaCoCo test report in HTML and XML format
+	proj.tasks.withType(JacocoReport) {
+		reports {
+			csv.enabled = true
+			xml {
+				enabled = true
+				destination file("${proj.buildDir}/reports/jacoco/jacoco.xml")
+			}
+			html {
+				enabled = true
+				destination file("${proj.buildDir}/reports/jacoco/html")
+			}
+		}
+	}
+
+	proj.tasks.withType(Javadoc) {
+		destinationDir = file(hasProperty('docsDir') ? "${proj.docsDir}/javadoc" : "${proj.buildDir}/docs/javadoc")
+		options.links << 'https://docs.oracle.com/en/java/javase/12/docs/api/'
+		options.addBooleanOption('html5', true)
+		options.noQualifiers 'all'
+		options.memberLevel = JavadocMemberLevel.PRIVATE
+
+		if (proj.hasProperty('moduleName')) {
+			inputs.property('moduleName', proj.moduleName)
+		}
+		doFirst {
+			options.addStringOption('-module-path', classpath.asPath)
+		}
+	}
+}
+
+subprojects { proj ->
+	afterEvaluate {
+		compileJava {
+			inputs.property('moduleName', proj.moduleName)
+			doFirst {
+				options.compilerArgs = ['--module-path', classpath.asPath]
+				classpath = files()
+			}
+		}
+	}
+}
+
+// Create a build task that builds all the subprojects
+tasks.register('build')
