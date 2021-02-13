@@ -317,7 +317,7 @@ public final class IxgbeDevice extends Device {
 
 			if (DEBUG >= LOG_TRACE) log.trace("Enabling writeback magic values.");
 			var txdctl = getRegister(IxgbeDefs.TXDCTL(i));
-			txdctl &= ~((0x3F << 16) | (0x3F << 8) | 0x3F);
+			txdctl &= ~((0x7F << 16) | (0x7F << 8) | 0x7F);
 			txdctl |= ((4 << 16) | (8 << 8) | 36);
 			setRegister(IxgbeDefs.TXDCTL(i), txdctl);
 
